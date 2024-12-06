@@ -42,6 +42,8 @@ func (l *lexer) NextToken() tokens.Token {
 		tok = l.newToken(tokens.WHITESPACE)
 	case ',':
 		tok = l.newToken(tokens.COMMA)
+	case '$':
+		tok = l.newToken(tokens.DOLLAR)
 	case '=':
 		if l.pick() == '=' {
 			tok = l.newDoubleCharacterToken(tokens.EQUAL)
