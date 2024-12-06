@@ -13,9 +13,9 @@ Using bot
 
 Bool hungry = True
 While hungry:
-    int MaxEnergy = 1500
+    Int maxEnergy = 1500
     ConsumeSunlight
-    If GetEnergy > MaxEnergy:
+    If GetEnergy > maxEnergy:
         Fork$ world::Forward
         hungry = False
 Dir dir = GetDir
