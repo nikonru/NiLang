@@ -1,2 +1,2 @@
-go build -o build/NiLang  src/main.go
+go build -o build/nilang  src/main.go
 
