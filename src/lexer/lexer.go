@@ -45,31 +45,31 @@ func (l *lexer) NextToken() tokens.Token {
 	case '$':
 		tok = l.newToken(tokens.DOLLAR)
 	case '=':
-		if l.pick() == '=' {
+		if l.peek() == '=' {
 			tok = l.newDoubleCharacterToken(tokens.EQUAL)
 		} else {
 			tok = l.newToken(tokens.ASSIGN)
 		}
 	case '!':
-		if l.pick() == '=' {
+		if l.peek() == '=' {
 			tok = l.newDoubleCharacterToken(tokens.NEQUAL)
 		} else {
 			tok = l.newToken(tokens.ILLEGAL) //may be array index?
 		}
 	case ':':
-		if l.pick() == ':' {
+		if l.peek() == ':' {
 			tok = l.newDoubleCharacterToken(tokens.DCOLON)
 		} else {
 			tok = l.newToken(tokens.COLON)
 		}
 	case '>':
-		if l.pick() == '=' {
+		if l.peek() == '=' {
 			tok = l.newDoubleCharacterToken(tokens.GE)
 		} else {
 			tok = l.newToken(tokens.GT)
 		}
 	case '<':
-		if l.pick() == '=' {
+		if l.peek() == '=' {
 			tok = l.newDoubleCharacterToken(tokens.LE)
 		} else {
 			tok = l.newToken(tokens.LT)
@@ -170,7 +170,7 @@ func (l *lexer) newDoubleCharacterToken(tok tokens.TokenType) tokens.Token {
 	}
 }
 
-func (l *lexer) pick() byte {
+func (l *lexer) peek() byte {
 	if l.next >= len(l.input) {
 		return 0
 	}
