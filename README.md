@@ -5,3 +5,20 @@ The last two letters **ng** are reference to ISO 639 language code of *Ndonga* -
 
 # What is this?
 NiLang (Russian: НиЛанг) is a high level language for programming a bot from [TorLand](https://github.com/Slava2001/TorLand).
+
+# Syntax
+```
+Using bot
+
+Bool hungry = True
+While hungry:
+    int MaxEnergy = 1500
+    ConsumeSunlight
+    If GetEnergy > MaxEnergy:
+        Fork: world::Forward
+        hungry = False
+
+Dir dir = GetDir
+# you may remove `bot::`, since we have already written 'using bot'
+bot::Move: RotateClockwise: dir  
+```
