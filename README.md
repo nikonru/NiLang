@@ -1,4 +1,5 @@
-![master](https://github.com/nikonru/NiLang/actions/workflows/master.yml/badge.svg)
+![linux](https://github.com/nikonru/NiLang/actions/workflows/linux.yml/badge.svg)
+![windows](https://github.com/nikonru/NiLang/actions/workflows/windows.yml/badge.svg)
 # Why NiLang?
 The part **NiLa** in the name stands for *Larry Niven* beloved author 
 of the famous sci-fi book series *Ringworld*. 
