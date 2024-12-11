@@ -15,6 +15,10 @@ type lexer struct {
 
 	current int
 	next    int
+
+	line   int
+	pos    int
+	offset int
 }
 
 func New(input []byte) Lexer {
@@ -22,12 +26,18 @@ func New(input []byte) Lexer {
 		input:   input,
 		current: 0,
 		next:    1,
+
+		line:   1,
+		offset: 0,
 	}
 	l.read()
+	l.offset = 0
 	return l
 }
 
 func (l *lexer) NextToken() tokens.Token {
+	l.pos = l.offset
+
 	if l.char == '#' {
 		l.skipComment()
 	}
@@ -84,9 +94,8 @@ func (l *lexer) NextToken() tokens.Token {
 			return l.readNumberToken()
 		}
 		if isLetter(l.char) {
-			tok.Literal = string(l.readIdent())
-			tok.Type = tokens.LookUpIdent(tok.Literal)
-			return tok
+			literal := string(l.readIdent())
+			return l.makeToken(tokens.LookUpIdent(literal), literal)
 		}
 
 		tok = l.newToken(tokens.ILLEGAL)
@@ -97,6 +106,12 @@ func (l *lexer) NextToken() tokens.Token {
 }
 
 func (l *lexer) read() {
+	l.offset++
+	if isNewline(l.char) {
+		l.line++
+		l.offset = 0
+	}
+
 	if l.current >= len(l.input) {
 		l.char = 0
 	} else {
@@ -126,14 +141,11 @@ func (l *lexer) readIdent() []byte {
 }
 
 func (l *lexer) readNumberToken() tokens.Token {
-	return tokens.Token{
-		Type:    tokens.INT,
-		Literal: string(l.readNumber()),
-	}
+	return l.makeToken(tokens.INT, string(l.readNumber()))
 }
 
 func (l *lexer) skipComment() {
-	for l.char != '\n' && l.char != '\r' {
+	for !isNewline(l.char) {
 		l.read()
 	}
 	for isNewline(l.char) {
@@ -142,7 +154,7 @@ func (l *lexer) skipComment() {
 }
 
 func (l *lexer) skipNewlines() {
-	for l.char == '\n' || l.char == '\r' {
+	for isNewline(l.char) {
 		l.read()
 	}
 }
@@ -155,19 +167,17 @@ func (l *lexer) newToken(tok tokens.TokenType) tokens.Token {
 		literal = string(l.char)
 	}
 
-	return tokens.Token{
-		Type:    tok,
-		Literal: literal,
-	}
+	return l.makeToken(tok, literal)
 }
 
 func (l *lexer) newDoubleCharacterToken(tok tokens.TokenType) tokens.Token {
 	first := l.char
 	l.read()
-	return tokens.Token{
-		Type:    tok,
-		Literal: string(first) + string(l.char),
-	}
+	return l.makeToken(tok, string(first)+string(l.char))
+}
+
+func (l *lexer) makeToken(tok tokens.TokenType, literal string) tokens.Token {
+	return tokens.Token{Type: tok, Literal: literal, Line: l.line, Offset: l.pos}
 }
 
 func (l *lexer) peek() byte {
