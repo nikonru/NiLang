@@ -9,9 +9,9 @@ import (
 
 func TestLetStatement(test *testing.T) {
 	input := []byte(`
-	Bool x = false
-	Int number = 1200
-	`)
+    Bool x = false
+    Int number = 1200
+    `)
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
