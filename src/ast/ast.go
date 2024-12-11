@@ -28,14 +28,14 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
-type LetStatement struct {
+type DeclarationStatement struct {
 	Token tokens.Token
 	Name  *Identifier
 	Value Expression
 }
 
-func (ls *LetStatement) statementNode()       {}
-func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
+func (ds *DeclarationStatement) statementNode()       {}
+func (ds *DeclarationStatement) TokenLiteral() string { return ds.Token.Literal }
 
 type Identifier struct {
 	Token tokens.Token

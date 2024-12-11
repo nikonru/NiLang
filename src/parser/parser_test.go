@@ -7,11 +7,10 @@ import (
 	"testing"
 )
 
-func TestLetStatement(test *testing.T) {
-	input := []byte(`
-    Bool x = false
-    Int number = 1200
-    `)
+func TestDeclarationStatement(test *testing.T) {
+	input := []byte(`Bool x = false
+Int number = 1400
+Dir face = forward`)
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
@@ -21,44 +20,47 @@ func TestLetStatement(test *testing.T) {
 		test.Fatalf("parser.Parse() has returned nil")
 	}
 
-	if len(program.Statements) != 3 {
-		test.Fatalf("program.Statements doesn't contain 2 statements: got=%v", len(program.Statements))
+	length := 3
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
 	}
 
 	tests := []struct {
-		expectedIdentifier string
+		expectedTypeLiteral string
+		expectedIdentifier  string
 	}{
-		{"x"},
-		{"number"},
+		{"Bool", "x"},
+		{"Int", "number"},
+		{"Dir", "face"},
 	}
 
 	for i, t := range tests {
 		statement := program.Statements[i]
-		if !testLetStatement(test, statement, t.expectedIdentifier) {
+		if !testDeclarationStatement(test, statement, t.expectedTypeLiteral, t.expectedIdentifier) {
 			return
 		}
 	}
 }
 
-func testLetStatement(test *testing.T, statement ast.Statement, name string) bool {
-	if statement.TokenLiteral() != "Bool" {
+func testDeclarationStatement(test *testing.T, statement ast.Statement, literal string, name string) bool {
+	if statement.TokenLiteral() != literal {
 		test.Errorf("statement.TokenLiteral() is not Bool: got=%v", statement.TokenLiteral())
 		return false
 	}
 
-	letStatement, ok := statement.(*ast.LetStatement)
+	declarationStatement, ok := statement.(*ast.DeclarationStatement)
 	if !ok {
-		test.Errorf("statement is not *ast.LetStatement type: got=%v", statement)
+		test.Errorf("statement is not *ast.DeclarationStatement type: got=%v", statement)
 		return false
 	}
 
-	if letStatement.Name.Value != name {
-		test.Errorf("letStatement.Name.Value is not *%v type: got=%v", name, statement)
+	if declarationStatement.Name.Value != name {
+		test.Errorf("declarationStatement.Name.Value is not *%v type: got=%v", name, statement)
 		return false
 	}
 
-	if letStatement.Name.TokenLiteral() != name {
-		test.Errorf("letStatement.Name.TokenLiteral is not *%v type: got=%v", name, statement)
+	if declarationStatement.Name.TokenLiteral() != name {
+		test.Errorf("declarationStatement.Name.TokenLiteral is not *%v type: got=%v", name, statement)
 		return false
 	}
 
