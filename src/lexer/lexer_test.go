@@ -11,7 +11,7 @@ import (
 
 func TestLexer(t *testing.T) {
 
-	file, err := os.Open("bot.nl")
+	file, err := os.Open("bot.nil")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -7,7 +7,8 @@ The last two letters **ng** are reference to ISO 639 language code of *Ndonga* -
 
 # What is this?
 NiLang (Russian: НиЛанг) is a high level language for programming a bot from [TorLand](https://github.com/Slava2001/TorLand).
-
+## File extension
+We recommend use `.nil` as a file extension for files containing **NiLang** source code.
 # Syntax
 ```
 Using bot
