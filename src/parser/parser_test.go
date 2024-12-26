@@ -2,8 +2,10 @@ package parser_test
 
 import (
 	"NiLang/src/ast"
+	"NiLang/src/helper"
 	"NiLang/src/lexer"
 	"NiLang/src/parser"
+	"fmt"
 	"testing"
 )
 
@@ -19,6 +21,7 @@ Dir face = forward`)
 	if program == nil {
 		test.Fatalf("parser.Parse() has returned nil")
 	}
+	checkParseErrors(test, parser, input)
 
 	length := 3
 	if len(program.Statements) != length {
@@ -65,4 +68,18 @@ func testDeclarationStatement(test *testing.T, statement ast.Statement, literal 
 	}
 
 	return true
+}
+
+func checkParseErrors(test *testing.T, parser *parser.Parser, input []byte) {
+	errors := parser.Errors()
+	if len(errors) == 0 {
+		return
+	}
+
+	test.Errorf("parser had %d errors", len(errors))
+	fmt.Print("parser error:\n")
+	for _, err := range errors {
+		helper.PrintError(err, input)
+	}
+	test.FailNow()
 }

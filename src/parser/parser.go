@@ -2,15 +2,21 @@ package parser
 
 import (
 	"NiLang/src/ast"
+	"NiLang/src/helper"
 	"NiLang/src/lexer"
 	"NiLang/src/tokens"
+	"fmt"
 )
+
+type errors = []helper.Error
 
 type Parser struct {
 	lexer *lexer.Lexer
 
 	current tokens.Token
 	next    tokens.Token
+
+	errors errors
 }
 
 func New(lexer *lexer.Lexer) *Parser {
@@ -51,7 +57,6 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 }
 
 func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
-	// TODO remove returning bool
 	statement := &ast.DeclarationStatement{Token: p.current}
 
 	if !p.expectNext(tokens.WHITESPACE) {
@@ -60,7 +65,7 @@ func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
 
 	p.skipWhitespaces()
 
-	if !p.isCurrent(tokens.IDENT) {
+	if !p.expectCurrent(tokens.IDENT) {
 		return false, nil
 	}
 
@@ -70,7 +75,7 @@ func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
 		p.skipWhitespaces()
 	}
 
-	if !p.isCurrent(tokens.ASSIGN) {
+	if !p.expectCurrent(tokens.ASSIGN) {
 		return false, nil
 	}
 
@@ -81,6 +86,15 @@ func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
 
 func (p *Parser) isCurrent(t tokens.TokenType) bool {
 	return t == p.current.Type
+}
+
+func (p *Parser) expectCurrent(t tokens.TokenType) bool {
+	if p.isCurrent(t) {
+		return true
+	} else {
+		p.currentError(t)
+		return false
+	}
 }
 
 func (p *Parser) isNext(t tokens.TokenType) bool {
@@ -104,6 +118,23 @@ func (p *Parser) expectNext(t tokens.TokenType) bool {
 		p.nextToken()
 		return true
 	} else {
+		p.nextError(t)
 		return false
 	}
+}
+
+func (p *Parser) Errors() errors { return p.errors }
+
+func (p *Parser) error(token tokens.TokenType, expected tokens.Token, name string) {
+	desc := fmt.Sprintf("expected %s token to be %s, got %s instead", name, token, expected.Type)
+	error := helper.Error{Line: expected.Line, Offset: expected.Offset, Description: desc}
+	p.errors = append(p.errors, error)
+}
+
+func (p *Parser) nextError(token tokens.TokenType) {
+	p.error(token, p.next, "next")
+}
+
+func (p *Parser) currentError(token tokens.TokenType) {
+	p.error(token, p.current, "current")
 }
