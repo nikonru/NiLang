@@ -51,11 +51,26 @@ type DeclarationStatement struct {
 func (ds *DeclarationStatement) statementNode()       {}
 func (ds *DeclarationStatement) TokenLiteral() string { return ds.Token.Literal }
 
+func (ds *DeclarationStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ds.TokenLiteral() + " ")
+	out.WriteString(ds.Name.String())
+	out.WriteString(" = ")
+
+	if ds.Value != nil {
+		out.WriteString(ds.Value.String())
+	}
+
+	return out.String()
+}
+
 type Identifier struct {
 	Token tokens.Token
 	Value string
 }
 
+func (i *Identifier) expressionNode()      {}
 func (i *Identifier) statementNode()       {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 func (i *Identifier) String() string       { return i.Value }
@@ -68,5 +83,10 @@ type ExpressionStatement struct {
 func (ds *ExpressionStatement) statementNode()       {}
 func (ds *ExpressionStatement) TokenLiteral() string { return ds.Token.Literal }
 
-func (ds *DeclarationStatement) String() string { return "todo" }
-func (es *ExpressionStatement) String() string  { return "todo" }
+func (es *ExpressionStatement) String() string {
+	if es.Expression != nil {
+		return es.Expression.String()
+	}
+
+	return ""
+}

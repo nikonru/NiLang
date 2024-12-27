@@ -8,15 +8,25 @@ import (
 	"fmt"
 )
 
+const (
+	_ int = iota
+	LOWEST
+	EQUALS      // ==
+	LESSGREATER // > or <
+	CALL        //func$ or func
+)
+
 type errors = []helper.Error
+type prefixParseFns = func() ast.Expression
 
 type Parser struct {
-	lexer *lexer.Lexer
+	lexer  *lexer.Lexer
+	errors errors
 
 	current tokens.Token
 	next    tokens.Token
 
-	errors errors
+	prefixParseFns map[tokens.TokenType]prefixParseFns
 }
 
 func New(lexer *lexer.Lexer) *Parser {
@@ -52,7 +62,7 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 	case tokens.BOOL, tokens.DIR, tokens.INT:
 		return p.parseDeclarationStatement()
 	default:
-		return false, nil
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -82,6 +92,24 @@ func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
 	p.skipUpToNewline()
 
 	return true, statement
+}
+
+func (p *Parser) parseExpressionStatement() (bool, *ast.ExpressionStatement) {
+	statement := &ast.ExpressionStatement{Token: p.current}
+
+	statement.Expression = p.parseExpression(LOWEST)
+
+	return true, statement
+}
+
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := p.prefixParseFns[p.current.Type]
+	if prefix == nil {
+		return nil
+	}
+	leftExpression := prefix()
+
+	return leftExpression
 }
 
 func (p *Parser) isCurrent(t tokens.TokenType) bool {
@@ -137,4 +165,8 @@ func (p *Parser) nextError(token tokens.TokenType) {
 
 func (p *Parser) currentError(token tokens.TokenType) {
 	p.error(token, p.current, "current")
+}
+
+func (p *Parser) registerPrefix(tokenType tokens.TokenType, fn prefixParseFns) {
+	p.prefixParseFns[tokenType] = fn
 }

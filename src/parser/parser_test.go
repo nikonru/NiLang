@@ -45,6 +45,34 @@ Dir face = forward`)
 	}
 }
 
+func TestIdentifierExpression(test *testing.T) {
+	input := []byte(`foobar`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+	program := parser.Parse()
+	checkParseErrors(test, parser, input)
+
+	if len(program.Statements) != 1 {
+		test.Fatalf("program has not enough statements, got=%d", len(program.Statements))
+	}
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.ExpressionStatement, got=%T", program.Statements[0])
+	}
+
+	ident, ok := statement.Expression.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("expression not *ast.Identifier, got=%T", statement.Expression)
+	}
+	if ident.Value != "foobar" {
+		test.Errorf("ident.Value not %s, got=%s", "foobar", ident.Value)
+	}
+	if ident.TokenLiteral() != "foobar" {
+		test.Errorf("ident.TokenLiteral() not %s, got=%s", "foobar", ident.TokenLiteral())
+	}
+}
+
 func testDeclarationStatement(test *testing.T, statement ast.Statement, literal string, name string) bool {
 	if statement.TokenLiteral() != literal {
 		test.Errorf("statement.TokenLiteral() is not Bool: got=%v", statement.TokenLiteral())
