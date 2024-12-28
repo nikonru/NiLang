@@ -207,7 +207,7 @@ func TestParsingInfixExpression(test *testing.T) {
 		{[]byte(`6 < 7`), 6, "<", 7},
 		{[]byte(`6 <= 7`), 6, "<=", 7},
 		{[]byte(`6 == 6`), 6, "==", 6},
-		{[]byte(`1 == 20`), 1, "!=", 20},
+		{[]byte(`1 != 20`), 1, "!=", 20},
 	}
 
 	for _, testCase := range infixTests {
@@ -229,7 +229,7 @@ func TestParsingInfixExpression(test *testing.T) {
 		if !ok {
 			test.Fatalf("expression is not *ast.InfixExpression, got=%T", statement.Expression)
 		}
-		if !testIntegralLiteral(test, exp.Right, testCase.LeftValue) {
+		if !testIntegralLiteral(test, exp.Left, testCase.LeftValue) {
 			return
 		}
 		if exp.Operator != testCase.Operator {
