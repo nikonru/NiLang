@@ -14,7 +14,8 @@ const (
 	LOWEST
 	EQUALS      // ==
 	LESSGREATER // > or <
-	CALL        //func$ or func
+	PREFIX      // Not
+	CALL        // func$ or func
 )
 
 type errors = []helper.Error
@@ -36,6 +37,9 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.prefixParseFns = make(map[tokens.TokenType]prefixParseFns)
 	p.registerPrefix(tokens.IDENT, p.parseIdentifier)
 	p.registerPrefix(tokens.NUMBER, p.parseIntegralLiteral)
+	p.registerPrefix(tokens.TRUE, p.parseBooleanLiteral)
+	p.registerPrefix(tokens.FALSE, p.parseBooleanLiteral)
+	p.registerPrefix(tokens.NOT, p.parsePrefixExpression)
 
 	p.nextToken()
 	p.nextToken()
@@ -110,6 +114,8 @@ func (p *Parser) parseExpressionStatement() (bool, *ast.ExpressionStatement) {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.current.Type]
 	if prefix == nil {
+		error := helper.MakeError(p.current, fmt.Sprintf("no prefix parse function for %s found", p.current.Type))
+		p.addError(error)
 		return nil
 	}
 	leftExpression := prefix()
@@ -197,4 +203,33 @@ func (p *Parser) parseIntegralLiteral() ast.Expression {
 	lit.Value = value
 
 	return lit
+}
+
+func (p *Parser) parseBooleanLiteral() ast.Expression {
+	lit := &ast.BooleanLiteral{Token: p.current}
+
+	tokenType := tokens.LookUpIdent(p.current.Literal)
+	if tokenType == tokens.TRUE {
+		lit.Value = true
+	} else if tokenType == tokens.FALSE {
+		lit.Value = false
+	} else {
+		error := helper.MakeError(p.current, fmt.Sprintf("could not parse %q as boolean", p.current.Literal))
+		p.addError(error)
+		return nil
+	}
+
+	return lit
+}
+
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	expression := &ast.PrefixExpression{Token: p.current, Operator: p.current.Literal}
+
+	if p.expectNext(tokens.WHITESPACE) {
+		p.skipWhitespaces()
+	}
+
+	expression.Right = p.parseExpression(PREFIX)
+
+	return expression
 }

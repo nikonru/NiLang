@@ -100,3 +100,34 @@ func (i *IntegralLiteral) expressionNode()      {}
 func (i *IntegralLiteral) statementNode()       {}
 func (i *IntegralLiteral) TokenLiteral() string { return i.Token.Literal }
 func (i *IntegralLiteral) String() string       { return i.TokenLiteral() }
+
+type BooleanLiteral struct {
+	Token tokens.Token
+	Value bool
+}
+
+func (b *BooleanLiteral) expressionNode()      {}
+func (b *BooleanLiteral) statementNode()       {}
+func (b *BooleanLiteral) TokenLiteral() string { return b.Token.Literal }
+func (b *BooleanLiteral) String() string       { return b.TokenLiteral() }
+
+type PrefixExpression struct {
+	Token    tokens.Token
+	Operator string
+	Right    Expression
+}
+
+func (p *PrefixExpression) expressionNode()      {}
+func (p *PrefixExpression) statementNode()       {}
+func (p *PrefixExpression) TokenLiteral() string { return p.Token.Literal }
+
+func (p *PrefixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(p.Operator)
+	out.WriteString(p.Right.String())
+	out.WriteString(")")
+
+	return out.String()
+}
