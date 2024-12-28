@@ -65,16 +65,6 @@ func (ds *DeclarationStatement) String() string {
 	return out.String()
 }
 
-type Identifier struct {
-	Token tokens.Token
-	Value string
-}
-
-func (i *Identifier) expressionNode()      {}
-func (i *Identifier) statementNode()       {}
-func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
-func (i *Identifier) String() string       { return i.Value }
-
 type ExpressionStatement struct {
 	Token      tokens.Token
 	Expression Expression
@@ -90,3 +80,23 @@ func (es *ExpressionStatement) String() string {
 
 	return ""
 }
+
+type Identifier struct {
+	Token tokens.Token
+	Value string
+}
+
+func (i *Identifier) expressionNode()      {}
+func (i *Identifier) statementNode()       {}
+func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+func (i *Identifier) String() string       { return i.Value }
+
+type IntegralLiteral struct {
+	Token tokens.Token
+	Value int64
+}
+
+func (i *IntegralLiteral) expressionNode()      {}
+func (i *IntegralLiteral) statementNode()       {}
+func (i *IntegralLiteral) TokenLiteral() string { return i.Token.Literal }
+func (i *IntegralLiteral) String() string       { return i.TokenLiteral() }

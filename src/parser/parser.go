@@ -6,6 +6,7 @@ import (
 	"NiLang/src/lexer"
 	"NiLang/src/tokens"
 	"fmt"
+	"strconv"
 )
 
 const (
@@ -34,6 +35,7 @@ func New(lexer *lexer.Lexer) *Parser {
 
 	p.prefixParseFns = make(map[tokens.TokenType]prefixParseFns)
 	p.registerPrefix(tokens.IDENT, p.parseIdentifier)
+	p.registerPrefix(tokens.NUMBER, p.parseIntegralLiteral)
 
 	p.nextToken()
 	p.nextToken()
@@ -158,7 +160,11 @@ func (p *Parser) Errors() errors { return p.errors }
 
 func (p *Parser) error(token tokens.TokenType, expected tokens.Token, name string) {
 	desc := fmt.Sprintf("expected %s token to be %s, got %s instead", name, token, expected.Type)
-	error := helper.Error{Line: expected.Line, Offset: expected.Offset, Description: desc}
+	error := helper.MakeError(expected, desc)
+	p.addError(error)
+}
+
+func (p *Parser) addError(error helper.Error) {
 	p.errors = append(p.errors, error)
 }
 
@@ -176,4 +182,19 @@ func (p *Parser) registerPrefix(tokenType tokens.TokenType, fn prefixParseFns) {
 
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.current, Value: p.current.Literal}
+}
+
+func (p *Parser) parseIntegralLiteral() ast.Expression {
+	lit := &ast.IntegralLiteral{Token: p.current}
+
+	value, err := strconv.ParseInt(p.current.Literal, 0, 64)
+	if err != nil {
+		error := helper.MakeError(p.current, fmt.Sprintf("could not parse %q as integer", p.current.Literal))
+		p.addError(error)
+		return nil
+	}
+
+	lit.Value = value
+
+	return lit
 }

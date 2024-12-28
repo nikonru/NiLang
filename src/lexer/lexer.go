@@ -141,7 +141,7 @@ func (l *lexer) readIdent() []byte {
 }
 
 func (l *lexer) readNumberToken() tokens.Token {
-	return l.makeToken(tokens.INT, string(l.readNumber()))
+	return l.makeToken(tokens.NUMBER, string(l.readNumber()))
 }
 
 func (l *lexer) skipComment() {

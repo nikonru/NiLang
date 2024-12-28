@@ -58,7 +58,7 @@ func TestLexer(t *testing.T) {
 		{tokens.WHITESPACE, " "},
 		{tokens.ASSIGN, "="},
 		{tokens.WHITESPACE, " "},
-		{tokens.INT, "1500"},
+		{tokens.NUMBER, "1500"},
 		{tokens.NEWLINE, "newline"},
 		{tokens.WHITESPACE, " "},
 		{tokens.WHITESPACE, " "},
@@ -175,7 +175,7 @@ Ille.gal y = 1`)
 		{tokens.WHITESPACE, " ", 4, 10},
 		{tokens.ASSIGN, "=", 4, 11},
 		{tokens.WHITESPACE, " ", 4, 12},
-		{tokens.INT, "1", 4, 13},
+		{tokens.NUMBER, "1", 4, 13},
 	}
 
 	Lexer := lexer.New(input)

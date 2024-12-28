@@ -17,7 +17,9 @@ const (
 	NEWLINE    = "NEWLINE"
 	COMMA      = ","
 
-	IDENT = "IDENT"
+	IDENT  = "IDENT"
+	NUMBER = "NUMBER"
+
 	BOOL  = "BOOL"
 	INT   = "INT"
 	DIR   = "DIR"

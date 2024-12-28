@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"NiLang/src/tokens"
 	"bufio"
 	"bytes"
 	"fmt"
@@ -15,6 +16,10 @@ type Error struct {
 
 func PrintError(error Error, input []byte) {
 	fmt.Printf("%s\n", formatError(error, input))
+}
+
+func MakeError(token tokens.Token, description string) Error {
+	return Error{Line: token.Line, Offset: token.Offset, Description: description}
 }
 
 func formatError(error Error, input []byte) (str string) {
