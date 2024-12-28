@@ -241,6 +241,28 @@ func TestParsingInfixExpression(test *testing.T) {
 	}
 }
 
+func TestOperatorPrecedenceParsing(test *testing.T) {
+	tests := []struct {
+		Input    []byte
+		Expected string
+	}{
+		{[]byte(`5 < 6 == Not True`), "((5 < 6) == (NotTrue))"},
+		{[]byte(`5 >= 6 <= 10`), "((5 >= 6) <= 10)"},
+	}
+
+	for _, testCase := range tests {
+		lexer := lexer.New(testCase.Input)
+		parser := parser.New(&lexer)
+		program := parser.Parse()
+		checkParseErrors(test, parser, testCase.Input)
+
+		actual := program.String()
+		if actual != testCase.Expected {
+			test.Errorf("expected=%q, got=%q", testCase.Expected, actual)
+		}
+	}
+}
+
 func testBooleanLiteral(test *testing.T, expression ast.Expression, value bool) bool {
 	boolean, ok := expression.(*ast.BooleanLiteral)
 	if !ok {
@@ -312,8 +334,8 @@ func checkParseErrors(test *testing.T, parser *parser.Parser, input []byte) {
 		return
 	}
 
-	test.Errorf("parser had %d errors", len(errors))
-	fmt.Print("parser error:\n")
+	test.Errorf("parser had %d error(s)", len(errors))
+	fmt.Print("parser error(s):\n")
 	for _, err := range errors {
 		helper.PrintError(err, input)
 	}

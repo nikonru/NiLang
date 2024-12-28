@@ -134,27 +134,31 @@ func (p *Parser) parseExpressionStatement() (bool, *ast.ExpressionStatement) {
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	prefix := p.prefixParseFns[p.current.Type]
-	if prefix == nil {
+	prefix, ok := p.prefixParseFns[p.current.Type]
+	if !ok {
 		error := helper.MakeError(p.current, fmt.Sprintf("no prefix parse function for %s found", p.current.Type))
 		p.addError(error)
 		return nil
 	}
 	leftExpression := prefix()
 
-	p.nextToken()
-	p.skipWhitespaces()
+	for p.isNext(tokens.WHITESPACE) {
+		p.nextToken()
+	}
 
-	for !p.isCurrent(tokens.NEWLINE) && precedence < p.currentPrecendence() {
+	for !p.isNext(tokens.NEWLINE) && precedence < p.nextPrecendence() {
+		p.nextToken()
+
 		infix, ok := p.infixParseFns[p.current.Type]
 		if !ok {
 			return leftExpression
 		}
 
 		leftExpression = infix(leftExpression)
+	}
 
+	for p.isNext(tokens.WHITESPACE) {
 		p.nextToken()
-		p.skipWhitespaces()
 	}
 
 	return leftExpression
@@ -266,9 +270,8 @@ func (p *Parser) parseBooleanLiteral() ast.Expression {
 func (p *Parser) parsePrefixExpression() ast.Expression {
 	expression := &ast.PrefixExpression{Token: p.current, Operator: p.current.Literal}
 
-	if p.expectNext(tokens.WHITESPACE) {
-		p.skipWhitespaces()
-	}
+	p.nextToken()
+	p.skipWhitespaces()
 
 	expression.Right = p.parseExpression(PREFIX)
 
@@ -281,7 +284,6 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 		Operator: p.current.Literal,
 		Left:     left,
 	}
-
 	precedence := p.currentPrecendence()
 	p.nextToken()
 	p.skipWhitespaces()
