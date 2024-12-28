@@ -248,6 +248,7 @@ func TestOperatorPrecedenceParsing(test *testing.T) {
 	}{
 		{[]byte(`5 < 6 == Not True`), "((5 < 6) == (NotTrue))"},
 		{[]byte(`5 >= 6 <= 10`), "((5 >= 6) <= 10)"},
+		{[]byte(`Not  True   ==  False  `), "((NotTrue) == False)"},
 	}
 
 	for _, testCase := range tests {
@@ -340,4 +341,38 @@ func checkParseErrors(test *testing.T, parser *parser.Parser, input []byte) {
 		helper.PrintError(err, input)
 	}
 	test.FailNow()
+}
+
+func testLiteralExpression(test *testing.T, exp ast.Expression, expected interface{}) bool {
+	switch v := expected.(type) {
+	case int:
+		return testIntegralLiteral(test, exp, int64(v))
+	case int64:
+		return testIntegralLiteral(test, exp, v)
+	case string:
+		return testIdentifier(test, exp, v)
+	default:
+		test.Errorf("type of exp not handled. got=%T", exp)
+		return false
+	}
+}
+
+func testIdentifier(test *testing.T, expression ast.Expression, value string) bool {
+	ident, ok := expression.(*ast.Identifier)
+	if !ok {
+		test.Errorf("expression is not *ast.Identifier, got=%T", expression)
+		return false
+	}
+
+	if ident.Value != value {
+		test.Errorf("expression is not %v, got=%v", value, expression)
+		return false
+	}
+
+	if ident.TokenLiteral() != value {
+		test.Errorf("ident.TokenLiteral() is not %s, got=%s", value, ident.TokenLiteral())
+		return false
+	}
+
+	return true
 }

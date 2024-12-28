@@ -27,6 +27,7 @@ const (
 
 	IF    = "IF"
 	ELSE  = "ELSE"
+	ELIF  = "ELIF"
 	WHILE = "WHILE"
 
 	FALSE = "FALSE"
@@ -53,6 +54,7 @@ const (
 var keywords = map[string]TokenType{
 	"If":    IF,
 	"Else":  ELSE,
+	"Elif":  ELIF,
 	"While": WHILE,
 	"True":  TRUE,
 	"False": FALSE,
