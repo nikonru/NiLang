@@ -32,6 +32,9 @@ type Parser struct {
 func New(lexer *lexer.Lexer) *Parser {
 	p := &Parser{lexer: lexer}
 
+	p.prefixParseFns = make(map[tokens.TokenType]prefixParseFns)
+	p.registerPrefix(tokens.IDENT, p.parseIdentifier)
+
 	p.nextToken()
 	p.nextToken()
 
@@ -169,4 +172,8 @@ func (p *Parser) currentError(token tokens.TokenType) {
 
 func (p *Parser) registerPrefix(tokenType tokens.TokenType, fn prefixParseFns) {
 	p.prefixParseFns[tokenType] = fn
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.current, Value: p.current.Literal}
 }
