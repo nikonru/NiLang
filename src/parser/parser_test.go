@@ -264,6 +264,13 @@ func TestOperatorPrecedenceParsing(test *testing.T) {
 	}
 }
 
+func TestIfExpression(test *testing.T) {
+	input := []byte(`if x > 5:
+    x = 6`)
+
+	fmt.Printf("%v", input)
+}
+
 func testBooleanLiteral(test *testing.T, expression ast.Expression, value bool) bool {
 	boolean, ok := expression.(*ast.BooleanLiteral)
 	if !ok {
