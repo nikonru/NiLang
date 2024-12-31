@@ -100,23 +100,13 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
 	statement := &ast.DeclarationStatement{Token: p.current}
 
-	if !p.expectNext(tokens.WHITESPACE) {
-		return false, nil
-	}
-
-	p.skipWhitespaces()
-
-	if !p.expectCurrent(tokens.IDENT) {
+	if !p.expectNext(tokens.IDENT) {
 		return false, nil
 	}
 
 	statement.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
 
-	if p.expectNext(tokens.WHITESPACE) {
-		p.skipWhitespaces()
-	}
-
-	if !p.expectCurrent(tokens.ASSIGN) {
+	if !p.expectNext(tokens.ASSIGN) {
 		return false, nil
 	}
 
@@ -142,7 +132,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	leftExpression := prefix()
 
-	for p.isNext(tokens.WHITESPACE) {
+	for p.isNext(tokens.INDENT) {
 		p.nextToken()
 	}
 
@@ -157,7 +147,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		leftExpression = infix(leftExpression)
 	}
 
-	for p.isNext(tokens.WHITESPACE) {
+	for p.isNext(tokens.INDENT) {
 		p.nextToken()
 	}
 
@@ -182,7 +172,7 @@ func (p *Parser) isNext(t tokens.TokenType) bool {
 }
 
 func (p *Parser) skipWhitespaces() {
-	for p.isCurrent(tokens.WHITESPACE) {
+	for p.isCurrent(tokens.INDENT) {
 		p.nextToken()
 	}
 }

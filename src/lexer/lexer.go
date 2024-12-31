@@ -1,7 +1,9 @@
 package lexer
 
 import (
+	"NiLang/src/helper"
 	"NiLang/src/tokens"
+	"fmt"
 	"log"
 )
 
@@ -16,6 +18,8 @@ type lexer struct {
 	current int
 	next    int
 
+	indentation bool
+
 	line   int
 	pos    int
 	offset int
@@ -27,9 +31,10 @@ func New(input []byte) Lexer {
 		current: 0,
 		next:    1,
 
-		line:   1,
+		line:   0,
 		offset: 0,
 	}
+	l.startNewline()
 	l.read()
 	l.offset = 0
 	return l
@@ -49,7 +54,13 @@ func (l *lexer) NextToken() tokens.Token {
 		l.skipNewlines()
 		return tok
 	case ' ':
-		tok = l.newToken(tokens.WHITESPACE)
+		if l.indentation {
+			l.readIndent()
+			tok = l.makeToken(tokens.INDENT, "indentation")
+		} else {
+			l.read()
+			return l.NextToken()
+		}
 	case ',':
 		tok = l.newToken(tokens.COMMA)
 	case '$':
@@ -88,7 +99,9 @@ func (l *lexer) NextToken() tokens.Token {
 		tok.Literal = ""
 		tok.Type = tokens.EOF
 	case '\t':
-		log.Fatal("Tabulation is illegal, use only spaces")
+		desc := fmt.Sprintf("tabulation is not allowed, use %d whitespaces only", tokens.INDENT_LENGTH)
+		err := helper.Error{Line: l.line, Offset: l.offset, Description: desc}
+		log.Fatal("\n" + helper.FormatError(err, l.input))
 	default:
 		if isDigit(l.char) {
 			return l.readNumberToken()
@@ -105,11 +118,17 @@ func (l *lexer) NextToken() tokens.Token {
 	return tok
 }
 
+func (l *lexer) startNewline() {
+	l.line++
+	l.offset = 0
+	l.indentation = true
+}
+
 func (l *lexer) read() {
 	l.offset++
-	if isNewline(l.char) {
-		l.line++
-		l.offset = 0
+	// here we need only '\n'
+	if l.char == '\n' {
+		l.startNewline()
 	}
 
 	if l.current >= len(l.input) {
@@ -119,6 +138,7 @@ func (l *lexer) read() {
 	}
 	l.current = l.next
 	l.next++
+	l.indentation = l.indentation && l.char == ' '
 }
 
 func (l *lexer) readSequence(check func(byte) bool) []byte {
@@ -140,6 +160,22 @@ func (l *lexer) readIdent() []byte {
 	return l.readSequence(isLetter)
 }
 
+func (l *lexer) readIndent() []byte {
+	counter := 0
+	seq := l.readSequence(func(char byte) bool {
+		counter++
+		return char == ' ' && counter < tokens.INDENT_LENGTH
+	})
+
+	if counter != tokens.INDENT_LENGTH {
+		desc := fmt.Sprintf("expected identation of length %d whitespaces, got=%d", tokens.INDENT_LENGTH, counter)
+		err := helper.Error{Line: l.line, Offset: l.offset, Description: desc}
+		log.Fatal("\n" + helper.FormatError(err, l.input))
+	}
+
+	return seq
+}
+
 func (l *lexer) readNumberToken() tokens.Token {
 	return l.makeToken(tokens.NUMBER, string(l.readNumber()))
 }
@@ -148,9 +184,7 @@ func (l *lexer) skipComment() {
 	for !isNewline(l.char) {
 		l.read()
 	}
-	for isNewline(l.char) {
-		l.read()
-	}
+	l.skipNewlines()
 }
 
 func (l *lexer) skipNewlines() {

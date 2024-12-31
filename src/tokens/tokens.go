@@ -9,13 +9,15 @@ type Token struct {
 	Offset  int
 }
 
+const INDENT_LENGTH = 4
+
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
 
-	WHITESPACE = "_"
-	NEWLINE    = "NEWLINE"
-	COMMA      = ","
+	INDENT  = "INDENTATION"
+	NEWLINE = "NEWLINE"
+	COMMA   = ","
 
 	IDENT  = "IDENT"
 	NUMBER = "NUMBER"
