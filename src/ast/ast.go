@@ -174,11 +174,11 @@ func (b *BlockStatement) String() string {
 }
 
 type IfExpression struct {
-	Token             tokens.Token
-	Condition         Expression
-	Consequence       *BlockStatement
-	NestedConsequence []*BlockStatement
-	Alternative       *BlockStatement
+	Token       tokens.Token
+	Condition   Expression
+	Consequence *BlockStatement
+	Elifs       []*ElifExpression
+	Alternative *BlockStatement
 }
 
 func (i *IfExpression) expressionNode()      {}
@@ -193,18 +193,39 @@ func (i *IfExpression) String() string {
 	out.WriteString(" ")
 	out.WriteString(i.Consequence.String())
 
-	for _, consequence := range i.NestedConsequence {
-		if consequence == nil {
+	for _, elif := range i.Elifs {
+		if elif == nil {
 			continue
 		}
 		out.WriteString("elif")
-		out.WriteString(consequence.String())
+		out.WriteString(elif.String())
 	}
 
 	if i.Alternative != nil {
 		out.WriteString("else")
 		out.WriteString(i.Alternative.String())
 	}
+
+	return out.String()
+}
+
+type ElifExpression struct {
+	Token       tokens.Token
+	Condition   Expression
+	Consequence *BlockStatement
+}
+
+func (i *ElifExpression) expressionNode()      {}
+func (i *ElifExpression) statementNode()       {}
+func (i *ElifExpression) TokenLiteral() string { return i.Token.Literal }
+
+func (i *ElifExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("elif")
+	out.WriteString(i.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(i.Consequence.String())
 
 	return out.String()
 }

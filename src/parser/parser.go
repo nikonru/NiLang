@@ -158,23 +158,8 @@ func (p *Parser) isCurrent(t tokens.TokenType) bool {
 	return t == p.current.Type
 }
 
-func (p *Parser) expectCurrent(t tokens.TokenType) bool {
-	if p.isCurrent(t) {
-		return true
-	} else {
-		p.currentError(t)
-		return false
-	}
-}
-
 func (p *Parser) isNext(t tokens.TokenType) bool {
 	return t == p.next.Type
-}
-
-func (p *Parser) skipWhitespaces() {
-	for p.isCurrent(tokens.INDENT) {
-		p.nextToken()
-	}
 }
 
 func (p *Parser) skipUpToNewline() {
@@ -207,10 +192,6 @@ func (p *Parser) addError(error helper.Error) {
 
 func (p *Parser) nextError(token tokens.TokenType) {
 	p.error(token, p.next, "next")
-}
-
-func (p *Parser) currentError(token tokens.TokenType) {
-	p.error(token, p.current, "current")
 }
 
 func (p *Parser) registerPrefix(tokenType tokens.TokenType, fn prefixParseFns) {
@@ -261,7 +242,6 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 	expression := &ast.PrefixExpression{Token: p.current, Operator: p.current.Literal}
 
 	p.nextToken()
-	p.skipWhitespaces()
 
 	expression.Right = p.parseExpression(PREFIX)
 
@@ -276,7 +256,6 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	}
 	precedence := p.currentPrecendence()
 	p.nextToken()
-	p.skipWhitespaces()
 	expression.Right = p.parseExpression(precedence)
 
 	return expression
