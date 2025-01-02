@@ -45,12 +45,49 @@ Dir face = forward`)
 	}
 }
 
+func TestUsingStatement(test *testing.T) {
+	input := []byte(`Using bot
+Using world`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 2
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	tests := []struct {
+		expectedTypeLiteral string
+		expectedIdentifier  string
+	}{
+		{"Using", "bot"},
+		{"Using", "world"},
+	}
+
+	for i, t := range tests {
+		statement := program.Statements[i]
+		if !testUsingStatement(test, statement, t.expectedTypeLiteral, t.expectedIdentifier) {
+			return
+		}
+	}
+}
+
 func TestIdentifierExpression(test *testing.T) {
 	input := []byte(`foobar`)
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
 	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
 	checkParseErrors(test, parser, input)
 
 	if len(program.Statements) != 1 {
@@ -79,6 +116,9 @@ func TestIntegralLiteralExpression(test *testing.T) {
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
 	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
 	checkParseErrors(test, parser, input)
 
 	if len(program.Statements) != 1 {
@@ -107,6 +147,9 @@ func TestTrueBooleanLiteralExpression(test *testing.T) {
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
 	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
 	checkParseErrors(test, parser, input)
 
 	if len(program.Statements) != 1 {
@@ -135,6 +178,9 @@ func TestFalseBooleanLiteralExpression(test *testing.T) {
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
 	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
 	checkParseErrors(test, parser, input)
 
 	if len(program.Statements) != 1 {
@@ -171,6 +217,9 @@ func TestParsingPrefixExpression(test *testing.T) {
 		lexer := lexer.New(testCase.Input)
 		parser := parser.New(&lexer)
 		program := parser.Parse()
+		if program == nil {
+			test.Fatalf("parser.Parse() has returned nil")
+		}
 		checkParseErrors(test, parser, testCase.Input)
 
 		if len(program.Statements) != 1 {
@@ -214,6 +263,9 @@ func TestParsingInfixExpression(test *testing.T) {
 		lexer := lexer.New(testCase.Input)
 		parser := parser.New(&lexer)
 		program := parser.Parse()
+		if program == nil {
+			test.Fatalf("parser.Parse() has returned nil")
+		}
 		checkParseErrors(test, parser, testCase.Input)
 
 		if len(program.Statements) != 1 {
@@ -250,6 +302,9 @@ func TestOperatorPrecedenceParsing(test *testing.T) {
 		lexer := lexer.New(testCase.Input)
 		parser := parser.New(&lexer)
 		program := parser.Parse()
+		if program == nil {
+			test.Fatalf("parser.Parse() has returned nil")
+		}
 		checkParseErrors(test, parser, testCase.Input)
 
 		actual := program.String()
@@ -274,6 +329,9 @@ Else:
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
 	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
 	checkParseErrors(test, parser, input)
 
 	if len(program.Statements) != 1 {
@@ -423,6 +481,31 @@ func testIntegralLiteral(test *testing.T, expression ast.Expression, value int64
 
 	if integral.TokenLiteral() != fmt.Sprintf("%d", value) {
 		test.Errorf("boolean.TokenLiteral() is not %d, got=%s", value, integral.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func testUsingStatement(test *testing.T, statement ast.Statement, literal string, name string) bool {
+	if statement.TokenLiteral() != literal {
+		test.Errorf("statement.TokenLiteral() is not Bool: got=%v", statement.TokenLiteral())
+		return false
+	}
+
+	usingStatement, ok := statement.(*ast.UsingStatement)
+	if !ok {
+		test.Errorf("statement is not *ast.UsingStatement type: got=%v", statement)
+		return false
+	}
+
+	if usingStatement.Name.Value != name {
+		test.Errorf("usingStatement.Name.Value is not *%v type: got=%v", name, statement)
+		return false
+	}
+
+	if usingStatement.Name.TokenLiteral() != name {
+		test.Errorf("usingStatement.Name.TokenLiteral is not *%v type: got=%v", name, statement)
 		return false
 	}
 

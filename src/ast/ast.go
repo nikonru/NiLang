@@ -65,6 +65,23 @@ func (ds *DeclarationStatement) String() string {
 	return out.String()
 }
 
+type UsingStatement struct {
+	Token tokens.Token
+	Name  *Identifier
+}
+
+func (us *UsingStatement) statementNode()       {}
+func (us *UsingStatement) TokenLiteral() string { return us.Token.Literal }
+
+func (us *UsingStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(us.TokenLiteral() + " ")
+	out.WriteString(us.Name.String())
+
+	return out.String()
+}
+
 type ExpressionStatement struct {
 	Token      tokens.Token
 	Expression Expression
