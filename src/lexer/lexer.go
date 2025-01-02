@@ -36,6 +36,7 @@ func New(input []byte) Lexer {
 	}
 	l.startNewline()
 	l.read()
+	l.skipNewlines()
 	l.offset = 0
 	return l
 }

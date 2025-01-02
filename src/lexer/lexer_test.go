@@ -124,20 +124,20 @@ func TestLexerLines(t *testing.T) {
 		Line    int
 		Offset  int
 	}{
-		{tokens.USING, "Using", 1, 0},
-		{tokens.IDENT, "bot", 1, 6},
-		{tokens.NEWLINE, "newline", 1, 9},
-		{tokens.BOOL, "Bool", 3, 0},
-		{tokens.IDENT, "x", 3, 5},
-		{tokens.ASSIGN, "=", 3, 7},
-		{tokens.FALSE, "False", 3, 9},
-		{tokens.NEWLINE, "newline", 3, 14},
-		{tokens.IDENT, "Ille", 4, 0},
-		{tokens.ILLEGAL, ".", 4, 4},
-		{tokens.IDENT, "gal", 4, 5},
-		{tokens.IDENT, "y", 4, 9},
-		{tokens.ASSIGN, "=", 4, 11},
-		{tokens.NUMBER, "1", 4, 13},
+		{tokens.USING, "Using", 2, 0},
+		{tokens.IDENT, "bot", 2, 6},
+		{tokens.NEWLINE, "newline", 2, 9},
+		{tokens.BOOL, "Bool", 4, 0},
+		{tokens.IDENT, "x", 4, 5},
+		{tokens.ASSIGN, "=", 4, 7},
+		{tokens.FALSE, "False", 4, 9},
+		{tokens.NEWLINE, "newline", 4, 14},
+		{tokens.IDENT, "Ille", 5, 0},
+		{tokens.ILLEGAL, ".", 5, 4},
+		{tokens.IDENT, "gal", 5, 5},
+		{tokens.IDENT, "y", 5, 9},
+		{tokens.ASSIGN, "=", 5, 11},
+		{tokens.NUMBER, "1", 5, 13},
 	}
 
 	Lexer := lexer.New(input)

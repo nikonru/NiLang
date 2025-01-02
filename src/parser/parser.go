@@ -103,7 +103,9 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 	switch p.current.Type {
 	case tokens.BOOL, tokens.DIR, tokens.INT:
 		return p.parseDeclarationStatement()
-	case tokens.NEWLINE:
+	case tokens.EOF, tokens.INDENT, tokens.NEWLINE:
+		err := helper.MakeError(p.current, fmt.Sprintf("attempt to parse invalid token %s", p.current.Type))
+		p.addError(err)
 		return false, nil
 	default:
 		return p.parseExpressionStatement()
