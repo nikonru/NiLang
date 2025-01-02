@@ -1,7 +1,7 @@
 
-Using bot
+Using bot #comment
 
-Bool hungry = True
+Bool hungry = True#commentary
 While hungry:
     Int maxEnergy = 1500
     ConsumeSunlight

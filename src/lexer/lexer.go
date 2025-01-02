@@ -45,7 +45,11 @@ func (l *lexer) NextToken() tokens.Token {
 	l.pos = l.offset
 
 	if l.char == '#' {
+		flag := l.offset == 0
 		l.skipComment()
+		if flag {
+			l.skipNewlines()
+		}
 	}
 
 	var tok tokens.Token
@@ -185,7 +189,6 @@ func (l *lexer) skipComment() {
 	for !isNewline(l.char) {
 		l.read()
 	}
-	l.skipNewlines()
 }
 
 func (l *lexer) skipNewlines() {
