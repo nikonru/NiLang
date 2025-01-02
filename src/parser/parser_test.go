@@ -261,13 +261,13 @@ func TestOperatorPrecedenceParsing(test *testing.T) {
 
 func TestIfExpression(test *testing.T) {
 	input := []byte(`
-if x > 5:
+If x > 5:
     Foo
-elif z > 3:
+Elif z > 3:
     Bar
-elif z < x:
+Elif z < x:
     Car
-else:
+Else:
     Goo
     `)
 
@@ -280,9 +280,14 @@ else:
 		test.Fatalf("program has not enough statements, got=%d", len(program.Statements))
 	}
 
-	exp, ok := program.Statements[0].(*ast.IfExpression)
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
-		test.Fatalf("program.Statements[0] is not ast.IfExpression, got=%T", program.Statements[0])
+		test.Fatalf("program.Statements[0] is not ast.ExpressionStatement, got=%T", program.Statements[0])
+	}
+
+	exp, ok := statement.Expression.(*ast.IfExpression)
+	if !ok {
+		test.Fatalf("statement.Expression is not ast.IfExpression, got=%T", statement.Expression)
 	}
 
 	condition, ok := exp.Condition.(*ast.InfixExpression)
@@ -351,7 +356,7 @@ else:
 		test.Fatalf("exp.Elifs[1].Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", exp.Elifs[1].Consequence.Statements[0])
 	}
 
-	if !testIdentifier(test, consequence2.Expression, "Bar") {
+	if !testIdentifier(test, consequence2.Expression, "Car") {
 		return
 	}
 

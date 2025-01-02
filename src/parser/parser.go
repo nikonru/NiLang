@@ -40,13 +40,14 @@ type Parser struct {
 
 	current tokens.Token
 	next    tokens.Token
+	level   int
 
 	prefixParseFns map[tokens.TokenType]prefixParseFns
 	infixParseFns  map[tokens.TokenType]infixParseFns
 }
 
 func New(lexer *lexer.Lexer) *Parser {
-	p := &Parser{lexer: lexer}
+	p := &Parser{lexer: lexer, level: 0}
 
 	p.prefixParseFns = make(map[tokens.TokenType]prefixParseFns)
 	p.registerPrefix(tokens.IDENT, p.parseIdentifier)
@@ -54,6 +55,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerPrefix(tokens.TRUE, p.parseBooleanLiteral)
 	p.registerPrefix(tokens.FALSE, p.parseBooleanLiteral)
 	p.registerPrefix(tokens.NOT, p.parsePrefixExpression)
+	p.registerPrefix(tokens.IF, p.parseIfExpression)
 
 	p.infixParseFns = make(map[tokens.TokenType]infixParseFns)
 	p.registerInfix(tokens.LT, p.parseInfixExpression)
@@ -72,6 +74,15 @@ func New(lexer *lexer.Lexer) *Parser {
 func (p *Parser) nextToken() {
 	p.current = p.next
 	p.next = (*p.lexer).NextToken()
+
+	if p.isCurrent(tokens.INDENT) {
+		p.level++
+		p.nextToken()
+	}
+
+	if p.isCurrent(tokens.NEWLINE) {
+		p.level = 0
+	}
 }
 
 func (p *Parser) Parse() *ast.Program {
@@ -92,6 +103,8 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 	switch p.current.Type {
 	case tokens.BOOL, tokens.DIR, tokens.INT:
 		return p.parseDeclarationStatement()
+	case tokens.NEWLINE:
+		return false, nil
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -109,7 +122,7 @@ func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
 	if !p.expectNext(tokens.ASSIGN) {
 		return false, nil
 	}
-
+	// TODO: parse expression
 	p.skipUpToNewline()
 
 	return true, statement
@@ -132,10 +145,6 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	leftExpression := prefix()
 
-	for p.isNext(tokens.INDENT) {
-		p.nextToken()
-	}
-
 	for !p.isNext(tokens.NEWLINE) && precedence < p.nextPrecendence() {
 		p.nextToken()
 
@@ -145,10 +154,6 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		}
 
 		leftExpression = infix(leftExpression)
-	}
-
-	for p.isNext(tokens.INDENT) {
-		p.nextToken()
 	}
 
 	return leftExpression
@@ -261,17 +266,52 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	return expression
 }
 
-func (p *Parser) parseIfExpression() ast.Expression {
-	expression := &ast.IfExpression{Token: p.current}
-
-	p.nextToken()
-	p.parseExpression(LOWEST)
-
+func (p *Parser) gotoBlockStatement() bool {
 	if !p.expectNext(tokens.COLON) {
-		return nil
+		return false
 	}
 
+	if !p.expectNext(tokens.NEWLINE) {
+		return false
+	}
+	return true
+}
+
+func (p *Parser) parseIfExpression() ast.Expression {
+	expression := &ast.IfExpression{Token: p.current}
+	expression.Elifs = make([]*ast.ElifExpression, 0)
+
+	p.nextToken()
+	expression.Condition = p.parseExpression(LOWEST)
+
+	if !p.gotoBlockStatement() {
+		return nil
+	}
 	expression.Consequence = p.parseBlockStatement()
+
+	for p.isCurrent(tokens.ELIF) {
+		p.nextToken()
+
+		exp := &ast.ElifExpression{Token: p.current}
+		exp.Condition = p.parseExpression(LOWEST)
+		if !p.gotoBlockStatement() {
+			exp = nil
+		}
+
+		if exp != nil {
+			exp.Consequence = p.parseBlockStatement()
+		}
+
+		expression.Elifs = append(expression.Elifs, exp)
+	}
+
+	if p.isCurrent(tokens.ELSE) {
+		if !p.gotoBlockStatement() {
+			return nil
+		}
+
+		expression.Alternative = p.parseBlockStatement()
+	}
 
 	return expression
 }
@@ -280,8 +320,29 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	block := &ast.BlockStatement{}
 	block.Statements = []ast.Statement{}
 
-	// p.nextToken()
-	// if !(p.isCurrent(tokens.) || )
+	level := p.level
+	p.nextToken()
+	level += 1
+
+	if level != p.level {
+		desc := fmt.Sprintf("expected one level of indentation after expression, got %d instead", p.level)
+		error := helper.MakeError(p.current, desc)
+		p.addError(error)
+		return nil
+	}
+
+	for level == p.level && !p.isCurrent(tokens.EOF) {
+		ok, statement := p.parseStatement()
+		if !ok {
+			continue
+		}
+		block.Statements = append(block.Statements, statement)
+		p.nextToken()
+
+		if p.isCurrent(tokens.NEWLINE) {
+			p.nextToken()
+		}
+	}
 
 	return block
 }
