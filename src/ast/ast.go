@@ -44,6 +44,7 @@ func (p *Program) String() string {
 
 type DeclarationStatement struct {
 	Token tokens.Token
+	// TODO use TypedIdentifier
 	Type  *Identifier
 	Name  *Identifier
 	Value Expression
@@ -164,6 +165,28 @@ func (as *AliasStatement) String() string {
 	return out.String()
 }
 
+type FunnctionStatement struct {
+	Token      tokens.Token
+	Name       *Identifier
+	Type       *Identifier
+	Parameters []*TypedIdentifier
+	Body       *BlockStatement
+}
+
+func (as *FunnctionStatement) statementNode()       {}
+func (as *FunnctionStatement) TokenLiteral() string { return as.Token.Literal }
+
+func (as *FunnctionStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(as.TokenLiteral() + " ")
+	out.WriteString(as.Name.String() + " ")
+	out.WriteString(as.Type.String() + " ")
+	out.WriteString(as.Body.String())
+
+	return out.String()
+}
+
 type ExpressionStatement struct {
 	Token      tokens.Token
 	Expression Expression
@@ -189,6 +212,25 @@ func (i *Identifier) expressionNode()      {}
 func (i *Identifier) statementNode()       {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 func (i *Identifier) String() string       { return i.Value }
+
+type TypedIdentifier struct {
+	Token tokens.Token
+	Type  *Identifier
+	Value string
+}
+
+func (ti *TypedIdentifier) expressionNode()      {}
+func (ti *TypedIdentifier) statementNode()       {}
+func (ti *TypedIdentifier) TokenLiteral() string { return ti.Token.Literal }
+
+func (ti *TypedIdentifier) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ti.Type.String() + " ")
+	out.WriteString(ti.Value)
+
+	return out.String()
+}
 
 type IntegralLiteral struct {
 	Token tokens.Token
