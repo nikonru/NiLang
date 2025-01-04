@@ -56,7 +56,6 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerPrefix(tokens.TRUE, p.parseBooleanLiteral)
 	p.registerPrefix(tokens.FALSE, p.parseBooleanLiteral)
 	p.registerPrefix(tokens.NOT, p.parsePrefixExpression)
-	p.registerPrefix(tokens.IF, p.parseIfExpression)
 
 	p.infixParseFns = make(map[tokens.TokenType]infixParseFns)
 	p.registerInfix(tokens.LT, p.parseInfixExpression)
@@ -111,7 +110,9 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 		return p.parseReturnStatement()
 	case tokens.SCOPE:
 		return p.parseScopeStatement()
-	case tokens.EOF, tokens.INDENT, tokens.NEWLINE:
+	case tokens.IF:
+		return p.parseIfExpression()
+	case tokens.EOF, tokens.INDENT, tokens.NEWLINE, tokens.ELIF:
 		err := helper.MakeError(p.current, fmt.Sprintf("attempt to parse invalid token %s", p.current.Type))
 		p.addError(err)
 		return false, nil
@@ -334,22 +335,22 @@ func (p *Parser) gotoBlockStatement() bool {
 	return true
 }
 
-func (p *Parser) parseIfExpression() ast.Expression {
-	expression := &ast.IfExpression{Token: p.current}
-	expression.Elifs = make([]*ast.ElifExpression, 0)
+func (p *Parser) parseIfExpression() (bool, ast.Statement) {
+	expression := &ast.IfStatement{Token: p.current}
+	expression.Elifs = make([]*ast.ElifStatement, 0)
 
 	p.nextToken()
 	expression.Condition = p.parseExpression(LOWEST)
 
 	if !p.gotoBlockStatement() {
-		return nil
+		return false, nil
 	}
 	expression.Consequence = p.parseBlockStatement()
 
 	for p.isCurrent(tokens.ELIF) {
 		p.nextToken()
 
-		exp := &ast.ElifExpression{Token: p.current}
+		exp := &ast.ElifStatement{Token: p.current}
 		exp.Condition = p.parseExpression(LOWEST)
 		if !p.gotoBlockStatement() {
 			exp = nil
@@ -364,13 +365,13 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	if p.isCurrent(tokens.ELSE) {
 		if !p.gotoBlockStatement() {
-			return nil
+			return false, nil
 		}
 
 		expression.Alternative = p.parseBlockStatement()
 	}
 
-	return expression
+	return true, expression
 }
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {

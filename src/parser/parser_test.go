@@ -381,7 +381,7 @@ func TestOperatorPrecedenceParsing(test *testing.T) {
 	}
 }
 
-func TestIfExpression(test *testing.T) {
+func TestIfStatement(test *testing.T) {
 	input := []byte(`
 If x > 5:
     Foo
@@ -405,93 +405,88 @@ Else:
 		test.Fatalf("program has not enough statements, got=%d", len(program.Statements))
 	}
 
-	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	statement, ok := program.Statements[0].(*ast.IfStatement)
 	if !ok {
-		test.Fatalf("program.Statements[0] is not ast.ExpressionStatement, got=%T", program.Statements[0])
+		test.Fatalf("program.Statements[0] is not ast.IfExpression, got=%T", program.Statements[0])
 	}
 
-	exp, ok := statement.Expression.(*ast.IfExpression)
+	condition, ok := statement.Condition.(*ast.InfixExpression)
 	if !ok {
-		test.Fatalf("statement.Expression is not ast.IfExpression, got=%T", statement.Expression)
-	}
-
-	condition, ok := exp.Condition.(*ast.InfixExpression)
-	if !ok {
-		test.Fatalf("exp.Condition is not InfixExpression, got=%T", exp.Condition)
+		test.Fatalf("exp.Condition is not InfixExpression, got=%T", statement.Condition)
 	}
 
 	if !testInfixExpression(test, condition, "x", ">", 5) {
 		return
 	}
 
-	if len(exp.Consequence.Statements) != 1 {
-		test.Fatalf("consequence is not 1 statements, got=%d", len(exp.Consequence.Statements))
+	if len(statement.Consequence.Statements) != 1 {
+		test.Fatalf("consequence is not 1 statements, got=%d", len(statement.Consequence.Statements))
 	}
 
-	consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
+	consequence, ok := statement.Consequence.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
-		test.Fatalf("exp.Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", exp.Consequence.Statements[0])
+		test.Fatalf("exp.Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Consequence.Statements[0])
 	}
 
 	if !testIdentifier(test, consequence.Expression, "Foo") {
 		return
 	}
 
-	if len(exp.Elifs) != 2 {
-		test.Fatalf("elifs is not 2 statements, got=%d", len(exp.Elifs))
+	if len(statement.Elifs) != 2 {
+		test.Fatalf("elifs is not 2 statements, got=%d", len(statement.Elifs))
 	}
 
-	elifCondition1, ok := exp.Elifs[0].Condition.(*ast.InfixExpression)
+	elifCondition1, ok := statement.Elifs[0].Condition.(*ast.InfixExpression)
 	if !ok {
-		test.Fatalf("exp.Elifs[0].Condition is not ast.InfixExpression, got=%T", exp.Elifs[0].Condition)
+		test.Fatalf("exp.Elifs[0].Condition is not ast.InfixExpression, got=%T", statement.Elifs[0].Condition)
 	}
 
 	if !testInfixExpression(test, elifCondition1, "z", ">", 3) {
 		return
 	}
 
-	if len(exp.Elifs[0].Consequence.Statements) != 1 {
-		test.Fatalf("exp.Elifs[0].Consequence.Statements is not 1 statements, got=%d", len(exp.Elifs[0].Consequence.Statements))
+	if len(statement.Elifs[0].Consequence.Statements) != 1 {
+		test.Fatalf("exp.Elifs[0].Consequence.Statements is not 1 statements, got=%d", len(statement.Elifs[0].Consequence.Statements))
 	}
 
-	consequence1, ok := exp.Elifs[0].Consequence.Statements[0].(*ast.ExpressionStatement)
+	consequence1, ok := statement.Elifs[0].Consequence.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
-		test.Fatalf("exp.Elifs[0].Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", exp.Elifs[0].Consequence.Statements[0])
+		test.Fatalf("exp.Elifs[0].Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Elifs[0].Consequence.Statements[0])
 	}
 
 	if !testIdentifier(test, consequence1.Expression, "Bar") {
 		return
 	}
 
-	elifCondition2, ok := exp.Elifs[1].Condition.(*ast.InfixExpression)
+	elifCondition2, ok := statement.Elifs[1].Condition.(*ast.InfixExpression)
 	if !ok {
-		test.Fatalf("exp.Elifs[1].Condition is not ast.InfixExpression, got=%T", exp.Elifs[1].Condition)
+		test.Fatalf("exp.Elifs[1].Condition is not ast.InfixExpression, got=%T", statement.Elifs[1].Condition)
 	}
 
 	if !testInfixExpression(test, elifCondition2, "z", "<", "x") {
 		return
 	}
 
-	if len(exp.Elifs[1].Consequence.Statements) != 1 {
-		test.Fatalf("exp.Elifs[1].Consequence.Statements is not 1 statements, got=%d", len(exp.Elifs[1].Consequence.Statements))
+	if len(statement.Elifs[1].Consequence.Statements) != 1 {
+		test.Fatalf("exp.Elifs[1].Consequence.Statements is not 1 statements, got=%d", len(statement.Elifs[1].Consequence.Statements))
 	}
 
-	consequence2, ok := exp.Elifs[1].Consequence.Statements[0].(*ast.ExpressionStatement)
+	consequence2, ok := statement.Elifs[1].Consequence.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
-		test.Fatalf("exp.Elifs[1].Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", exp.Elifs[1].Consequence.Statements[0])
+		test.Fatalf("exp.Elifs[1].Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Elifs[1].Consequence.Statements[0])
 	}
 
 	if !testIdentifier(test, consequence2.Expression, "Car") {
 		return
 	}
 
-	if len(exp.Alternative.Statements) != 1 {
-		test.Fatalf("alternative is not 1 statements, got=%d", len(exp.Alternative.Statements))
+	if len(statement.Alternative.Statements) != 1 {
+		test.Fatalf("alternative is not 1 statements, got=%d", len(statement.Alternative.Statements))
 	}
 
-	alternative, ok := exp.Alternative.Statements[0].(*ast.ExpressionStatement)
+	alternative, ok := statement.Alternative.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
-		test.Fatalf("exp.Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", exp.Alternative.Statements[0])
+		test.Fatalf("exp.Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Alternative.Statements[0])
 	}
 
 	if !testIdentifier(test, alternative.Expression, "Goo") {

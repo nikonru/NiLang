@@ -226,19 +226,18 @@ func (b *BlockStatement) String() string {
 	return out.String()
 }
 
-type IfExpression struct {
+type IfStatement struct {
 	Token       tokens.Token
 	Condition   Expression
 	Consequence *BlockStatement
-	Elifs       []*ElifExpression
+	Elifs       []*ElifStatement
 	Alternative *BlockStatement
 }
 
-func (i *IfExpression) expressionNode()      {}
-func (i *IfExpression) statementNode()       {}
-func (i *IfExpression) TokenLiteral() string { return i.Token.Literal }
+func (i *IfStatement) statementNode()       {}
+func (i *IfStatement) TokenLiteral() string { return i.Token.Literal }
 
-func (i *IfExpression) String() string {
+func (i *IfStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("if")
@@ -262,17 +261,16 @@ func (i *IfExpression) String() string {
 	return out.String()
 }
 
-type ElifExpression struct {
+type ElifStatement struct {
 	Token       tokens.Token
 	Condition   Expression
 	Consequence *BlockStatement
 }
 
-func (i *ElifExpression) expressionNode()      {}
-func (i *ElifExpression) statementNode()       {}
-func (i *ElifExpression) TokenLiteral() string { return i.Token.Literal }
+func (i *ElifStatement) statementNode()       {}
+func (i *ElifStatement) TokenLiteral() string { return i.Token.Literal }
 
-func (i *ElifExpression) String() string {
+func (i *ElifStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("elif")
