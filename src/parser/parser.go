@@ -102,8 +102,6 @@ func (p *Parser) Parse() *ast.Program {
 
 func (p *Parser) parseStatement() (bool, ast.Statement) {
 	switch p.current.Type {
-	case tokens.BOOL, tokens.DIR, tokens.INT:
-		return p.parseDeclarationStatement()
 	case tokens.USING:
 		return p.parseUsingStatement()
 	case tokens.RETURN:
@@ -119,22 +117,31 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 		p.addError(err)
 		return false, nil
 	default:
+		if p.isCurrent(tokens.IDENT) && p.isNext(tokens.IDENT) {
+			return p.parseDeclarationStatement()
+		}
 		return p.parseExpressionStatement()
 	}
 }
 
-func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
+func (p *Parser) parseDeclarationStatement() (bool, ast.Statement) {
 	statement := &ast.DeclarationStatement{Token: p.current}
 
 	if !p.expectNext(tokens.IDENT) {
 		return false, nil
 	}
 
-	statement.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+	name := &ast.Identifier{Token: p.current, Value: p.current.Literal}
+
+	if p.isNext(tokens.DCOLON) || p.isNext(tokens.COLON) {
+		// TODO parse function
+		return false, nil
+	}
 
 	if !p.expectNext(tokens.ASSIGN) {
 		return false, nil
 	}
+	statement.Name = name
 	// TODO: parse expression
 	p.skipUpToNewline()
 

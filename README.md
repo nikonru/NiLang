@@ -34,7 +34,7 @@ Alias Numbers:
 Scope names:
     max = 1000
 
-Fun Bool F$max Int, default Bool:
+Fun F::Bool$max Int, default Bool:
     Using bot
     ConsumeSunlight
     If GetEnergy > max:
@@ -44,6 +44,13 @@ Fun Bool F$max Int, default Bool:
     else:
         Return default
 
-Fun Int G:
+Fun G::Int:
     Return 5
+
+Fun W:
+    ConsumeSunlight
+
+W
+Bool flag = F$ 5, False
+flag = F$ G, True
 ```

@@ -22,11 +22,7 @@ const (
 	IDENT  = "IDENT"
 	NUMBER = "NUMBER"
 
-	BOOL  = "BOOL"
-	INT   = "INT"
-	DIR   = "DIR"
-	USING = "USING"
-
+	USING  = "USING"
 	IF     = "IF"
 	ELSE   = "ELSE"
 	ELIF   = "ELIF"
@@ -62,9 +58,6 @@ var keywords = map[string]TokenType{
 	"While":  WHILE,
 	"True":   TRUE,
 	"False":  FALSE,
-	"Bool":   BOOL,
-	"Int":    INT,
-	"Dir":    DIR,
 	"Using":  USING,
 	"And":    AND,
 	"Or":     OR,
