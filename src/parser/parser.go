@@ -107,6 +107,8 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 		return p.parseDeclarationStatement()
 	case tokens.USING:
 		return p.parseUsingStatement()
+	case tokens.RETURN:
+		return p.parseReturnStatement()
 	case tokens.EOF, tokens.INDENT, tokens.NEWLINE:
 		err := helper.MakeError(p.current, fmt.Sprintf("attempt to parse invalid token %s", p.current.Type))
 		p.addError(err)
@@ -142,6 +144,19 @@ func (p *Parser) parseUsingStatement() (bool, *ast.UsingStatement) {
 	}
 
 	statement.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+
+	if !p.expectNewline() {
+		return false, nil
+	}
+
+	return true, statement
+}
+
+func (p *Parser) parseReturnStatement() (bool, *ast.ReturnStatement) {
+	statement := &ast.ReturnStatement{Token: p.current}
+
+	p.nextToken()
+	statement.Value = p.parseExpression(LOWEST)
 
 	if !p.expectNewline() {
 		return false, nil

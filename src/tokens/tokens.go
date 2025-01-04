@@ -27,10 +27,11 @@ const (
 	DIR   = "DIR"
 	USING = "USING"
 
-	IF    = "IF"
-	ELSE  = "ELSE"
-	ELIF  = "ELIF"
-	WHILE = "WHILE"
+	IF     = "IF"
+	ELSE   = "ELSE"
+	ELIF   = "ELIF"
+	WHILE  = "WHILE"
+	RETURN = "RETURN"
 
 	FALSE = "FALSE"
 	TRUE  = "TRUE"
@@ -54,19 +55,20 @@ const (
 )
 
 var keywords = map[string]TokenType{
-	"If":    IF,
-	"Else":  ELSE,
-	"Elif":  ELIF,
-	"While": WHILE,
-	"True":  TRUE,
-	"False": FALSE,
-	"Bool":  BOOL,
-	"Int":   INT,
-	"Dir":   DIR,
-	"Using": USING,
-	"And":   AND,
-	"Or":    OR,
-	"Not":   NOT,
+	"If":     IF,
+	"Else":   ELSE,
+	"Elif":   ELIF,
+	"While":  WHILE,
+	"True":   TRUE,
+	"False":  FALSE,
+	"Bool":   BOOL,
+	"Int":    INT,
+	"Dir":    DIR,
+	"Using":  USING,
+	"And":    AND,
+	"Or":     OR,
+	"Not":    NOT,
+	"Return": RETURN,
 }
 
 func LookUpIdent(ident string) TokenType {

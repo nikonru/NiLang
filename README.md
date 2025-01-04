@@ -26,6 +26,11 @@ bot::Move$ RotateClockwise$ dir
 ```
 
 ```
+Alias Numbers:
+    One = 1
+    Two = 2
+    Four = 4
+
 Scope names:
     max = 1000
 
@@ -33,13 +38,12 @@ Fun Bool F$max Int, default Bool:
     Using bot
     ConsumeSunlight
     If GetEnergy > max:
-        return True
+        Return True
     elif GetEnergy < max:
-        return False
+        Return False
     else:
-        return default
+        Return default
 
 Fun Int G:
-    return 5
-
+    Return 5
 ```

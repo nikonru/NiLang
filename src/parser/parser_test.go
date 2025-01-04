@@ -79,6 +79,33 @@ Using world`)
 	}
 }
 
+func TestReturnStatement(test *testing.T) {
+	input := []byte(`Return 2`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 1
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ReturnStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.ReturnStatement, got=%T", program.Statements[0])
+	}
+
+	if !testIntegralLiteral(test, statement.Value, 2) {
+		return
+	}
+}
+
 func TestIdentifierExpression(test *testing.T) {
 	input := []byte(`foobar`)
 
