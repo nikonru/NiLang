@@ -433,7 +433,7 @@ Else:
 }
 
 func TestCallExpression(test *testing.T) {
-	input := []byte(`Get$1 < x`)
+	input := []byte(`Get$1 < x,z,  z==2`)
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
@@ -461,12 +461,29 @@ func TestCallExpression(test *testing.T) {
 		return
 	}
 
-	arg, ok := exp.Argument.(*ast.InfixExpression)
-	if !ok {
-		test.Fatalf("exp.Argument is not ast.InfixExpression, got=%T", exp.Argument)
+	if len(exp.Arguments) != 3 {
+		test.Fatalf("wrong length of arguments, got=%d", len(exp.Arguments))
 	}
 
-	if !testInfixExpression(test, arg, 1, "<", "x") {
+	arg1, ok := exp.Arguments[0].(*ast.InfixExpression)
+	if !ok {
+		test.Fatalf("exp.Arguments[0] is not ast.InfixExpression, got=%T", exp.Arguments[0])
+	}
+
+	if !testInfixExpression(test, arg1, 1, "<", "x") {
+		return
+	}
+
+	if !testLiteralExpression(test, exp.Arguments[1], "z") {
+		return
+	}
+
+	arg3, ok := exp.Arguments[2].(*ast.InfixExpression)
+	if !ok {
+		test.Fatalf("exp.Arguments[2] is not ast.InfixExpression, got=%T", exp.Arguments[2])
+	}
+
+	if !testInfixExpression(test, arg3, "z", "==", 2) {
 		return
 	}
 }

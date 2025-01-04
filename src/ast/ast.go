@@ -248,9 +248,9 @@ func (i *ElifExpression) String() string {
 }
 
 type CallExpression struct {
-	Token    tokens.Token
-	Function Expression
-	Argument Expression
+	Token     tokens.Token
+	Function  Expression
+	Arguments []Expression
 }
 
 func (ce *CallExpression) expressionNode()      {}
@@ -263,7 +263,12 @@ func (ce *CallExpression) String() string {
 	out.WriteString(ce.Function.String())
 
 	out.WriteString("(")
-	out.WriteString(ce.Argument.String())
+	for i, arg := range ce.Arguments {
+		out.WriteString(arg.String())
+		if (i + 1) != len(ce.Arguments) {
+			out.WriteString(", ")
+		}
+	}
 	out.WriteString(")")
 
 	return out.String()

@@ -371,24 +371,31 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	exp := &ast.CallExpression{Token: p.current, Function: function}
-	exp.Argument = p.parseCallArgument()
+	exp.Arguments = p.parseCallArguments()
 	return exp
 }
 
-func (p *Parser) parseCallArgument() ast.Expression {
+func (p *Parser) parseCallArguments() []ast.Expression {
+	args := []ast.Expression{}
 	if p.isNext(tokens.NEWLINE) {
 		p.nextToken()
 		return nil
 	}
 
 	p.nextToken()
-	arg := p.parseExpression(LOWEST)
+	args = append(args, p.parseExpression(LOWEST))
+
+	for p.isNext(tokens.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		args = append(args, p.parseExpression(LOWEST))
+	}
 
 	if !p.expectNewline() {
 		return nil
 	}
 
-	return arg
+	return args
 }
 
 func (p *Parser) expectNewline() bool {
