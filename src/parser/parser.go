@@ -110,8 +110,10 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 		return p.parseReturnStatement()
 	case tokens.SCOPE:
 		return p.parseScopeStatement()
+	case tokens.WHILE:
+		return p.parseWhileStatement()
 	case tokens.IF:
-		return p.parseIfExpression()
+		return p.parseIfStatement()
 	case tokens.EOF, tokens.INDENT, tokens.NEWLINE, tokens.ELIF:
 		err := helper.MakeError(p.current, fmt.Sprintf("attempt to parse invalid token %s", p.current.Type))
 		p.addError(err)
@@ -176,6 +178,21 @@ func (p *Parser) parseScopeStatement() (bool, *ast.ScopeStatement) {
 	}
 
 	statement.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+
+	if !p.gotoBlockStatement() {
+		return false, nil
+	}
+
+	statement.Body = p.parseBlockStatement()
+
+	return true, statement
+}
+
+func (p *Parser) parseWhileStatement() (bool, *ast.WhileStatement) {
+	statement := &ast.WhileStatement{Token: p.current}
+
+	p.nextToken()
+	statement.Condition = p.parseExpression(LOWEST)
 
 	if !p.gotoBlockStatement() {
 		return false, nil
@@ -335,17 +352,17 @@ func (p *Parser) gotoBlockStatement() bool {
 	return true
 }
 
-func (p *Parser) parseIfExpression() (bool, ast.Statement) {
-	expression := &ast.IfStatement{Token: p.current}
-	expression.Elifs = make([]*ast.ElifStatement, 0)
+func (p *Parser) parseIfStatement() (bool, ast.Statement) {
+	statement := &ast.IfStatement{Token: p.current}
+	statement.Elifs = make([]*ast.ElifStatement, 0)
 
 	p.nextToken()
-	expression.Condition = p.parseExpression(LOWEST)
+	statement.Condition = p.parseExpression(LOWEST)
 
 	if !p.gotoBlockStatement() {
 		return false, nil
 	}
-	expression.Consequence = p.parseBlockStatement()
+	statement.Consequence = p.parseBlockStatement()
 
 	for p.isCurrent(tokens.ELIF) {
 		p.nextToken()
@@ -360,7 +377,7 @@ func (p *Parser) parseIfExpression() (bool, ast.Statement) {
 			exp.Consequence = p.parseBlockStatement()
 		}
 
-		expression.Elifs = append(expression.Elifs, exp)
+		statement.Elifs = append(statement.Elifs, exp)
 	}
 
 	if p.isCurrent(tokens.ELSE) {
@@ -368,10 +385,10 @@ func (p *Parser) parseIfExpression() (bool, ast.Statement) {
 			return false, nil
 		}
 
-		expression.Alternative = p.parseBlockStatement()
+		statement.Alternative = p.parseBlockStatement()
 	}
 
-	return true, expression
+	return true, statement
 }
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {

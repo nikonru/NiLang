@@ -134,7 +134,7 @@ Scope names:
 
 	length = 2
 	if len(statement.Body.Statements) != length {
-		test.Fatalf("wrong number of statements in body of the scope, expeted=%d, got=%T", length, len(statement.Body.Statements))
+		test.Fatalf("wrong number of statements in body of the scope, expected=%d, got=%T", length, len(statement.Body.Statements))
 	}
 
 	if !testDeclarationStatement(test, statement.Body.Statements[0], "Int", "fish") {
@@ -142,6 +142,55 @@ Scope names:
 	}
 
 	if !testDeclarationStatement(test, statement.Body.Statements[1], "Bool", "flag") {
+		return
+	}
+}
+
+func TestWhileStatement(test *testing.T) {
+	input := []byte(`
+While 1 < 2:
+    Foo
+`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 1
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.WhileStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.WhileStatement, got=%T", program.Statements[0])
+	}
+
+	condition, ok := statement.Condition.(*ast.InfixExpression)
+	if !ok {
+		test.Fatalf("statement.Condition is not ast.WhileStatement, got=%T", statement.Condition)
+	}
+
+	if !testInfixExpression(test, condition, 1, "<", 2) {
+		return
+	}
+
+	length = 1
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in body of the scope, expected=%d, got=%T", length, len(statement.Body.Statements))
+	}
+
+	exp, ok := statement.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("statement.Body.Statements[0] is not ast.ScopeStatement, got=%T", statement.Body.Statements[0])
+	}
+
+	if !testIdentifier(test, exp.Expression, "Foo") {
 		return
 	}
 }
