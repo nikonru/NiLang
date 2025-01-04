@@ -36,7 +36,7 @@ Dir face = forward`)
 		{"Int", "number"},
 		{"Dir", "face"},
 	}
-
+	// TODO check expression
 	for i, t := range tests {
 		statement := program.Statements[i]
 		if !testDeclarationStatement(test, statement, t.expectedTypeLiteral, t.expectedIdentifier) {
@@ -102,6 +102,46 @@ func TestReturnStatement(test *testing.T) {
 	}
 
 	if !testIntegralLiteral(test, statement.Value, 2) {
+		return
+	}
+}
+
+func TestScopeStatement(test *testing.T) {
+	input := []byte(`
+Scope names:
+    Int fish = 1
+    Bool flag = False`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 1
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ScopeStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.ScopeStatement, got=%T", program.Statements[0])
+	}
+	// TODO check expression
+
+	length = 2
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in body of the scope, expeted=%d, got=%T", length, len(statement.Body.Statements))
+	}
+
+	if !testDeclarationStatement(test, statement.Body.Statements[0], "Int", "fish") {
+		return
+	}
+
+	if !testDeclarationStatement(test, statement.Body.Statements[1], "Bool", "flag") {
 		return
 	}
 }
@@ -488,8 +528,9 @@ func TestCallExpression(test *testing.T) {
 		return
 	}
 
-	if len(exp.Arguments) != 3 {
-		test.Fatalf("wrong length of arguments, got=%d", len(exp.Arguments))
+	length := 3
+	if len(exp.Arguments) != length {
+		test.Fatalf("wrong length of arguments, expected=%d, got=%d", length, len(exp.Arguments))
 	}
 
 	arg1, ok := exp.Arguments[0].(*ast.InfixExpression)

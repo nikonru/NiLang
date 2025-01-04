@@ -32,6 +32,7 @@ const (
 	ELIF   = "ELIF"
 	WHILE  = "WHILE"
 	RETURN = "RETURN"
+	SCOPE  = "SCOPE"
 
 	FALSE = "FALSE"
 	TRUE  = "TRUE"
@@ -69,6 +70,7 @@ var keywords = map[string]TokenType{
 	"Or":     OR,
 	"Not":    NOT,
 	"Return": RETURN,
+	"Scope":  SCOPE,
 }
 
 func LookUpIdent(ident string) TokenType {

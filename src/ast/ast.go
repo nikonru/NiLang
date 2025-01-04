@@ -99,6 +99,25 @@ func (rs *ReturnStatement) String() string {
 	return out.String()
 }
 
+type ScopeStatement struct {
+	Token tokens.Token
+	Name  *Identifier
+	Body  *BlockStatement
+}
+
+func (ss *ScopeStatement) statementNode()       {}
+func (ss *ScopeStatement) TokenLiteral() string { return ss.Token.Literal }
+
+func (ss *ScopeStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ss.TokenLiteral() + " ")
+	out.WriteString(ss.Name.String() + " ")
+	out.WriteString(ss.Body.String())
+
+	return out.String()
+}
+
 type ExpressionStatement struct {
 	Token      tokens.Token
 	Expression Expression
