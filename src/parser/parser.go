@@ -112,6 +112,8 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 		return p.parseWhileStatement()
 	case tokens.IF:
 		return p.parseIfStatement()
+	case tokens.ALIAS:
+		return p.parseAliasStatement()
 	case tokens.EOF, tokens.INDENT, tokens.NEWLINE, tokens.ELIF:
 		err := helper.MakeError(p.current, fmt.Sprintf("attempt to parse invalid token %s", p.current.Type))
 		p.addError(err)
@@ -124,24 +126,20 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 	}
 }
 
-func (p *Parser) parseDeclarationStatement() (bool, ast.Statement) {
+func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
 	statement := &ast.DeclarationStatement{Token: p.current}
+	statement.Type = &ast.Identifier{Token: p.current, Value: p.current.Literal}
 
 	if !p.expectNext(tokens.IDENT) {
 		return false, nil
 	}
 
-	name := &ast.Identifier{Token: p.current, Value: p.current.Literal}
-
-	if p.isNext(tokens.DCOLON) || p.isNext(tokens.COLON) {
-		// TODO parse function
-		return false, nil
-	}
+	statement.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
 
 	if !p.expectNext(tokens.ASSIGN) {
 		return false, nil
 	}
-	statement.Name = name
+
 	// TODO: parse expression
 	p.skipUpToNewline()
 
@@ -206,6 +204,37 @@ func (p *Parser) parseWhileStatement() (bool, *ast.WhileStatement) {
 	}
 
 	statement.Body = p.parseBlockStatement()
+
+	return true, statement
+}
+
+func (p *Parser) parseAliasStatement() (bool, *ast.AliasStatement) {
+	statement := &ast.AliasStatement{Token: p.current}
+
+	if !p.expectNext(tokens.IDENT) {
+		return false, nil
+	}
+
+	statement.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+
+	if !p.expectNext(tokens.DCOLON) {
+		return false, nil
+	}
+
+	if !p.expectNext(tokens.IDENT) {
+		return false, nil
+	}
+
+	statement.Type = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+
+	if !p.gotoBlockStatement() {
+		return false, nil
+	}
+
+	statement.Values = p.parseAliasValues(statement.Type)
+	if statement.Values == nil {
+		return false, statement
+	}
 
 	return true, statement
 }
@@ -427,6 +456,47 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	}
 
 	return block
+}
+
+func (p *Parser) parseAliasValues(t *ast.Identifier) []*ast.DeclarationStatement {
+	statements := []*ast.DeclarationStatement{}
+
+	level := p.level
+	p.nextToken()
+	level += 1
+
+	if level != p.level {
+		desc := fmt.Sprintf("expected one level of indentation after expression, got %d instead", p.level)
+		error := helper.MakeError(p.current, desc)
+		p.addError(error)
+		return nil
+	}
+
+	for level == p.level && !p.isCurrent(tokens.EOF) {
+		if !p.isCurrent(tokens.IDENT) {
+			p.error(tokens.IDENT, p.current, "current")
+			return nil
+		}
+
+		declaration := &ast.DeclarationStatement{Token: p.current, Type: t}
+		declaration.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+
+		if !p.expectNext(tokens.ASSIGN) {
+			return nil
+		}
+
+		p.nextToken()
+		declaration.Value = p.parseExpression(LOWEST)
+
+		statements = append(statements, declaration)
+		p.nextToken()
+
+		if p.isCurrent(tokens.NEWLINE) {
+			p.nextToken()
+		}
+	}
+
+	return statements
 }
 
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {

@@ -29,6 +29,7 @@ const (
 	WHILE  = "WHILE"
 	RETURN = "RETURN"
 	SCOPE  = "SCOPE"
+	ALIAS  = "ALIAS"
 
 	FALSE = "FALSE"
 	TRUE  = "TRUE"
@@ -64,6 +65,7 @@ var keywords = map[string]TokenType{
 	"Not":    NOT,
 	"Return": RETURN,
 	"Scope":  SCOPE,
+	"Alias":  ALIAS,
 }
 
 func LookUpIdent(ident string) TokenType {

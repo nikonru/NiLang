@@ -39,7 +39,52 @@ Dir face = forward`)
 	// TODO check expression
 	for i, t := range tests {
 		statement := program.Statements[i]
-		if !testDeclarationStatement(test, statement, t.expectedTypeLiteral, t.expectedIdentifier) {
+		if !testDeclarationStatement(test, statement, t.expectedTypeLiteral, t.expectedTypeLiteral, t.expectedIdentifier) {
+			return
+		}
+	}
+}
+
+func TestAliasStatement(test *testing.T) {
+	input := []byte(`
+Alias Numbers::Int:
+    One = 1
+    Two = 2
+    Four = 4`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 1
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.AliasStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.ReturnStatement, got=%T", program.Statements[0])
+	}
+
+	if !testIdentifier(test, statement.Name, "Numbers") {
+		return
+	}
+
+	expectedType := "Int"
+	if !testIdentifier(test, statement.Type, expectedType) {
+		return
+	}
+
+	tests := []string{"One", "Two", "Four"}
+
+	// TODO check expression
+	for i, ident := range tests {
+		if !testDeclarationStatement(test, statement.Values[i], ident, expectedType, ident) {
 			return
 		}
 	}
@@ -137,11 +182,11 @@ Scope names:
 		test.Fatalf("wrong number of statements in body of the scope, expected=%d, got=%T", length, len(statement.Body.Statements))
 	}
 
-	if !testDeclarationStatement(test, statement.Body.Statements[0], "Int", "fish") {
+	if !testDeclarationStatement(test, statement.Body.Statements[0], "Int", "Int", "fish") {
 		return
 	}
 
-	if !testDeclarationStatement(test, statement.Body.Statements[1], "Bool", "flag") {
+	if !testDeclarationStatement(test, statement.Body.Statements[1], "Bool", "Bool", "flag") {
 		return
 	}
 }
@@ -680,9 +725,9 @@ func testUsingStatement(test *testing.T, statement ast.Statement, literal string
 	return true
 }
 
-func testDeclarationStatement(test *testing.T, statement ast.Statement, literal string, name string) bool {
+func testDeclarationStatement(test *testing.T, statement ast.Statement, literal string, t string, name string) bool {
 	if statement.TokenLiteral() != literal {
-		test.Errorf("statement.TokenLiteral() is not Bool: got=%v", statement.TokenLiteral())
+		test.Errorf("statement.TokenLiteral() is not %v: got=%v", literal, statement.TokenLiteral())
 		return false
 	}
 
@@ -692,13 +737,23 @@ func testDeclarationStatement(test *testing.T, statement ast.Statement, literal 
 		return false
 	}
 
+	if declarationStatement.Type.Value != t {
+		test.Errorf("declarationStatement.Type.Value is not *%v type: got=%v", t, declarationStatement.Type.Value)
+		return false
+	}
+
+	if declarationStatement.Type.TokenLiteral() != t {
+		test.Errorf("declarationStatement.Type.TokenLiteral() is not *%v type: got=%v", t, declarationStatement.Type.TokenLiteral())
+		return false
+	}
+
 	if declarationStatement.Name.Value != name {
-		test.Errorf("declarationStatement.Name.Value is not *%v type: got=%v", name, statement)
+		test.Errorf("declarationStatement.Name.Value is not *%v type: got=%v", name, declarationStatement.Name.Value)
 		return false
 	}
 
 	if declarationStatement.Name.TokenLiteral() != name {
-		test.Errorf("declarationStatement.Name.TokenLiteral is not *%v type: got=%v", name, statement)
+		test.Errorf("declarationStatement.Name.TokenLiteral is not *%v type: got=%v", name, declarationStatement.Name.TokenLiteral())
 		return false
 	}
 
