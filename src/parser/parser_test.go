@@ -432,6 +432,45 @@ Else:
 	}
 }
 
+func TestCallExpression(test *testing.T) {
+	input := []byte(`Get$1 < x`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	if len(program.Statements) != 1 {
+		test.Fatalf("program has not enough statements, got=%d", len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.ExpressionStatement, got=%T", program.Statements[0])
+	}
+
+	exp, ok := statement.Expression.(*ast.CallExpression)
+	if !ok {
+		test.Fatalf("statement.Expression is not ast.CallExpression, got=%T", statement.Expression)
+	}
+
+	if !testIdentifier(test, exp.Function, "Get") {
+		return
+	}
+
+	arg, ok := exp.Argument.(*ast.InfixExpression)
+	if !ok {
+		test.Fatalf("exp.Argument is not ast.InfixExpression, got=%T", exp.Argument)
+	}
+
+	if !testInfixExpression(test, arg, 1, "<", "x") {
+		return
+	}
+}
+
 func testInfixExpression(test *testing.T, exp *ast.InfixExpression, left interface{}, operator string, right interface{}) bool {
 
 	if !testLiteralExpression(test, exp.Left, left) {

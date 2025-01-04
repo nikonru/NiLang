@@ -246,3 +246,25 @@ func (i *ElifExpression) String() string {
 
 	return out.String()
 }
+
+type CallExpression struct {
+	Token    tokens.Token
+	Function Expression
+	Argument Expression
+}
+
+func (ce *CallExpression) expressionNode()      {}
+func (ce *CallExpression) statementNode()       {}
+func (ce *CallExpression) TokenLiteral() string { return ce.Token.Literal }
+
+func (ce *CallExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ce.Function.String())
+
+	out.WriteString("(")
+	out.WriteString(ce.Argument.String())
+	out.WriteString(")")
+
+	return out.String()
+}

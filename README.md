@@ -24,3 +24,22 @@ Dir dir = GetDir
 # you may remove `bot::`, since we have already written 'using bot'
 bot::Move$ RotateClockwise$ dir  
 ```
+
+```
+Scope names:
+    max = 1000
+
+Fun Bool f$max Int, default Bool:
+    Using bot
+    ConsumeSunlight
+    If GetEnergy > max:
+        return True
+    elif GetEnergy < max:
+        return False
+    else:
+        return default
+
+Fun Int g:
+    return 5
+
+```

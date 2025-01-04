@@ -20,6 +20,7 @@ const (
 )
 
 var precedence = map[tokens.TokenType]int{
+	tokens.DOLLAR: CALL,
 	tokens.EQUAL:  EQUALS,
 	tokens.NEQUAL: EQUALS,
 	tokens.LT:     LESSGREATER,
@@ -64,6 +65,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerInfix(tokens.GE, p.parseInfixExpression)
 	p.registerInfix(tokens.NEQUAL, p.parseInfixExpression)
 	p.registerInfix(tokens.EQUAL, p.parseInfixExpression)
+	p.registerInfix(tokens.DOLLAR, p.parseCallExpression)
 
 	p.nextToken()
 	p.nextToken()
@@ -141,10 +143,8 @@ func (p *Parser) parseUsingStatement() (bool, *ast.UsingStatement) {
 
 	statement.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
 
-	if !p.isNext(tokens.EOF) {
-		if !p.expectNext(tokens.NEWLINE) {
-			return false, nil
-		}
+	if !p.expectNewline() {
+		return false, nil
 	}
 
 	return true, statement
@@ -367,6 +367,37 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	}
 
 	return block
+}
+
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	exp := &ast.CallExpression{Token: p.current, Function: function}
+	exp.Argument = p.parseCallArgument()
+	return exp
+}
+
+func (p *Parser) parseCallArgument() ast.Expression {
+	if p.isNext(tokens.NEWLINE) {
+		p.nextToken()
+		return nil
+	}
+
+	p.nextToken()
+	arg := p.parseExpression(LOWEST)
+
+	if !p.expectNewline() {
+		return nil
+	}
+
+	return arg
+}
+
+func (p *Parser) expectNewline() bool {
+	if !p.isNext(tokens.EOF) {
+		if !p.expectNext(tokens.NEWLINE) {
+			return false
+		}
+	}
+	return true
 }
 
 func (p *Parser) nextPrecendence() int {
