@@ -90,7 +90,7 @@ func (p *Parser) Parse() *ast.Program {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 
-	for p.current.Type != tokens.EOF {
+	for !p.isCurrent(tokens.EOF) {
 		ok, statement := p.parseStatement()
 		if ok {
 			program.Statements = append(program.Statements, statement)
@@ -121,9 +121,16 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 		p.addError(err)
 		return false, nil
 	default:
-		if p.isCurrent(tokens.IDENT) && p.isNext(tokens.IDENT) {
-			return p.parseDeclarationStatement()
+		if p.isCurrent(tokens.IDENT) {
+			if p.isNext(tokens.IDENT) {
+				return p.parseDeclarationStatement()
+			}
+
+			if p.isNext(tokens.ASSIGN) {
+				return p.parseAssignmentStatement()
+			}
 		}
+
 		return p.parseExpressionStatement()
 	}
 }
@@ -271,6 +278,23 @@ func (p *Parser) parseFunctionStatement() (bool, *ast.FunctionStatement) {
 	}
 
 	statement.Body = p.parseBlockStatement()
+
+	return true, statement
+}
+
+func (p *Parser) parseAssignmentStatement() (bool, *ast.AssignmentStatement) {
+	name := &ast.Identifier{Token: p.current, Value: p.current.Literal}
+	if !p.expectNext(tokens.ASSIGN) {
+		return false, nil
+	}
+	statement := &ast.AssignmentStatement{Name: name}
+
+	p.nextToken()
+	statement.Value = p.parseExpression(LOWEST)
+
+	if !p.expectNewline() {
+		return false, nil
+	}
 
 	return true, statement
 }

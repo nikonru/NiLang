@@ -45,6 +45,49 @@ Dir face = forward`)
 	}
 }
 
+func TestAssignmentStatement(test *testing.T) {
+	input := []byte(`
+x = 100
+hungry = False`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 2
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	tests := []struct {
+		Name  string
+		Value interface{}
+	}{
+		{"x", 100},
+		{"hungry", false},
+	}
+
+	for i, t := range tests {
+		statement, ok := program.Statements[i].(*ast.AssignmentStatement)
+		if !ok {
+			test.Fatalf("statement is not *ast.AssignmentStatement type: got=%v", statement)
+		}
+
+		if !testIdentifier(test, statement.Name, t.Name) {
+			return
+		}
+
+		if !testLiteralExpression(test, statement.Value, t.Value) {
+			return
+		}
+	}
+}
+
 func TestAliasStatement(test *testing.T) {
 	input := []byte(`
 Alias Numbers::Int:
@@ -1065,6 +1108,8 @@ func testLiteralExpression(test *testing.T, exp ast.Expression, expected interfa
 		return testIntegralLiteral(test, exp, v)
 	case string:
 		return testIdentifier(test, exp, v)
+	case bool:
+		return testBooleanLiteral(test, exp, v)
 	default:
 		test.Errorf("type of exp not handled. got=%T", exp)
 		return false

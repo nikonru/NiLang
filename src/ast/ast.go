@@ -80,19 +80,19 @@ func (us *UsingStatement) String() string {
 	return out.String()
 }
 
-type ReturnStatement struct {
-	Token tokens.Token
+type AssignmentStatement struct {
+	Name  *Identifier
 	Value Expression
 }
 
-func (rs *ReturnStatement) statementNode()       {}
-func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
+func (as *AssignmentStatement) statementNode()       {}
+func (as *AssignmentStatement) TokenLiteral() string { return as.Name.TokenLiteral() }
 
-func (rs *ReturnStatement) String() string {
+func (as *AssignmentStatement) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(rs.TokenLiteral() + " ")
-	out.WriteString(rs.Value.String())
+	out.WriteString(as.TokenLiteral() + " = ")
+	out.WriteString(as.Value.String())
 
 	return out.String()
 }
@@ -183,6 +183,23 @@ func (as *FunctionStatement) String() string {
 type ExpressionStatement struct {
 	Token      tokens.Token
 	Expression Expression
+}
+
+type ReturnStatement struct {
+	Token tokens.Token
+	Value Expression
+}
+
+func (rs *ReturnStatement) statementNode()       {}
+func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
+
+func (rs *ReturnStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(rs.TokenLiteral() + " ")
+	out.WriteString(rs.Value.String())
+
+	return out.String()
 }
 
 func (ds *ExpressionStatement) statementNode()       {}
