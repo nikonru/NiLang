@@ -53,7 +53,9 @@ func (ds *DeclarationStatement) TokenLiteral() string { return "" }
 func (ds *DeclarationStatement) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(ds.Name.String() + " ")
+	if ds.Name != nil {
+		out.WriteString(ds.Name.String() + " ")
+	}
 	out.WriteString("= ")
 
 	if ds.Value != nil {
@@ -75,8 +77,9 @@ func (us *UsingStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(us.TokenLiteral() + " ")
-	out.WriteString(us.Name.String())
-
+	if us.Name != nil {
+		out.WriteString(us.Name.String())
+	}
 	return out.String()
 }
 
@@ -85,8 +88,13 @@ type AssignmentStatement struct {
 	Value Expression
 }
 
-func (as *AssignmentStatement) statementNode()       {}
-func (as *AssignmentStatement) TokenLiteral() string { return as.Name.TokenLiteral() }
+func (as *AssignmentStatement) statementNode() {}
+func (as *AssignmentStatement) TokenLiteral() string {
+	if as.Name != nil {
+		return as.Name.TokenLiteral()
+	}
+	return ""
+}
 
 func (as *AssignmentStatement) String() string {
 	var out bytes.Buffer
@@ -110,8 +118,12 @@ func (ss *ScopeStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(ss.TokenLiteral() + " ")
-	out.WriteString(ss.Name.String() + "{")
-	out.WriteString(ss.Body.String())
+	if ss.Name != nil {
+		out.WriteString(ss.Name.String() + "{\n")
+	}
+	if ss.Body != nil {
+		out.WriteString(ss.Body.String())
+	}
 	out.WriteString("}")
 	return out.String()
 }
@@ -129,8 +141,10 @@ func (ws *WhileStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(ws.TokenLiteral() + " ")
-	out.WriteString(ws.Condition.String() + "{")
-	out.WriteString(ws.Body.String())
+	out.WriteString(ws.Condition.String() + "{\n")
+	if ws.Body != nil {
+		out.WriteString(ws.Body.String())
+	}
 	out.WriteString("}")
 	return out.String()
 }
@@ -148,7 +162,9 @@ func (as *AliasStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(as.TokenLiteral() + " ")
-	out.WriteString(as.Name.String() + "{")
+	if as.Name != nil {
+		out.WriteString(as.Name.String() + "{\n")
+	}
 	for i, v := range as.Values {
 		out.WriteString(v.String())
 		if i+1 != len(as.Values) {
@@ -166,15 +182,19 @@ type FunctionStatement struct {
 	Body       *BlockStatement
 }
 
-func (as *FunctionStatement) statementNode()       {}
-func (as *FunctionStatement) TokenLiteral() string { return as.Token.Literal }
+func (fs *FunctionStatement) statementNode()       {}
+func (fs *FunctionStatement) TokenLiteral() string { return fs.Token.Literal }
 
-func (as *FunctionStatement) String() string {
+func (fs *FunctionStatement) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(as.TokenLiteral() + " ")
-	out.WriteString(as.Name.String() + "{")
-	out.WriteString(as.Body.String())
+	out.WriteString(fs.TokenLiteral() + " ")
+	if fs.Name != nil {
+		out.WriteString(fs.Name.String() + "{\n")
+	}
+	if fs.Body != nil {
+		out.WriteString(fs.Body.String())
+	}
 	out.WriteString("}")
 
 	return out.String()
@@ -236,7 +256,9 @@ func (ti *TypedIdentifier) TokenLiteral() string { return ti.Token.Literal }
 func (ti *TypedIdentifier) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(ti.Type.String() + " ")
+	if ti.Type != nil {
+		out.WriteString(ti.Type.String() + " ")
+	}
 	out.WriteString(ti.Value)
 
 	return out.String()
@@ -319,6 +341,7 @@ func (b *BlockStatement) String() string {
 
 	for _, s := range b.Statements {
 		out.WriteString(s.String())
+		out.WriteString("\n")
 	}
 
 	return out.String()
@@ -341,8 +364,10 @@ func (i *IfStatement) String() string {
 	out.WriteString("if")
 	out.WriteString(i.Condition.String())
 
-	out.WriteString("{")
-	out.WriteString(i.Consequence.String())
+	out.WriteString("{\n")
+	if i.Consequence != nil {
+		out.WriteString(i.Consequence.String())
+	}
 	out.WriteString("}")
 
 	for _, elif := range i.Elifs {
@@ -376,8 +401,10 @@ func (i *ElifStatement) String() string {
 	out.WriteString("elif")
 	out.WriteString(i.Condition.String())
 
-	out.WriteString("{")
-	out.WriteString(i.Consequence.String())
+	out.WriteString("{\n")
+	if i.Consequence != nil {
+		out.WriteString(i.Consequence.String())
+	}
 	out.WriteString("}")
 
 	return out.String()

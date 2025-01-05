@@ -6,8 +6,38 @@ import (
 	"NiLang/src/lexer"
 	"NiLang/src/parser"
 	"fmt"
+	"io"
+	"log"
+	"os"
 	"testing"
 )
+
+func TestGeneral(test *testing.T) {
+	file, err := os.Open("bot.nil")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	input, err := io.ReadAll(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+}
 
 func TestDeclarationStatement(test *testing.T) {
 	input := []byte(`Bool x = False

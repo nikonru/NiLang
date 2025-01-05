@@ -77,16 +77,16 @@ func New(lexer *lexer.Lexer) *Parser {
 }
 
 func (p *Parser) nextToken() {
+	if p.isCurrent(tokens.NEWLINE) {
+		p.level = 0
+	}
+
 	p.current = p.next
 	p.next = (*p.lexer).NextToken()
 
 	if p.isCurrent(tokens.INDENT) {
 		p.level++
 		p.nextToken()
-	}
-
-	if p.isCurrent(tokens.NEWLINE) {
-		p.level = 0
 	}
 }
 
