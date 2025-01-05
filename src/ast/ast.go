@@ -43,23 +43,18 @@ func (p *Program) String() string {
 }
 
 type DeclarationStatement struct {
-	Token tokens.Token
-	// TODO use TypedIdentifier
-	Type  *Identifier
-	Name  *Identifier
+	Name  *TypedIdentifier
 	Value Expression
 }
 
 func (ds *DeclarationStatement) statementNode()       {}
-func (ds *DeclarationStatement) TokenLiteral() string { return ds.Token.Literal }
+func (ds *DeclarationStatement) TokenLiteral() string { return "" }
 
 func (ds *DeclarationStatement) String() string {
 	var out bytes.Buffer
 
-	out.WriteString("(" + ds.TokenLiteral() + ") ")
-	out.WriteString(ds.Type.String() + " ")
-	out.WriteString(ds.Name.String())
-	out.WriteString(" = ")
+	out.WriteString(ds.Name.String() + " ")
+	out.WriteString("= ")
 
 	if ds.Value != nil {
 		out.WriteString(ds.Value.String())
@@ -142,8 +137,7 @@ func (ws *WhileStatement) String() string {
 
 type AliasStatement struct {
 	Token  tokens.Token
-	Name   *Identifier
-	Type   *Identifier
+	Name   *TypedIdentifier
 	Values []*DeclarationStatement
 }
 
@@ -155,7 +149,6 @@ func (as *AliasStatement) String() string {
 
 	out.WriteString(as.TokenLiteral() + " ")
 	out.WriteString(as.Name.String() + " ")
-	out.WriteString(as.Type.String() + " ")
 	for i, v := range as.Values {
 		out.WriteString(v.String())
 		if i+1 != len(as.Values) {

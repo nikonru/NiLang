@@ -127,14 +127,13 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 }
 
 func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
-	statement := &ast.DeclarationStatement{Token: p.current}
-	statement.Type = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+	t := &ast.Identifier{Token: p.current, Value: p.current.Literal}
 
 	if !p.expectNext(tokens.IDENT) {
 		return false, nil
 	}
 
-	statement.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+	ident := &ast.TypedIdentifier{Token: p.current, Type: t, Value: p.current.Literal}
 
 	if !p.expectNext(tokens.ASSIGN) {
 		return false, nil
@@ -142,6 +141,8 @@ func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
 
 	// TODO: parse expression
 	p.skipUpToNewline()
+
+	statement := &ast.DeclarationStatement{Name: ident, Value: nil}
 
 	return true, statement
 }
@@ -215,7 +216,7 @@ func (p *Parser) parseAliasStatement() (bool, *ast.AliasStatement) {
 		return false, nil
 	}
 
-	statement.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+	statement.Name = &ast.TypedIdentifier{Token: p.current, Value: p.current.Literal}
 
 	if !p.expectNext(tokens.DCOLON) {
 		return false, nil
@@ -225,13 +226,13 @@ func (p *Parser) parseAliasStatement() (bool, *ast.AliasStatement) {
 		return false, nil
 	}
 
-	statement.Type = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+	statement.Name.Type = &ast.Identifier{Token: p.current, Value: p.current.Literal}
 
 	if !p.gotoBlockStatement() {
 		return false, nil
 	}
 
-	statement.Values = p.parseAliasValues(statement.Type)
+	statement.Values = p.parseAliasValues(statement.Name.Type)
 	if statement.Values == nil {
 		return false, statement
 	}
@@ -478,8 +479,8 @@ func (p *Parser) parseAliasValues(t *ast.Identifier) []*ast.DeclarationStatement
 			return nil
 		}
 
-		declaration := &ast.DeclarationStatement{Token: p.current, Type: t}
-		declaration.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+		name := &ast.TypedIdentifier{Token: p.current, Type: t, Value: p.current.Literal}
+		declaration := &ast.DeclarationStatement{Name: name}
 
 		if !p.expectNext(tokens.ASSIGN) {
 			return nil

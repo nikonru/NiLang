@@ -39,7 +39,7 @@ Dir face = forward`)
 	// TODO check expression
 	for i, t := range tests {
 		statement := program.Statements[i]
-		if !testDeclarationStatement(test, statement, t.expectedTypeLiteral, t.expectedTypeLiteral, t.expectedIdentifier) {
+		if !testDeclarationStatement(test, statement, t.expectedTypeLiteral, t.expectedIdentifier) {
 			return
 		}
 	}
@@ -71,12 +71,8 @@ Alias Numbers::Int:
 		test.Fatalf("program.Statements[0] is not ast.ReturnStatement, got=%T", program.Statements[0])
 	}
 
-	if !testIdentifier(test, statement.Name, "Numbers") {
-		return
-	}
-
 	expectedType := "Int"
-	if !testIdentifier(test, statement.Type, expectedType) {
+	if !testTypedIdentifier(test, statement.Name, expectedType, "Numbers") {
 		return
 	}
 
@@ -84,7 +80,7 @@ Alias Numbers::Int:
 
 	// TODO check expression
 	for i, ident := range tests {
-		if !testDeclarationStatement(test, statement.Values[i], ident, expectedType, ident) {
+		if !testDeclarationStatement(test, statement.Values[i], expectedType, ident) {
 			return
 		}
 	}
@@ -182,11 +178,11 @@ Scope names:
 		test.Fatalf("wrong number of statements in body of the scope, expected=%d, got=%T", length, len(statement.Body.Statements))
 	}
 
-	if !testDeclarationStatement(test, statement.Body.Statements[0], "Int", "Int", "fish") {
+	if !testDeclarationStatement(test, statement.Body.Statements[0], "Int", "fish") {
 		return
 	}
 
-	if !testDeclarationStatement(test, statement.Body.Statements[1], "Bool", "Bool", "flag") {
+	if !testDeclarationStatement(test, statement.Body.Statements[1], "Bool", "flag") {
 		return
 	}
 }
@@ -725,9 +721,9 @@ func testUsingStatement(test *testing.T, statement ast.Statement, literal string
 	return true
 }
 
-func testDeclarationStatement(test *testing.T, statement ast.Statement, literal string, t string, name string) bool {
-	if statement.TokenLiteral() != literal {
-		test.Errorf("statement.TokenLiteral() is not %v: got=%v", literal, statement.TokenLiteral())
+func testDeclarationStatement(test *testing.T, statement ast.Statement, t string, name string) bool {
+	if statement.TokenLiteral() != "" {
+		test.Errorf("statement.TokenLiteral() is not empty string: got=%v", statement.TokenLiteral())
 		return false
 	}
 
@@ -737,13 +733,13 @@ func testDeclarationStatement(test *testing.T, statement ast.Statement, literal 
 		return false
 	}
 
-	if declarationStatement.Type.Value != t {
-		test.Errorf("declarationStatement.Type.Value is not *%v type: got=%v", t, declarationStatement.Type.Value)
+	if declarationStatement.Name.Type.Value != t {
+		test.Errorf("declarationStatement.Name.Type.Value is not *%v type: got=%v", t, declarationStatement.Name.Type.Value)
 		return false
 	}
 
-	if declarationStatement.Type.TokenLiteral() != t {
-		test.Errorf("declarationStatement.Type.TokenLiteral() is not *%v type: got=%v", t, declarationStatement.Type.TokenLiteral())
+	if declarationStatement.Name.Type.TokenLiteral() != t {
+		test.Errorf("declarationStatement.Name.Type.TokenLiteral() is not *%v type: got=%v", t, declarationStatement.Name.Type.TokenLiteral())
 		return false
 	}
 
@@ -792,6 +788,30 @@ func testIdentifier(test *testing.T, expression ast.Expression, value string) bo
 	ident, ok := expression.(*ast.Identifier)
 	if !ok {
 		test.Errorf("expression is not *ast.Identifier, got=%T", expression)
+		return false
+	}
+
+	if ident.Value != value {
+		test.Errorf("expression is not %v, got=%v", value, expression)
+		return false
+	}
+
+	if ident.TokenLiteral() != value {
+		test.Errorf("ident.TokenLiteral() is not %s, got=%s", value, ident.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func testTypedIdentifier(test *testing.T, expression ast.Expression, t string, value string) bool {
+	ident, ok := expression.(*ast.TypedIdentifier)
+	if !ok {
+		test.Errorf("expression is not *ast.Identifier, got=%T", expression)
+		return false
+	}
+
+	if !testIdentifier(test, ident.Type, t) {
 		return false
 	}
 
