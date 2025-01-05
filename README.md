@@ -39,9 +39,9 @@ Fun F::Bool$max Int, default Bool:
     ConsumeSunlight
     If GetEnergy > max:
         Return True
-    elif GetEnergy < max:
+    Elif GetEnergy < max:
         Return False
-    else:
+    Else:
         Return default
 
 Fun G::Int:

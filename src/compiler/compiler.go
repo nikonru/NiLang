@@ -31,6 +31,8 @@ func (c *Compiler) Compile(input []byte) ([]byte, error) {
 		for _, err := range errors {
 			helper.PrintError(err, input)
 		}
+
+		return input, nil
 	}
 
 	fmt.Println("PROGRAM TREE")

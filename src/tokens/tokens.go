@@ -89,3 +89,7 @@ func LookUpIdent(ident string) TokenType {
 func isUppercase(char byte) bool {
 	return 'A' <= char && char <= 'Z'
 }
+
+func GetIdentLevel(t Token) int {
+	return t.Offset / INDENT_LENGTH
+}

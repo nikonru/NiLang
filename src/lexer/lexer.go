@@ -60,8 +60,8 @@ func (l *lexer) NextToken() tokens.Token {
 		return tok
 	case ' ':
 		if l.indentation {
-			l.readIndent()
-			tok = l.makeToken(tokens.INDENT, "indentation")
+			offset := l.readIndent()
+			return tokens.Token{Type: tokens.INDENT, Literal: "indentation", Line: l.line, Offset: offset}
 		} else {
 			l.read()
 			return l.NextToken()
@@ -165,20 +165,24 @@ func (l *lexer) readIdent() []byte {
 	return l.readSequence(isLetter)
 }
 
-func (l *lexer) readIndent() []byte {
+func (l *lexer) readIndent() int {
 	counter := 0
-	seq := l.readSequence(func(char byte) bool {
-		counter++
-		return char == ' ' && counter < tokens.INDENT_LENGTH
+
+	l.readSequence(func(char byte) bool {
+		if char == ' ' {
+			counter++
+			return true
+		}
+		return false
 	})
 
-	if counter != tokens.INDENT_LENGTH {
-		desc := fmt.Sprintf("expected identation of length %d whitespaces, got=%d", tokens.INDENT_LENGTH, counter)
+	if counter%tokens.INDENT_LENGTH != 0 {
+		desc := fmt.Sprintf("expected indentation to be multiple of %d, got=%d whitespaces", tokens.INDENT_LENGTH, counter)
 		err := helper.Error{Line: l.line, Offset: l.offset, Description: desc}
 		log.Fatal("\n" + helper.FormatError(err, l.input))
 	}
 
-	return seq
+	return counter
 }
 
 func (l *lexer) readNumberToken() tokens.Token {

@@ -11,3 +11,35 @@ While hungry:
 Dir dir = GetDir
 # you may remove `bot::`, since we have already written 'using bot'
 bot::Move$ RotateClockwise$ dir  
+
+Alias Numbers::Int:
+    one = 1
+    two = 2
+    four = 4
+
+Scope names:
+    max = 1000
+
+Fun F::Bool$max Int, default Bool:
+    Using bot
+    ConsumeSunlight
+    If GetEnergy > max:
+        Return True
+    Elif GetEnergy < max:
+        Return False
+    Else:
+        Return default
+    If 2 > 5:
+        Get
+    Int x = 4
+    Return default
+
+Fun G::Int:
+    Return 5
+
+Fun W:
+    ConsumeSunlight
+
+W
+Bool flag = F$ 5, False
+flag = F$ G, True

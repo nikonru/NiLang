@@ -47,6 +47,8 @@ type Parser struct {
 
 	prefixParseFns map[tokens.TokenType]prefixParseFns
 	infixParseFns  map[tokens.TokenType]infixParseFns
+
+	pleaseDontSkipToken bool
 }
 
 func New(lexer *lexer.Lexer) *Parser {
@@ -85,7 +87,7 @@ func (p *Parser) nextToken() {
 	p.next = (*p.lexer).NextToken()
 
 	if p.isCurrent(tokens.INDENT) {
-		p.level++
+		p.level = tokens.GetIdentLevel(p.current)
 		p.nextToken()
 	}
 }
@@ -98,6 +100,10 @@ func (p *Parser) Parse() *ast.Program {
 		ok, statement := p.parseStatement()
 		if ok {
 			program.Statements = append(program.Statements, statement)
+		}
+		if p.pleaseDontSkipToken {
+			p.pleaseDontSkipToken = false
+			continue
 		}
 		p.nextToken()
 	}
@@ -177,6 +183,7 @@ func (p *Parser) parseReturnStatement() (bool, *ast.ReturnStatement) {
 	statement := &ast.ReturnStatement{Token: p.current}
 
 	p.nextToken()
+
 	statement.Value = p.parseExpression(LOWEST)
 
 	return true, statement
@@ -337,10 +344,11 @@ func (p *Parser) isNext(t tokens.TokenType) bool {
 	return t == p.next.Type
 }
 
-func (p *Parser) skipUpToNewline() {
-	for !(p.isCurrent(tokens.NEWLINE) || p.isCurrent(tokens.EOF)) {
-		p.nextToken()
+func (p *Parser) IsNextLevel() int {
+	if p.isNext(tokens.INDENT) {
+		return tokens.GetIdentLevel(p.next)
 	}
+	return 0
 }
 
 func (p *Parser) expectNext(t tokens.TokenType) bool {
@@ -459,8 +467,10 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 	}
 	statement.Consequence = p.parseBlockStatement()
 
-	for p.isNext(tokens.ELIF) {
-		p.nextToken()
+	p.pleaseDontSkipToken = true
+	p.nextToken()
+
+	for p.isCurrent(tokens.ELIF) {
 		p.nextToken()
 
 		exp := &ast.ElifStatement{Token: p.current}
@@ -474,10 +484,10 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 		}
 
 		statement.Elifs = append(statement.Elifs, exp)
+		p.nextToken()
 	}
 
-	if p.isNext(tokens.ELSE) {
-		p.nextToken()
+	if p.isCurrent(tokens.ELSE) {
 		if !p.gotoBlockStatement() {
 			return false, nil
 		}
@@ -485,7 +495,21 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 		statement.Alternative = p.parseBlockStatement()
 	}
 
+	if p.isCurrent(tokens.NEWLINE) {
+		p.nextToken()
+	}
+
 	return true, statement
+}
+
+func (p *Parser) gotoNextLine() bool {
+	if p.isCurrent(tokens.NEWLINE) {
+		if p.IsNextLevel() == p.level {
+			p.nextToken()
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
@@ -509,9 +533,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 			block.Statements = append(block.Statements, statement)
 		}
 
-		if p.isCurrent(tokens.NEWLINE) && p.isNext(tokens.INDENT) {
-			p.nextToken()
-		} else {
+		if !p.gotoNextLine() {
 			break
 		}
 	}
@@ -549,10 +571,9 @@ func (p *Parser) parseAliasValues(t *ast.Identifier) []*ast.DeclarationStatement
 		declaration.Value = p.parseExpression(LOWEST)
 
 		statements = append(statements, declaration)
-		p.nextToken()
 
-		if p.isCurrent(tokens.NEWLINE) {
-			p.nextToken()
+		if !p.gotoNextLine() {
+			break
 		}
 	}
 
