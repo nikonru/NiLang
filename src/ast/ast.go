@@ -110,9 +110,9 @@ func (ss *ScopeStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(ss.TokenLiteral() + " ")
-	out.WriteString(ss.Name.String() + " ")
+	out.WriteString(ss.Name.String() + "{")
 	out.WriteString(ss.Body.String())
-
+	out.WriteString("}")
 	return out.String()
 }
 
@@ -129,9 +129,9 @@ func (ws *WhileStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(ws.TokenLiteral() + " ")
-	out.WriteString(ws.Condition.String() + " ")
+	out.WriteString(ws.Condition.String() + "{")
 	out.WriteString(ws.Body.String())
-
+	out.WriteString("}")
 	return out.String()
 }
 
@@ -148,34 +148,34 @@ func (as *AliasStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(as.TokenLiteral() + " ")
-	out.WriteString(as.Name.String() + " ")
+	out.WriteString(as.Name.String() + "{")
 	for i, v := range as.Values {
 		out.WriteString(v.String())
 		if i+1 != len(as.Values) {
 			out.WriteString(", ")
 		}
 	}
+	out.WriteString("}")
 	return out.String()
 }
 
-type FunnctionStatement struct {
+type FunctionStatement struct {
 	Token      tokens.Token
-	Name       *Identifier
-	Type       *Identifier
+	Name       *TypedIdentifier
 	Parameters []*TypedIdentifier
 	Body       *BlockStatement
 }
 
-func (as *FunnctionStatement) statementNode()       {}
-func (as *FunnctionStatement) TokenLiteral() string { return as.Token.Literal }
+func (as *FunctionStatement) statementNode()       {}
+func (as *FunctionStatement) TokenLiteral() string { return as.Token.Literal }
 
-func (as *FunnctionStatement) String() string {
+func (as *FunctionStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(as.TokenLiteral() + " ")
-	out.WriteString(as.Name.String() + " ")
-	out.WriteString(as.Type.String() + " ")
+	out.WriteString(as.Name.String() + "{")
 	out.WriteString(as.Body.String())
+	out.WriteString("}")
 
 	return out.String()
 }
@@ -323,20 +323,22 @@ func (i *IfStatement) String() string {
 
 	out.WriteString("if")
 	out.WriteString(i.Condition.String())
-	out.WriteString(" ")
+
+	out.WriteString("{")
 	out.WriteString(i.Consequence.String())
+	out.WriteString("}")
 
 	for _, elif := range i.Elifs {
 		if elif == nil {
 			continue
 		}
-		out.WriteString("elif")
 		out.WriteString(elif.String())
 	}
 
 	if i.Alternative != nil {
-		out.WriteString("else")
+		out.WriteString("else {")
 		out.WriteString(i.Alternative.String())
+		out.WriteString("}")
 	}
 
 	return out.String()
@@ -356,8 +358,10 @@ func (i *ElifStatement) String() string {
 
 	out.WriteString("elif")
 	out.WriteString(i.Condition.String())
-	out.WriteString(" ")
+
+	out.WriteString("{")
 	out.WriteString(i.Consequence.String())
+	out.WriteString("}")
 
 	return out.String()
 }

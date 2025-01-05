@@ -30,6 +30,7 @@ const (
 	RETURN = "RETURN"
 	SCOPE  = "SCOPE"
 	ALIAS  = "ALIAS"
+	FUN    = "FUN"
 
 	FALSE = "FALSE"
 	TRUE  = "TRUE"
@@ -66,6 +67,7 @@ var keywords = map[string]TokenType{
 	"Return": RETURN,
 	"Scope":  SCOPE,
 	"Alias":  ALIAS,
+	"Fun":    FUN,
 }
 
 func LookUpIdent(ident string) TokenType {

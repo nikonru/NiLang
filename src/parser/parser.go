@@ -114,6 +114,8 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 		return p.parseIfStatement()
 	case tokens.ALIAS:
 		return p.parseAliasStatement()
+	case tokens.FUN:
+		return p.parseFunctionStatement()
 	case tokens.EOF, tokens.INDENT, tokens.NEWLINE, tokens.ELIF:
 		err := helper.MakeError(p.current, fmt.Sprintf("attempt to parse invalid token %s", p.current.Type))
 		p.addError(err)
@@ -168,10 +170,6 @@ func (p *Parser) parseReturnStatement() (bool, *ast.ReturnStatement) {
 
 	p.nextToken()
 	statement.Value = p.parseExpression(LOWEST)
-
-	if !p.expectNewline() {
-		return false, nil
-	}
 
 	return true, statement
 }
@@ -236,6 +234,43 @@ func (p *Parser) parseAliasStatement() (bool, *ast.AliasStatement) {
 	if statement.Values == nil {
 		return false, statement
 	}
+
+	return true, statement
+}
+
+func (p *Parser) parseFunctionStatement() (bool, *ast.FunctionStatement) {
+	statement := &ast.FunctionStatement{Token: p.current}
+
+	if !p.expectNext(tokens.IDENT) {
+		return false, nil
+	}
+
+	name := &ast.TypedIdentifier{Token: p.current, Value: p.current.Literal}
+
+	if p.isNext(tokens.DCOLON) {
+		p.nextToken()
+		if !p.expectNext(tokens.IDENT) {
+			return false, nil
+		}
+		name.Type = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+	} else {
+		name.Type = nil
+	}
+
+	statement.Name = name
+
+	if p.isNext(tokens.DOLLAR) {
+		p.nextToken()
+		statement.Parameters = p.parseFunctionParameters()
+	} else {
+		statement.Parameters = nil
+	}
+
+	if !p.gotoBlockStatement() {
+		return false, nil
+	}
+
+	statement.Body = p.parseBlockStatement()
 
 	return true, statement
 }
@@ -401,7 +436,8 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 	}
 	statement.Consequence = p.parseBlockStatement()
 
-	for p.isCurrent(tokens.ELIF) {
+	for p.isNext(tokens.ELIF) {
+		p.nextToken()
 		p.nextToken()
 
 		exp := &ast.ElifStatement{Token: p.current}
@@ -417,7 +453,8 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 		statement.Elifs = append(statement.Elifs, exp)
 	}
 
-	if p.isCurrent(tokens.ELSE) {
+	if p.isNext(tokens.ELSE) {
+		p.nextToken()
 		if !p.gotoBlockStatement() {
 			return false, nil
 		}
@@ -451,7 +488,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 		block.Statements = append(block.Statements, statement)
 		p.nextToken()
 
-		if p.isCurrent(tokens.NEWLINE) {
+		if p.isCurrent(tokens.NEWLINE) && p.isNext(tokens.INDENT) {
 			p.nextToken()
 		}
 	}
@@ -522,11 +559,33 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 		args = append(args, p.parseExpression(LOWEST))
 	}
 
-	if !p.expectNewline() {
-		return nil
+	return args
+}
+
+func (p *Parser) parseFunctionParameters() []*ast.TypedIdentifier {
+	parameters := []*ast.TypedIdentifier{}
+
+	for !p.isNext(tokens.COLON) {
+		if len(parameters) != 0 {
+			if !p.expectNext(tokens.COMMA) {
+				return nil
+			}
+		}
+
+		if !p.expectNext(tokens.IDENT) {
+			return nil
+		}
+		parameter := &ast.TypedIdentifier{Token: p.current, Value: p.current.Literal}
+
+		if !p.expectNext(tokens.IDENT) {
+			return nil
+		}
+		parameter.Type = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+
+		parameters = append(parameters, parameter)
 	}
 
-	return args
+	return parameters
 }
 
 func (p *Parser) expectNewline() bool {

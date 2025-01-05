@@ -236,6 +236,293 @@ While 1 < 2:
 	}
 }
 
+func TestFunctionStatement(test *testing.T) {
+	input := []byte(`
+Fun F::Bool$max Int, default Bool:
+    Return 5 > max
+
+Fun I::Int$v Int:
+    Return v
+
+Fun G::Int:
+    Foo
+    Return 5
+
+Fun H:
+    Foo
+
+Fun Z$v Int:
+    Foo
+`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 5
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	//-0-
+
+	statement, ok := program.Statements[0].(*ast.FunctionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.FunnctionStatement, got=%T", program.Statements[0])
+	}
+
+	if statement.TokenLiteral() != "Fun" {
+		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
+	}
+
+	if !testTypedIdentifier(test, statement.Name, "Bool", "F") {
+		return
+	}
+
+	length = 2
+	if len(statement.Parameters) != length {
+		test.Fatalf("wrong number of parameters in F, expected=%d, got=%d", length, len(statement.Parameters))
+	}
+
+	if !testTypedIdentifier(test, statement.Parameters[0], "Int", "max") {
+		return
+	}
+
+	if !testTypedIdentifier(test, statement.Parameters[1], "Bool", "default") {
+		return
+	}
+
+	length = 1
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in F, expected=%d, got=%d", length, len(statement.Body.Statements))
+	}
+
+	ret, ok := statement.Body.Statements[0].(*ast.ReturnStatement)
+	if !ok {
+		test.Fatalf("statement.Body.Statements[0] is not ast.ReturnStatement, got=%T", statement.Body.Statements[0])
+	}
+
+	if ret.TokenLiteral() != "Return" {
+		test.Fatalf("ret.TokenLiteral() is not Return, got=%q", ret.TokenLiteral())
+	}
+
+	exp, ok := ret.Value.(*ast.InfixExpression)
+	if !ok {
+		test.Fatalf("ret.Value is not ast.InfixExpression, got=%T", ret.Value)
+	}
+
+	if !testInfixExpression(test, exp, 5, ">", "max") {
+		return
+	}
+
+	//-1-
+
+	statement, ok = program.Statements[1].(*ast.FunctionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[1] is not ast.FunnctionStatement, got=%T", program.Statements[1])
+	}
+
+	if statement.TokenLiteral() != "Fun" {
+		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
+	}
+
+	if !testTypedIdentifier(test, statement.Name, "Int", "I") {
+		return
+	}
+
+	length = 1
+	if len(statement.Parameters) != length {
+		test.Fatalf("wrong number of parameters in I, expected=%d, got=%d", length, len(statement.Parameters))
+	}
+
+	if !testTypedIdentifier(test, statement.Parameters[0], "Int", "v") {
+		return
+	}
+
+	length = 1
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in I, expected=%d, got=%d", length, len(statement.Body.Statements))
+	}
+
+	ret, ok = statement.Body.Statements[0].(*ast.ReturnStatement)
+	if !ok {
+		test.Fatalf("statement.Body.Statements[0] is not ast.ReturnStatement, got=%T", statement.Body.Statements[0])
+	}
+
+	if ret.TokenLiteral() != "Return" {
+		test.Fatalf("ret.TokenLiteral() is not Return, got=%q", ret.TokenLiteral())
+	}
+
+	ident, ok := ret.Value.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("ret.Value is not ast.InfixExpression, got=%T", ret.Value)
+	}
+
+	if !testIdentifier(test, ident, "v") {
+		return
+	}
+
+	//-2-
+
+	statement, ok = program.Statements[2].(*ast.FunctionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[2] is not ast.FunnctionStatement, got=%T", program.Statements[2])
+	}
+
+	if statement.TokenLiteral() != "Fun" {
+		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
+	}
+
+	if !testTypedIdentifier(test, statement.Name, "Int", "G") {
+		return
+	}
+
+	length = 0
+	if len(statement.Parameters) != length {
+		test.Fatalf("wrong number of parameters in G, expected=%d, got=%d", length, len(statement.Parameters))
+	}
+
+	length = 2
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in G, expected=%d, got=%d", length, len(statement.Body.Statements))
+	}
+
+	expStatement, ok := statement.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("statement.Body.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Body.Statements[0])
+	}
+
+	foo, ok := expStatement.Expression.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("expStatement.Expression is not ast.Identifier, got=%T", expStatement.Expression)
+	}
+
+	if !testIdentifier(test, foo, "Foo") {
+		return
+	}
+
+	ret, ok = statement.Body.Statements[1].(*ast.ReturnStatement)
+	if !ok {
+		test.Fatalf("statement.Body.Statements[1] is not ast.ReturnStatement, got=%T", statement.Body.Statements[0])
+	}
+
+	if ret.TokenLiteral() != "Return" {
+		test.Fatalf("ret.TokenLiteral() is not Return, got=%q", ret.TokenLiteral())
+	}
+
+	integer, ok := ret.Value.(*ast.IntegralLiteral)
+	if !ok {
+		test.Fatalf("ret.Value is not ast.InfixExpression, got=%T", ret.Value)
+	}
+
+	if !testIntegralLiteral(test, integer, 5) {
+		return
+	}
+
+	//-3-
+
+	statement, ok = program.Statements[3].(*ast.FunctionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[3] is not ast.FunnctionStatement, got=%T", program.Statements[3])
+	}
+
+	if statement.TokenLiteral() != "Fun" {
+		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
+	}
+
+	if statement.Name.Type != nil {
+		test.Fatalf("statement.Name.Type is not `nil`, got=%v", statement.Name.Type)
+	}
+
+	if statement.Name.TokenLiteral() != "H" {
+		test.Fatalf("statement.Name.TokenLiteral() is not '%s', got=%s", "H", statement.Name.TokenLiteral())
+	}
+
+	if statement.Name.Value != "H" {
+		test.Fatalf("statement.Name.Value is not '%s', got=%s", "H", statement.Name.Value)
+	}
+
+	length = 0
+	if len(statement.Parameters) != length {
+		test.Fatalf("wrong number of parameters in H, expected=%d, got=%d", length, len(statement.Parameters))
+	}
+
+	length = 1
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in H, expected=%d, got=%d", length, len(statement.Body.Statements))
+	}
+
+	expStatement, ok = statement.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("statement.Body.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Body.Statements[0])
+	}
+
+	foo, ok = expStatement.Expression.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("expStatement.Expression is not ast.Identifier, got=%T", expStatement.Expression)
+	}
+
+	if !testIdentifier(test, foo, "Foo") {
+		return
+	}
+
+	//-4-
+
+	statement, ok = program.Statements[4].(*ast.FunctionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[4] is not ast.FunnctionStatement, got=%T", program.Statements[4])
+	}
+
+	if statement.TokenLiteral() != "Fun" {
+		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
+	}
+
+	if statement.Name.Type != nil {
+		test.Fatalf("statement.Name.Type is not `nil`, got=%v", statement.Name.Type)
+	}
+
+	if statement.Name.TokenLiteral() != "Z" {
+		test.Fatalf("statement.Name.TokenLiteral() is not '%s', got=%s", "Z", statement.Name.TokenLiteral())
+	}
+
+	if statement.Name.Value != "Z" {
+		test.Fatalf("statement.Name.Value is not '%s', got=%s", "Z", statement.Name.Value)
+	}
+
+	length = 1
+	if len(statement.Parameters) != length {
+		test.Fatalf("wrong number of parameters in H, expected=%d, got=%d", length, len(statement.Parameters))
+	}
+
+	length = 1
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in H, expected=%d, got=%d", length, len(statement.Body.Statements))
+	}
+
+	if !testTypedIdentifier(test, statement.Parameters[0], "Int", "v") {
+		return
+	}
+
+	expStatement, ok = statement.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("statement.Body.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Body.Statements[0])
+	}
+
+	foo, ok = expStatement.Expression.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("expStatement.Expression is not ast.Identifier, got=%T", expStatement.Expression)
+	}
+
+	if !testIdentifier(test, foo, "Foo") {
+		return
+	}
+}
+
 func TestIdentifierExpression(test *testing.T) {
 	input := []byte(`foobar`)
 
@@ -722,14 +1009,14 @@ func testUsingStatement(test *testing.T, statement ast.Statement, literal string
 }
 
 func testDeclarationStatement(test *testing.T, statement ast.Statement, t string, name string) bool {
-	if statement.TokenLiteral() != "" {
-		test.Errorf("statement.TokenLiteral() is not empty string: got=%v", statement.TokenLiteral())
-		return false
-	}
-
 	declarationStatement, ok := statement.(*ast.DeclarationStatement)
 	if !ok {
 		test.Errorf("statement is not *ast.DeclarationStatement type: got=%v", statement)
+		return false
+	}
+
+	if statement.TokenLiteral() != "" {
+		test.Errorf("statement.TokenLiteral() is not empty string: got=%v", statement.TokenLiteral())
 		return false
 	}
 
@@ -807,7 +1094,7 @@ func testIdentifier(test *testing.T, expression ast.Expression, value string) bo
 func testTypedIdentifier(test *testing.T, expression ast.Expression, t string, value string) bool {
 	ident, ok := expression.(*ast.TypedIdentifier)
 	if !ok {
-		test.Errorf("expression is not *ast.Identifier, got=%T", expression)
+		test.Errorf("expression is not *ast.TypedIdentifier, got=%T", expression)
 		return false
 	}
 
