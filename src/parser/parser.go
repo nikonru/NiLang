@@ -54,6 +54,7 @@ func New(lexer *lexer.Lexer) *Parser {
 
 	p.prefixParseFns = make(map[tokens.TokenType]prefixParseFns)
 	p.registerPrefix(tokens.IDENT, p.parseIdentifier)
+	p.registerPrefix(tokens.PIDENT, p.parseIdentifier)
 	p.registerPrefix(tokens.NUMBER, p.parseIntegralLiteral)
 	p.registerPrefix(tokens.TRUE, p.parseBooleanLiteral)
 	p.registerPrefix(tokens.FALSE, p.parseBooleanLiteral)
@@ -104,6 +105,7 @@ func (p *Parser) Parse() *ast.Program {
 }
 
 func (p *Parser) parseStatement() (bool, ast.Statement) {
+	fmt.Printf("Token %v\n", p.current)
 	switch p.current.Type {
 	case tokens.USING:
 		return p.parseUsingStatement()
@@ -124,14 +126,12 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 		p.addError(err)
 		return false, nil
 	default:
-		if p.isCurrent(tokens.IDENT) {
-			if p.isNext(tokens.IDENT) {
-				return p.parseDeclarationStatement()
-			}
+		if p.isCurrent(tokens.IDENT) && p.isNext(tokens.ASSIGN) {
+			return p.parseAssignmentStatement()
+		}
 
-			if p.isNext(tokens.ASSIGN) {
-				return p.parseAssignmentStatement()
-			}
+		if p.isCurrent(tokens.PIDENT) && p.isNext(tokens.IDENT) {
+			return p.parseDeclarationStatement()
 		}
 
 		return p.parseExpressionStatement()
@@ -220,7 +220,7 @@ func (p *Parser) parseWhileStatement() (bool, *ast.WhileStatement) {
 func (p *Parser) parseAliasStatement() (bool, *ast.AliasStatement) {
 	statement := &ast.AliasStatement{Token: p.current}
 
-	if !p.expectNext(tokens.IDENT) {
+	if !p.expectNext(tokens.PIDENT) {
 		return false, nil
 	}
 
@@ -230,7 +230,7 @@ func (p *Parser) parseAliasStatement() (bool, *ast.AliasStatement) {
 		return false, nil
 	}
 
-	if !p.expectNext(tokens.IDENT) {
+	if !p.expectNext(tokens.PIDENT) {
 		return false, nil
 	}
 
@@ -251,7 +251,7 @@ func (p *Parser) parseAliasStatement() (bool, *ast.AliasStatement) {
 func (p *Parser) parseFunctionStatement() (bool, *ast.FunctionStatement) {
 	statement := &ast.FunctionStatement{Token: p.current}
 
-	if !p.expectNext(tokens.IDENT) {
+	if !p.expectNext(tokens.PIDENT) {
 		return false, nil
 	}
 
@@ -259,7 +259,7 @@ func (p *Parser) parseFunctionStatement() (bool, *ast.FunctionStatement) {
 
 	if p.isNext(tokens.DCOLON) {
 		p.nextToken()
-		if !p.expectNext(tokens.IDENT) {
+		if !p.expectNext(tokens.PIDENT) {
 			return false, nil
 		}
 		name.Type = &ast.Identifier{Token: p.current, Value: p.current.Literal}
@@ -507,10 +507,9 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 
 	for level == p.level && !p.isCurrent(tokens.EOF) {
 		ok, statement := p.parseStatement()
-		if !ok {
-			continue
+		if ok {
+			block.Statements = append(block.Statements, statement)
 		}
-		block.Statements = append(block.Statements, statement)
 
 		if p.isCurrent(tokens.NEWLINE) && p.isNext(tokens.INDENT) {
 			p.nextToken()
@@ -602,7 +601,7 @@ func (p *Parser) parseFunctionParameters() []*ast.TypedIdentifier {
 		}
 		parameter := &ast.TypedIdentifier{Token: p.current, Value: p.current.Literal}
 
-		if !p.expectNext(tokens.IDENT) {
+		if !p.expectNext(tokens.PIDENT) {
 			return nil
 		}
 		parameter.Type = &ast.Identifier{Token: p.current, Value: p.current.Literal}
@@ -615,7 +614,9 @@ func (p *Parser) parseFunctionParameters() []*ast.TypedIdentifier {
 
 func (p *Parser) parseScopeExpression(scope ast.Expression) ast.Expression {
 	exp := &ast.ScopeExpression{Token: p.current, Scope: scope}
-	if !p.expectNext(tokens.IDENT) {
+	if p.isNext(tokens.IDENT) || p.isNext(tokens.PIDENT) {
+		p.nextToken()
+	} else {
 		return nil
 	}
 	exp.Value = p.parseIdentifier()

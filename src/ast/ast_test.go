@@ -12,7 +12,7 @@ func TestString(test *testing.T) {
 			&ast.DeclarationStatement{
 				Name: &ast.TypedIdentifier{
 					Token: tokens.Token{Type: tokens.IDENT, Literal: "myVar", Line: 1, Offset: 4},
-					Type:  &ast.Identifier{Token: tokens.Token{Type: tokens.IDENT, Literal: "Int", Line: 1, Offset: 4}, Value: "Int"},
+					Type:  &ast.Identifier{Token: tokens.Token{Type: tokens.PIDENT, Literal: "Int", Line: 1, Offset: 4}, Value: "Int"},
 					Value: "myVar"},
 				Value: &ast.Identifier{Token: tokens.Token{Type: tokens.IDENT, Literal: "anotherVar", Line: 1, Offset: 9}, Value: "anotherVar"},
 			},

@@ -27,9 +27,9 @@ bot::Move$ RotateClockwise$ dir
 
 ```
 Alias Numbers::Int:
-    One = 1
-    Two = 2
-    Four = 4
+    one = 1
+    two = 2
+    four = 4
 
 Scope names:
     max = 1000

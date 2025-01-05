@@ -20,6 +20,7 @@ const (
 	COMMA   = ","
 
 	IDENT  = "IDENT"
+	PIDENT = "PIDENT" //prime identifier starts with uppercase letter
 	NUMBER = "NUMBER"
 
 	USING  = "USING"
@@ -71,8 +72,20 @@ var keywords = map[string]TokenType{
 }
 
 func LookUpIdent(ident string) TokenType {
+	if len(ident) == 0 {
+		panic("empty identity")
+	}
+
 	if tok, ok := keywords[ident]; ok {
 		return tok
 	}
+
+	if isUppercase(ident[0]) {
+		return PIDENT
+	}
 	return IDENT
+}
+
+func isUppercase(char byte) bool {
+	return 'A' <= char && char <= 'Z'
 }

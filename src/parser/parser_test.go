@@ -91,9 +91,9 @@ hungry = False`)
 func TestAliasStatement(test *testing.T) {
 	input := []byte(`
 Alias Numbers::Int:
-    One = 1
-    Two = 2
-    Four = 4`)
+    one = 1
+    two = 2
+    four = 4`)
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
@@ -119,7 +119,7 @@ Alias Numbers::Int:
 		return
 	}
 
-	tests := []string{"One", "Two", "Four"}
+	tests := []string{"one", "two", "four"}
 
 	// TODO check expression
 	for i, ident := range tests {
