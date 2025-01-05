@@ -567,7 +567,9 @@ Fun Z$v Int:
 }
 
 func TestIdentifierExpression(test *testing.T) {
-	input := []byte(`foobar`)
+	input := []byte(`
+foobar
+goo`)
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
@@ -577,9 +579,11 @@ func TestIdentifierExpression(test *testing.T) {
 	}
 	checkParseErrors(test, parser, input)
 
-	if len(program.Statements) != 1 {
-		test.Fatalf("program has not enough statements, got=%d", len(program.Statements))
+	length := 2
+	if len(program.Statements) != 2 {
+		test.Fatalf("program has not enough statements, expectdd=%d, got=%d", length, len(program.Statements))
 	}
+
 	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
 		test.Fatalf("program.Statements[0] is not ast.ExpressionStatement, got=%T", program.Statements[0])
@@ -594,6 +598,22 @@ func TestIdentifierExpression(test *testing.T) {
 	}
 	if exp.TokenLiteral() != "foobar" {
 		test.Errorf("exp.TokenLiteral() is not %s, got=%s", "foobar", exp.TokenLiteral())
+	}
+
+	statement, ok = program.Statements[1].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[1] is not ast.ExpressionStatement, got=%T", program.Statements[1])
+	}
+
+	exp, ok = statement.Expression.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("expression is not *ast.Identifier, got=%T", statement.Expression)
+	}
+	if exp.Value != "goo" {
+		test.Errorf("exp.Value is not %s, got=%s", "goo", exp.Value)
+	}
+	if exp.TokenLiteral() != "goo" {
+		test.Errorf("exp.TokenLiteral() is not %s, got=%s", "goo", exp.TokenLiteral())
 	}
 }
 
@@ -915,7 +935,9 @@ Else:
 }
 
 func TestCallExpression(test *testing.T) {
-	input := []byte(`Get$1 < x,z,  z==2`)
+	input := []byte(`
+Get$1 < x,z,  z==2
+Read$2`)
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
@@ -925,8 +947,9 @@ func TestCallExpression(test *testing.T) {
 	}
 	checkParseErrors(test, parser, input)
 
-	if len(program.Statements) != 1 {
-		test.Fatalf("program has not enough statements, got=%d", len(program.Statements))
+	length := 2
+	if len(program.Statements) != length {
+		test.Fatalf("program has not enough statements, expected=%d, got=%d", length, len(program.Statements))
 	}
 
 	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
@@ -943,7 +966,7 @@ func TestCallExpression(test *testing.T) {
 		return
 	}
 
-	length := 3
+	length = 3
 	if len(exp.Arguments) != length {
 		test.Fatalf("wrong length of arguments, expected=%d, got=%d", length, len(exp.Arguments))
 	}
@@ -967,6 +990,152 @@ func TestCallExpression(test *testing.T) {
 	}
 
 	if !testInfixExpression(test, arg3, "z", "==", 2) {
+		return
+	}
+
+	//
+
+	statement, ok = program.Statements[1].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[1] is not ast.ExpressionStatement, got=%T", program.Statements[1])
+	}
+
+	exp, ok = statement.Expression.(*ast.CallExpression)
+	if !ok {
+		test.Fatalf("statement.Expression is not ast.CallExpression, got=%T", statement.Expression)
+	}
+
+	if !testIdentifier(test, exp.Function, "Read") {
+		return
+	}
+
+	length = 1
+	if len(exp.Arguments) != length {
+		test.Fatalf("wrong length of arguments, expected=%d, got=%d", length, len(exp.Arguments))
+	}
+
+	if !testIntegralLiteral(test, exp.Arguments[0], 2) {
+		return
+	}
+}
+
+func TestScopeExpression(test *testing.T) {
+	input := []byte(`bot::max
+world::Get
+world::compass::south`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 3
+	if len(program.Statements) != length {
+		test.Fatalf("program has not enough statements, expected=%d, got=%d", length, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.ExpressionStatement, got=%T", program.Statements[0])
+	}
+
+	exp, ok := statement.Expression.(*ast.ScopeExpression)
+	if !ok {
+		test.Fatalf("statement.Expression is not ast.ScopeExpression, got=%T", statement.Expression)
+	}
+
+	scope, ok := exp.Scope.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("exp.Scope is not ast.Identifier, got=%T", exp.Scope)
+	}
+
+	if !testIdentifier(test, scope, "bot") {
+		return
+	}
+
+	ident, ok := exp.Value.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("exp.Value is not ast.Identifier, got=%T", exp.Value)
+	}
+
+	if !testIdentifier(test, ident, "max") {
+		return
+	}
+
+	//
+
+	statement, ok = program.Statements[1].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[1] is not ast.ExpressionStatement, got=%T", program.Statements[1])
+	}
+
+	exp, ok = statement.Expression.(*ast.ScopeExpression)
+	if !ok {
+		test.Fatalf("statement.Expression is not ast.ScopeExpression, got=%T", statement.Expression)
+	}
+
+	scope, ok = exp.Scope.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("exp.Scope is not ast.Identifier, got=%T", exp.Scope)
+	}
+
+	if !testIdentifier(test, scope, "world") {
+		return
+	}
+
+	ident, ok = exp.Value.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("exp.Value is not ast.Identifier, got=%T", exp.Value)
+	}
+
+	if !testIdentifier(test, ident, "Get") {
+		return
+	}
+
+	//
+
+	statement, ok = program.Statements[2].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[2] is not ast.ExpressionStatement, got=%T", program.Statements[2])
+	}
+
+	exp, ok = statement.Expression.(*ast.ScopeExpression)
+	if !ok {
+		test.Fatalf("statement.Expression is not ast.ScopeExpression, got=%T", statement.Expression)
+	}
+
+	superScope, ok := exp.Scope.(*ast.ScopeExpression)
+	if !ok {
+		test.Fatalf("exp.Scope is not ast.ScopeExpression, got=%T", exp.Scope)
+	}
+
+	scope, ok = superScope.Scope.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("superScope.Scope is not ast.Identifier, got=%T", superScope.Scope)
+	}
+
+	if !testIdentifier(test, scope, "world") {
+		return
+	}
+
+	ident, ok = superScope.Value.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("exp.Value is not ast.Identifier, got=%T", superScope.Value)
+	}
+
+	if !testIdentifier(test, ident, "compass") {
+		return
+	}
+
+	ident, ok = exp.Value.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("exp.Value is not ast.ScopeExpression, got=%T", exp.Value)
+	}
+
+	if !testIdentifier(test, ident, "south") {
 		return
 	}
 }

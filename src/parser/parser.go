@@ -17,9 +17,11 @@ const (
 	LESSGREATER // > or <
 	PREFIX      // Not
 	CALL        // func$ or func
+	SCOPE       // ::
 )
 
 var precedence = map[tokens.TokenType]int{
+	tokens.DCOLON: SCOPE,
 	tokens.DOLLAR: CALL,
 	tokens.EQUAL:  EQUALS,
 	tokens.NEQUAL: EQUALS,
@@ -65,6 +67,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerInfix(tokens.NEQUAL, p.parseInfixExpression)
 	p.registerInfix(tokens.EQUAL, p.parseInfixExpression)
 	p.registerInfix(tokens.DOLLAR, p.parseCallExpression)
+	p.registerInfix(tokens.DCOLON, p.parseScopeExpression)
 
 	p.nextToken()
 	p.nextToken()
@@ -116,7 +119,7 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 		return p.parseAliasStatement()
 	case tokens.FUN:
 		return p.parseFunctionStatement()
-	case tokens.EOF, tokens.INDENT, tokens.NEWLINE, tokens.ELIF:
+	case tokens.COLON, tokens.EOF, tokens.INDENT, tokens.NEWLINE, tokens.ELIF:
 		err := helper.MakeError(p.current, fmt.Sprintf("attempt to parse invalid token %s", p.current.Type))
 		p.addError(err)
 		return false, nil
@@ -292,18 +295,12 @@ func (p *Parser) parseAssignmentStatement() (bool, *ast.AssignmentStatement) {
 	p.nextToken()
 	statement.Value = p.parseExpression(LOWEST)
 
-	if !p.expectNewline() {
-		return false, nil
-	}
-
 	return true, statement
 }
 
 func (p *Parser) parseExpressionStatement() (bool, *ast.ExpressionStatement) {
 	statement := &ast.ExpressionStatement{Token: p.current}
-
 	statement.Expression = p.parseExpression(LOWEST)
-
 	return true, statement
 }
 
@@ -325,6 +322,10 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		}
 
 		leftExpression = infix(leftExpression)
+	}
+
+	if p.isNext(tokens.NEWLINE) {
+		p.nextToken()
 	}
 
 	return leftExpression
@@ -510,13 +511,13 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 			continue
 		}
 		block.Statements = append(block.Statements, statement)
-		p.nextToken()
 
 		if p.isCurrent(tokens.NEWLINE) && p.isNext(tokens.INDENT) {
 			p.nextToken()
+		} else {
+			break
 		}
 	}
-
 	return block
 }
 
@@ -610,6 +611,16 @@ func (p *Parser) parseFunctionParameters() []*ast.TypedIdentifier {
 	}
 
 	return parameters
+}
+
+func (p *Parser) parseScopeExpression(scope ast.Expression) ast.Expression {
+	exp := &ast.ScopeExpression{Token: p.current, Scope: scope}
+	if !p.expectNext(tokens.IDENT) {
+		return nil
+	}
+	exp.Value = p.parseIdentifier()
+
+	return exp
 }
 
 func (p *Parser) expectNewline() bool {

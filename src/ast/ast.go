@@ -409,3 +409,23 @@ func (ce *CallExpression) String() string {
 
 	return out.String()
 }
+
+type ScopeExpression struct {
+	Token tokens.Token
+	Scope Expression
+	Value Expression
+}
+
+func (se *ScopeExpression) expressionNode()      {}
+func (se *ScopeExpression) statementNode()       {}
+func (se *ScopeExpression) TokenLiteral() string { return se.Token.Literal }
+
+func (se *ScopeExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(se.Scope.String())
+	out.WriteString("::")
+	out.WriteString(se.Value.String())
+
+	return out.String()
+}
