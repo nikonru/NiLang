@@ -10,7 +10,7 @@ import (
 )
 
 func TestDeclarationStatement(test *testing.T) {
-	input := []byte(`Bool x = false
+	input := []byte(`Bool x = False
 Int number = 1400
 Dir face = forward`)
 
@@ -31,15 +31,21 @@ Dir face = forward`)
 	tests := []struct {
 		expectedTypeLiteral string
 		expectedIdentifier  string
+		expectedValue       interface{}
 	}{
-		{"Bool", "x"},
-		{"Int", "number"},
-		{"Dir", "face"},
+		{"Bool", "x", false},
+		{"Int", "number", 1400},
+		{"Dir", "face", "forward"},
 	}
-	// TODO check expression
+
 	for i, t := range tests {
 		statement := program.Statements[i]
 		if !testDeclarationStatement(test, statement, t.expectedTypeLiteral, t.expectedIdentifier) {
+			return
+		}
+
+		val := statement.(*ast.DeclarationStatement).Value
+		if !testLiteralExpression(test, val, t.expectedValue) {
 			return
 		}
 	}
@@ -119,11 +125,23 @@ Alias Numbers::Int:
 		return
 	}
 
-	tests := []string{"one", "two", "four"}
+	tests := []struct {
+		expectedName  string
+		expectedValue interface{}
+	}{
+		{"one", 1},
+		{"two", 2},
+		{"four", 4},
+	}
 
-	// TODO check expression
-	for i, ident := range tests {
-		if !testDeclarationStatement(test, statement.Values[i], expectedType, ident) {
+	for i, testCase := range tests {
+		stm := statement.Values[i]
+
+		if !testDeclarationStatement(test, stm, expectedType, testCase.expectedName) {
+			return
+		}
+
+		if !testLiteralExpression(test, stm.Value, testCase.expectedValue) {
 			return
 		}
 	}
@@ -214,7 +232,6 @@ Scope names:
 	if !ok {
 		test.Fatalf("program.Statements[0] is not ast.ScopeStatement, got=%T", program.Statements[0])
 	}
-	// TODO check expression
 
 	length = 2
 	if len(statement.Body.Statements) != length {
@@ -225,7 +242,17 @@ Scope names:
 		return
 	}
 
+	val := statement.Body.Statements[0].(*ast.DeclarationStatement).Value
+	if !testLiteralExpression(test, val, 1) {
+		return
+	}
+
 	if !testDeclarationStatement(test, statement.Body.Statements[1], "Bool", "flag") {
+		return
+	}
+
+	val = statement.Body.Statements[1].(*ast.DeclarationStatement).Value
+	if !testLiteralExpression(test, val, false) {
 		return
 	}
 }

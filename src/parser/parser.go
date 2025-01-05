@@ -150,10 +150,9 @@ func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
 		return false, nil
 	}
 
-	// TODO: parse expression
-	p.skipUpToNewline()
-
 	statement := &ast.DeclarationStatement{Name: ident, Value: nil}
+	p.nextToken()
+	statement.Value = p.parseExpression(LOWEST)
 
 	return true, statement
 }
