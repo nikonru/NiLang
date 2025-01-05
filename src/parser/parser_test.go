@@ -274,7 +274,7 @@ While 1 < 2:
 		test.Fatalf("statement.Body.Statements[0] is not ast.ScopeStatement, got=%T", statement.Body.Statements[0])
 	}
 
-	if !testIdentifier(test, exp.Expression, "Foo") {
+	if !testEmptyCallExpression(test, exp.Expression, "Foo") {
 		return
 	}
 }
@@ -440,12 +440,7 @@ Fun Z$v Int:
 		test.Fatalf("statement.Body.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Body.Statements[0])
 	}
 
-	foo, ok := expStatement.Expression.(*ast.Identifier)
-	if !ok {
-		test.Fatalf("expStatement.Expression is not ast.Identifier, got=%T", expStatement.Expression)
-	}
-
-	if !testIdentifier(test, foo, "Foo") {
+	if !testEmptyCallExpression(test, expStatement.Expression, "Foo") {
 		return
 	}
 
@@ -505,12 +500,7 @@ Fun Z$v Int:
 		test.Fatalf("statement.Body.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Body.Statements[0])
 	}
 
-	foo, ok = expStatement.Expression.(*ast.Identifier)
-	if !ok {
-		test.Fatalf("expStatement.Expression is not ast.Identifier, got=%T", expStatement.Expression)
-	}
-
-	if !testIdentifier(test, foo, "Foo") {
+	if !testEmptyCallExpression(test, expStatement.Expression, "Foo") {
 		return
 	}
 
@@ -556,12 +546,7 @@ Fun Z$v Int:
 		test.Fatalf("statement.Body.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Body.Statements[0])
 	}
 
-	foo, ok = expStatement.Expression.(*ast.Identifier)
-	if !ok {
-		test.Fatalf("expStatement.Expression is not ast.Identifier, got=%T", expStatement.Expression)
-	}
-
-	if !testIdentifier(test, foo, "Foo") {
+	if !testEmptyCallExpression(test, expStatement.Expression, "Foo") {
 		return
 	}
 }
@@ -868,7 +853,7 @@ Else:
 		test.Fatalf("exp.Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Consequence.Statements[0])
 	}
 
-	if !testIdentifier(test, consequence.Expression, "Foo") {
+	if !testEmptyCallExpression(test, consequence.Expression, "Foo") {
 		return
 	}
 
@@ -894,7 +879,7 @@ Else:
 		test.Fatalf("exp.Elifs[0].Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Elifs[0].Consequence.Statements[0])
 	}
 
-	if !testIdentifier(test, consequence1.Expression, "Bar") {
+	if !testEmptyCallExpression(test, consequence1.Expression, "Bar") {
 		return
 	}
 
@@ -916,7 +901,7 @@ Else:
 		test.Fatalf("exp.Elifs[1].Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Elifs[1].Consequence.Statements[0])
 	}
 
-	if !testIdentifier(test, consequence2.Expression, "Car") {
+	if !testEmptyCallExpression(test, consequence2.Expression, "Car") {
 		return
 	}
 
@@ -929,7 +914,7 @@ Else:
 		test.Fatalf("exp.Consequence.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Alternative.Statements[0])
 	}
 
-	if !testIdentifier(test, alternative.Expression, "Goo") {
+	if !testEmptyCallExpression(test, alternative.Expression, "Goo") {
 		return
 	}
 }
@@ -937,6 +922,7 @@ Else:
 func TestCallExpression(test *testing.T) {
 	input := []byte(`
 Get$1 < x,z,  z==2
+Consume
 Read$2`)
 
 	lexer := lexer.New(input)
@@ -947,7 +933,7 @@ Read$2`)
 	}
 	checkParseErrors(test, parser, input)
 
-	length := 2
+	length := 3
 	if len(program.Statements) != length {
 		test.Fatalf("program has not enough statements, expected=%d, got=%d", length, len(program.Statements))
 	}
@@ -1005,6 +991,27 @@ Read$2`)
 		test.Fatalf("statement.Expression is not ast.CallExpression, got=%T", statement.Expression)
 	}
 
+	if !testIdentifier(test, exp.Function, "Consume") {
+		return
+	}
+
+	length = 0
+	if len(exp.Arguments) != length {
+		test.Fatalf("wrong length of arguments, expected=%d, got=%d", length, len(exp.Arguments))
+	}
+
+	//
+
+	statement, ok = program.Statements[2].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[2] is not ast.ExpressionStatement, got=%T", program.Statements[2])
+	}
+
+	exp, ok = statement.Expression.(*ast.CallExpression)
+	if !ok {
+		test.Fatalf("statement.Expression is not ast.CallExpression, got=%T", statement.Expression)
+	}
+
 	if !testIdentifier(test, exp.Function, "Read") {
 		return
 	}
@@ -1022,7 +1029,8 @@ Read$2`)
 func TestScopeExpression(test *testing.T) {
 	input := []byte(`bot::max
 world::Get
-world::compass::south`)
+world::compass::south
+world::Set$1`)
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
@@ -1032,7 +1040,7 @@ world::compass::south`)
 	}
 	checkParseErrors(test, parser, input)
 
-	length := 3
+	length := 4
 	if len(program.Statements) != length {
 		test.Fatalf("program has not enough statements, expected=%d, got=%d", length, len(program.Statements))
 	}
@@ -1072,26 +1080,25 @@ world::compass::south`)
 		test.Fatalf("program.Statements[1] is not ast.ExpressionStatement, got=%T", program.Statements[1])
 	}
 
-	exp, ok = statement.Expression.(*ast.ScopeExpression)
+	call, ok := statement.Expression.(*ast.CallExpression)
 	if !ok {
-		test.Fatalf("statement.Expression is not ast.ScopeExpression, got=%T", statement.Expression)
+		test.Fatalf("statement.Expression is not ast.CallExpression, got=%T", statement.Expression)
 	}
 
-	scope, ok = exp.Scope.(*ast.Identifier)
-	if !ok {
-		test.Fatalf("exp.Scope is not ast.Identifier, got=%T", exp.Scope)
+	if len(call.Arguments) != 0 {
+		test.Fatalf("wrong number of arguments,expected=%d, got=%T", 0, call.TokenLiteral())
 	}
 
-	if !testIdentifier(test, scope, "world") {
+	superScope, ok := call.Function.(*ast.ScopeExpression)
+	if !ok {
+		test.Fatalf("call.Function is not ast.ScopeExpression, got=%T", exp.Scope)
+	}
+
+	if !testIdentifier(test, superScope.Scope, "world") {
 		return
 	}
 
-	ident, ok = exp.Value.(*ast.Identifier)
-	if !ok {
-		test.Fatalf("exp.Value is not ast.Identifier, got=%T", exp.Value)
-	}
-
-	if !testIdentifier(test, ident, "Get") {
+	if !testIdentifier(test, superScope.Value, "Get") {
 		return
 	}
 
@@ -1107,7 +1114,7 @@ world::compass::south`)
 		test.Fatalf("statement.Expression is not ast.ScopeExpression, got=%T", statement.Expression)
 	}
 
-	superScope, ok := exp.Scope.(*ast.ScopeExpression)
+	superScope, ok = exp.Scope.(*ast.ScopeExpression)
 	if !ok {
 		test.Fatalf("exp.Scope is not ast.ScopeExpression, got=%T", exp.Scope)
 	}
@@ -1136,6 +1143,39 @@ world::compass::south`)
 	}
 
 	if !testIdentifier(test, ident, "south") {
+		return
+	}
+
+	//
+
+	statement, ok = program.Statements[3].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[3] is not ast.ExpressionStatement, got=%T", program.Statements[3])
+	}
+
+	call, ok = statement.Expression.(*ast.CallExpression)
+	if !ok {
+		test.Fatalf("statement.Expression is not ast.CallExpression, got=%T", statement.Expression)
+	}
+
+	if len(call.Arguments) != 1 {
+		test.Fatalf("wrong number of arguments,expected=%d, got=%T", 1, call.TokenLiteral())
+	}
+
+	if !testIntegralLiteral(test, call.Arguments[0], 1) {
+		return
+	}
+
+	superScope, ok = call.Function.(*ast.ScopeExpression)
+	if !ok {
+		test.Fatalf("call.Function is not ast.Identifier, got=%T", call.Function)
+	}
+
+	if !testIdentifier(test, superScope.Scope, "world") {
+		return
+	}
+
+	if !testIdentifier(test, superScope.Value, "Set") {
 		return
 	}
 }
@@ -1289,6 +1329,42 @@ func testIdentifier(test *testing.T, expression ast.Expression, value string) bo
 	ident, ok := expression.(*ast.Identifier)
 	if !ok {
 		test.Errorf("expression is not *ast.Identifier, got=%T", expression)
+		return false
+	}
+
+	if ident.Value != value {
+		test.Errorf("expression is not %v, got=%v", value, expression)
+		return false
+	}
+
+	if ident.TokenLiteral() != value {
+		test.Errorf("ident.TokenLiteral() is not %s, got=%s", value, ident.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func testEmptyCallExpression(test *testing.T, expression ast.Expression, value string) bool {
+	fun, ok := expression.(*ast.CallExpression)
+	if !ok {
+		test.Errorf("expression is not *ast.CallExpression, got=%T", expression)
+		return false
+	}
+
+	if fun.TokenLiteral() != value {
+		test.Errorf("fun.TokenLiteral() is not %v, got=%v", value, fun.TokenLiteral())
+		return false
+	}
+
+	if len(fun.Arguments) != 0 {
+		test.Errorf("wrong number of fun.Arguments, expected=0, got=%v", len(fun.Arguments))
+		return false
+	}
+
+	ident, ok := fun.Function.(*ast.Identifier)
+	if !ok {
+		test.Errorf("fun.Function is not *ast.Identifier, got=%T", fun.Function)
 		return false
 	}
 

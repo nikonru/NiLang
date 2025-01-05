@@ -54,7 +54,7 @@ func New(lexer *lexer.Lexer) *Parser {
 
 	p.prefixParseFns = make(map[tokens.TokenType]prefixParseFns)
 	p.registerPrefix(tokens.IDENT, p.parseIdentifier)
-	p.registerPrefix(tokens.PIDENT, p.parseIdentifier)
+	p.registerPrefix(tokens.PIDENT, p.parseCallExpressionPrefix)
 	p.registerPrefix(tokens.NUMBER, p.parseIntegralLiteral)
 	p.registerPrefix(tokens.TRUE, p.parseBooleanLiteral)
 	p.registerPrefix(tokens.FALSE, p.parseBooleanLiteral)
@@ -105,7 +105,6 @@ func (p *Parser) Parse() *ast.Program {
 }
 
 func (p *Parser) parseStatement() (bool, ast.Statement) {
-	fmt.Printf("Token %v\n", p.current)
 	switch p.current.Type {
 	case tokens.USING:
 		return p.parseUsingStatement()
@@ -561,6 +560,16 @@ func (p *Parser) parseAliasValues(t *ast.Identifier) []*ast.DeclarationStatement
 	return statements
 }
 
+func (p *Parser) parseCallExpressionPrefix() ast.Expression {
+	fun := p.parseIdentifier()
+	if p.isNext(tokens.DOLLAR) {
+		return fun
+	}
+	exp := &ast.CallExpression{Token: p.current, Function: fun}
+	exp.Arguments = nil
+	return exp
+}
+
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	exp := &ast.CallExpression{Token: p.current, Function: function}
 	exp.Arguments = p.parseCallArguments()
@@ -570,6 +579,7 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 func (p *Parser) parseCallArguments() []ast.Expression {
 	args := []ast.Expression{}
 	if p.isNext(tokens.NEWLINE) {
+		// maybe we never visit this if
 		p.nextToken()
 		return nil
 	}
@@ -619,7 +629,18 @@ func (p *Parser) parseScopeExpression(scope ast.Expression) ast.Expression {
 	} else {
 		return nil
 	}
+
 	exp.Value = p.parseIdentifier()
+
+	if p.isCurrent(tokens.PIDENT) {
+		if p.isNext(tokens.DOLLAR) {
+			p.nextToken()
+			return p.parseCallExpression(exp)
+		}
+		exp := &ast.CallExpression{Token: p.current, Function: exp}
+		exp.Arguments = nil
+		return exp
+	}
 
 	return exp
 }
