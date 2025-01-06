@@ -608,6 +608,56 @@ Fun Z$v Int:
 	}
 }
 
+func TestBodyOfFunction(test *testing.T) {
+	input := []byte(`
+Fun F::Bool$max Int, default Bool:
+    Using bot
+    ConsumeSunlight
+    If GetEnergy > max:
+        Return True
+    Elif GetEnergy < max:
+        Return False
+    Else:
+        Return default
+    If 2 > 5:
+        Get
+    Int x = 4
+    Return default
+`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 1
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.FunctionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.FunnctionStatement, got=%T", program.Statements[0])
+	}
+
+	if statement.TokenLiteral() != "Fun" {
+		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
+	}
+
+	if !testTypedIdentifier(test, statement.Name, "Bool", "F") {
+		return
+	}
+
+	length = 6
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in F, expected=%d, got=%d", length, len(statement.Body.Statements))
+	}
+}
+
 func TestIdentifierExpression(test *testing.T) {
 	input := []byte(`
 foobar
