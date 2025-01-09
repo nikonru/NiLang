@@ -186,6 +186,11 @@ func (p *Parser) parseReturnStatement() (bool, *ast.ReturnStatement) {
 
 	p.nextToken()
 
+	if p.isCurrent(tokens.NEWLINE) || p.isCurrent(tokens.EOF) {
+		statement.Value = nil
+		return true, statement
+	}
+
 	statement.Value = p.parseExpression(LOWEST)
 
 	return true, statement

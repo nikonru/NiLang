@@ -238,6 +238,61 @@ func TestReturnStatement(test *testing.T) {
 	}
 }
 
+func TestEmptyReturnStatement(test *testing.T) {
+	input := []byte(`Return`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 1
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ReturnStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.ReturnStatement, got=%T", program.Statements[0])
+	}
+
+	if statement.Value != nil {
+		return
+	}
+}
+
+func TestEmptyReturnStatementWithNewline(test *testing.T) {
+	input := []byte(`Return
+x = 10`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 2
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ReturnStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.ReturnStatement, got=%T", program.Statements[0])
+	}
+
+	if statement.Value != nil {
+		return
+	}
+}
+
 func TestScopeStatement(test *testing.T) {
 	input := []byte(`
 Scope names:
