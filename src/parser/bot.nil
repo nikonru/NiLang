@@ -34,6 +34,18 @@ Fun F::Bool$max Int, default Bool:
     Int x = 4
     Return default
 
+Fun T::Bool$max Int, default Bool:
+    Using bot
+    ConsumeSunlight
+    If GetEnergy > max:
+        Return True
+    Elif GetEnergy < max:
+        Return False
+    Else:
+        Return default
+    If 2 > 5:
+        Get
+
 Fun G::Int:
     Return 5
 

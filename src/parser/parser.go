@@ -101,7 +101,9 @@ func (p *Parser) Parse() *ast.Program {
 		if ok {
 			program.Statements = append(program.Statements, statement)
 		}
+
 		if p.pleaseDontSkipToken {
+
 			p.pleaseDontSkipToken = false
 			continue
 		}
@@ -465,8 +467,10 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 	if !p.gotoBlockStatement() {
 		return false, nil
 	}
+
 	statement.Consequence = p.parseBlockStatement()
 	p.nextToken()
+
 	for p.isCurrent(tokens.ELIF) {
 		p.nextToken()
 
@@ -525,10 +529,18 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 		return nil
 	}
 
-	for level == p.level && !p.isCurrent(tokens.EOF) {
+	isInBlock := func() bool {
+		return level == p.level && !p.isCurrent(tokens.EOF)
+	}
+
+	for isInBlock() {
 		ok, statement := p.parseStatement()
 		if ok {
 			block.Statements = append(block.Statements, statement)
+		}
+
+		if !isInBlock() {
+			break
 		}
 
 		if p.pleaseDontSkipToken {
