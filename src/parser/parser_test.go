@@ -1342,6 +1342,49 @@ world::Set$1`)
 	}
 }
 
+func TestLackOfIndentationStatement(test *testing.T) {
+	input := []byte(`
+If x:
+    Get Forward`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+
+	errors := parser.Errors()
+
+	if len(errors) != 1 {
+		checkParseErrors(test, parser, input)
+		test.Fatalf("expected 1 parsing error, got=%d", len(errors))
+	}
+}
+
+func TestIncorrectIndentationStatement(test *testing.T) {
+	input := []byte(`
+If x:
+    Get 
+        Forward`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+
+	errors := parser.Errors()
+
+	if len(errors) != 1 {
+		checkParseErrors(test, parser, input)
+		test.Fatalf("expected 1 parsing error, got=%d", len(errors))
+	}
+}
+
 func testInfixExpression(test *testing.T, exp *ast.InfixExpression, left interface{}, operator string, right interface{}) bool {
 
 	if !testLiteralExpression(test, exp.Left, left) {

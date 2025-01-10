@@ -466,6 +466,8 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 	statement := &ast.IfStatement{Token: p.current}
 	statement.Elifs = make([]*ast.ElifStatement, 0)
 
+	level := p.level
+
 	p.nextToken()
 	statement.Condition = p.parseExpression(LOWEST)
 
@@ -505,6 +507,11 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 		p.nextToken()
 	}
 	p.pleaseDontSkipToken = true
+
+	if p.level > level && !p.isCurrent(tokens.EOF) {
+		err := helper.MakeError(p.current, "unexpected indentation after if statement")
+		p.addError(err)
+	}
 
 	return true, statement
 }
