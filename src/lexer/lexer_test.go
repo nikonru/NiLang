@@ -84,6 +84,7 @@ func TestLexer(t *testing.T) {
 		{tokens.DOLLAR, "$"},
 		{tokens.IDENT, "dir"},
 		{tokens.NEWLINE, "newline"},
+		{tokens.EOF, ""},
 	}
 
 	Lexer := lexer.New(input)
@@ -135,6 +136,8 @@ func TestLexerLines(t *testing.T) {
 		{tokens.IDENT, "y", 5, 9},
 		{tokens.ASSIGN, "=", 5, 11},
 		{tokens.NUMBER, "1", 5, 13},
+		{tokens.NEWLINE, "newline", 5, 14},
+		{tokens.EOF, "", 6, 0},
 	}
 
 	Lexer := lexer.New(input)

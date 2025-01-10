@@ -101,8 +101,12 @@ func (l *lexer) NextToken() tokens.Token {
 			tok = l.newToken(tokens.LT)
 		}
 	case 0:
+		// tok.Literal = ""
+		// tok.Type = tokens.EOF
+		// tok.Line = l.line
+		// tok.Offset = l.offset
+		tok = l.newToken(tokens.EOF)
 		tok.Literal = ""
-		tok.Type = tokens.EOF
 	case '\t':
 		desc := fmt.Sprintf("tabulation is not allowed, use %d whitespaces only", tokens.INDENT_LENGTH)
 		err := helper.Error{Line: l.line, Offset: l.offset, Description: desc}
