@@ -1,23 +1,27 @@
 package compiler
 
 import (
+	"NiLang/src/ast"
 	"NiLang/src/helper"
 	"NiLang/src/lexer"
 	"NiLang/src/parser"
-	"NiLang/src/ast"
 	"bytes"
 	"errors"
-	"strconv"
 	"fmt"
 	"log"
+	"strconv"
 )
 
+type address = int
+
 type Compiler struct {
-	output bytes.Buffer
+	output      bytes.Buffer
+	memoryIndex address
+	variables   map[name]variable
 }
 
 func New() *Compiler {
-	return &Compiler{}
+	return &Compiler{memoryIndex: -1, variables: make(map[string]variable)}
 }
 
 func (c *Compiler) Compile(input []byte) ([]byte, error) {
@@ -42,33 +46,32 @@ func (c *Compiler) Compile(input []byte) ([]byte, error) {
 
 	fmt.Println("PROGRAM TREE")
 	for _, statement := range program.Statements {
+		c.compileStatement(statement)
 		fmt.Println(statement.String())
 	}
 	fmt.Println("END")
-
-	c.emit(LOAD, AX, BX)
-	c.emit(LOAD, 2, BX)
-	c.emitLabel("lab")
-
+	fmt.Println(c.variables)
 	return c.output.Bytes(), nil
 }
 
 func (c *Compiler) emit(op command, arg1 interface{}, arg2 interface{}) {
 
-	write := func(arg interface{}, id int){
+	write := func(arg interface{}, id int) {
 		switch v := arg.(type) {
 		case int:
 			c.output.WriteString(strconv.Itoa(v))
+		case int64:
+			c.output.WriteString(strconv.FormatInt(v, 10))
 		case string:
 			c.output.WriteString(v)
 		case bool:
-			if v{
+			if v {
 				c.output.WriteString("1")
-			} else{
+			} else {
 				c.output.WriteString("0")
 			}
 		default:
-			log.Fatalf("type of arg%d not handled. got=%T", arg, id)
+			log.Fatalf("type of arg%d not handled. got=%T", id, arg)
 		}
 	}
 
@@ -86,11 +89,65 @@ func (c *Compiler) emit(op command, arg1 interface{}, arg2 interface{}) {
 	c.output.WriteString("\n")
 }
 
-func (c *Compiler) emitLabel(label string){
-	c.emit(label +":", nil, nil)
+func (c *Compiler) emitLabel(label string) {
+	c.emit(label+":", nil, nil)
 }
 
-func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement){
-	return
+func (c *Compiler) compileStatement(statement ast.Statement) {
+	switch stm := statement.(type) {
+	case *ast.DeclarationStatement:
+		c.compileDeclarationStatement(stm)
+	case *ast.ExpressionStatement:
+		c.compileExpression(stm.Expression)
+	default:
+		log.Fatalf("type of statement is not handled. got=%T", statement)
+	}
 }
 
+func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
+	_type, register := c.compileExpression(ds.Value)
+
+	if _, ok := c.variables[ds.Name.Value]; ok {
+		log.Fatalf("redeclaration of variable %q", ds.Name.Value)
+	}
+
+	if _type != ds.Name.Type.Value {
+		log.Fatalf("declared variable and expression have different types. variable=%q, expression=%q", ds.Name.Type.Value, _type)
+	}
+
+	addr := c.getMemoryIndex()
+	c.emit(LOAD_MEM, addr, register)
+	c.variables[ds.Name.Value] = variable{Addr: addr, Type: _type}
+}
+
+func (c *Compiler) compileExpression(statement ast.Expression) (name, register) {
+	switch exp := statement.(type) {
+	case *ast.IntegralLiteral:
+		return c.compileIntegralLiteral(exp)
+	case *ast.BooleanLiteral:
+		return c.compileBooleanLiteral(exp)
+	default:
+		log.Fatalf("type of expression is not handled. got=%T", exp)
+		return "", ""
+	}
+}
+
+func (c *Compiler) compileIntegralLiteral(expression *ast.IntegralLiteral) (name, register) {
+	c.emit(LOAD_VAL, AX, expression.Value)
+	return Int, AX
+}
+
+func (c *Compiler) compileBooleanLiteral(expression *ast.BooleanLiteral) (name, register) {
+	value := 0
+	if expression.Value {
+		value = 1
+	}
+
+	c.emit(LOAD_VAL, AX, value)
+	return Bool, AX
+}
+
+func (c *Compiler) getMemoryIndex() address {
+	c.memoryIndex++
+	return c.memoryIndex
+}

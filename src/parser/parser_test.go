@@ -1525,7 +1525,7 @@ func testLiteralExpression(test *testing.T, exp ast.Expression, expected interfa
 	case bool:
 		return testBooleanLiteral(test, exp, v)
 	default:
-		test.Errorf("type of exp not handled. got=%T", exp)
+		test.Errorf("type of exp is not handled. got=%T", exp)
 		return false
 	}
 }

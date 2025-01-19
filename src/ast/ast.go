@@ -205,6 +205,17 @@ type ExpressionStatement struct {
 	Expression Expression
 }
 
+func (ds *ExpressionStatement) statementNode()       {}
+func (ds *ExpressionStatement) TokenLiteral() string { return ds.Token.Literal }
+
+func (es *ExpressionStatement) String() string {
+	if es.Expression != nil {
+		return es.Expression.String()
+	}
+
+	return ""
+}
+
 type ReturnStatement struct {
 	Token tokens.Token
 	Value Expression
@@ -220,17 +231,6 @@ func (rs *ReturnStatement) String() string {
 	out.WriteString(rs.Value.String())
 
 	return out.String()
-}
-
-func (ds *ExpressionStatement) statementNode()       {}
-func (ds *ExpressionStatement) TokenLiteral() string { return ds.Token.Literal }
-
-func (es *ExpressionStatement) String() string {
-	if es.Expression != nil {
-		return es.Expression.String()
-	}
-
-	return ""
 }
 
 type Identifier struct {
