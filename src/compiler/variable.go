@@ -8,6 +8,11 @@ type variable struct {
 }
 
 const (
+	BOOL_TRUE  = 1
+	BOOL_FALSE = 0
+)
+
+const (
 	Int  = "Int"
 	Bool = "Bool"
 )

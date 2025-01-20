@@ -5,6 +5,7 @@ import (
 	"NiLang/src/helper"
 	"NiLang/src/lexer"
 	"NiLang/src/parser"
+	"NiLang/src/tokens"
 	"bytes"
 	"errors"
 	"fmt"
@@ -18,10 +19,12 @@ type Compiler struct {
 	output      bytes.Buffer
 	memoryIndex address
 	variables   map[name]variable
+
+	labelIndex uint64
 }
 
 func New() *Compiler {
-	return &Compiler{memoryIndex: -1, variables: make(map[string]variable)}
+	return &Compiler{memoryIndex: -1, variables: make(map[string]variable), labelIndex: 0}
 }
 
 func (c *Compiler) Compile(input []byte) ([]byte, error) {
@@ -55,6 +58,7 @@ func (c *Compiler) Compile(input []byte) ([]byte, error) {
 }
 
 func (c *Compiler) emit(op command, arg1 interface{}, arg2 interface{}) {
+	//TODO make variadic
 
 	write := func(arg interface{}, id int) {
 		switch v := arg.(type) {
@@ -126,6 +130,8 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 		return c.compileIntegralLiteral(exp)
 	case *ast.BooleanLiteral:
 		return c.compileBooleanLiteral(exp)
+	case *ast.PrefixExpression:
+		return c.compilePrefixExpression(exp)
 	default:
 		log.Fatalf("type of expression is not handled. got=%T", exp)
 		return "", ""
@@ -138,16 +144,55 @@ func (c *Compiler) compileIntegralLiteral(expression *ast.IntegralLiteral) (name
 }
 
 func (c *Compiler) compileBooleanLiteral(expression *ast.BooleanLiteral) (name, register) {
-	value := 0
+	value := BOOL_FALSE
 	if expression.Value {
-		value = 1
+		value = BOOL_TRUE
 	}
 
 	c.emit(LOAD_VAL, AX, value)
 	return Bool, AX
 }
 
+func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (name, register) {
+
+	name, register := c.compileExpression(expression.Right)
+
+	switch tokens.LookUpIdent(expression.Operator) {
+	case tokens.NOT:
+		if name != Bool {
+			log.Fatalf("expected boolean expression. got=%q", name)
+		}
+
+		end := c.getUniqueLabel()
+		True := c.getUniqueLabel()
+		False := c.getUniqueLabel()
+
+		c.emit(COMPARE_WITH_VALUE, register, BOOL_TRUE)
+		c.emit(JUMP_IF_EQUAL, register, False)
+
+		c.emitLabel(True)
+		c.emit(LOAD_VAL, register, BOOL_TRUE)
+		c.emit(JUMP, end, nil)
+
+		c.emitLabel(False)
+		c.emit(LOAD_VAL, register, BOOL_FALSE)
+
+		c.emitLabel(end)
+
+	default:
+		log.Fatalf("type of prefix is not handled. got=%q", expression.Operator)
+	}
+
+	return Bool, register
+}
+
 func (c *Compiler) getMemoryIndex() address {
 	c.memoryIndex++
 	return c.memoryIndex
+}
+
+func (c *Compiler) getUniqueLabel() string {
+	// TODO: maximize number of possible labels
+	c.labelIndex++
+	return "label" + strconv.FormatUint(c.labelIndex, 10)
 }
