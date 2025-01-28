@@ -120,7 +120,7 @@ func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 	addr := c.getMemoryIndex()
 	c.emit(LOAD_MEM, addr, register)
 
-	if ok := c.addNewVariable(ds.Name.Value, addr, _type); !ok {
+	if ok := c.addVariable(ds.Name.Value, addr, _type); !ok {
 		log.Fatalf("redeclaration of variable %q", ds.Name.Value)
 	}
 }
@@ -198,13 +198,24 @@ func (c *Compiler) getUniqueLabel() string {
 	return "label" + strconv.FormatUint(c.labelIndex, 10)
 }
 
-func (c *Compiler) addNewVariable(name string, addr address, t name) bool {
+func (c *Compiler) addVariable(name string, addr address, t name) bool {
 	scope := c.variables[len(c.variables)-1]
 
 	if _, ok := scope[name]; ok {
 		return false
 	}
 
-	scope[name] = variable{Addr: addr, Type: t}
+	scope[name] = variable{Name: name, Addr: addr, Type: t}
 	return true
+}
+
+func (c *Compiler) getVariable(name string) (variable, bool) {
+	for i := len(c.variables) - 1; i >= 0; i-- {
+		scope := c.variables[i]
+
+		if variable, ok := scope[name]; ok {
+			return variable, true
+		}
+	}
+	return variable{}, false
 }

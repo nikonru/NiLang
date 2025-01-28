@@ -3,6 +3,7 @@ package compiler
 type name = string
 
 type variable struct {
+	Name name
 	Addr address
 	Type name
 }
