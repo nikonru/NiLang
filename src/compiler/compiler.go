@@ -18,13 +18,15 @@ type address = int
 type Compiler struct {
 	output      bytes.Buffer
 	memoryIndex address
-	variables   map[name]variable
+	variables   []map[name]variable
 
 	labelIndex uint64
 }
 
 func New() *Compiler {
-	return &Compiler{memoryIndex: -1, variables: make(map[string]variable), labelIndex: 0}
+	global := make(map[string]variable)
+	variables := []map[string]variable{global}
+	return &Compiler{memoryIndex: -1, variables: variables, labelIndex: 0}
 }
 
 func (c *Compiler) Compile(input []byte) ([]byte, error) {
@@ -111,17 +113,16 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 	_type, register := c.compileExpression(ds.Value)
 
-	if _, ok := c.variables[ds.Name.Value]; ok {
-		log.Fatalf("redeclaration of variable %q", ds.Name.Value)
-	}
-
 	if _type != ds.Name.Type.Value {
 		log.Fatalf("declared variable and expression have different types. variable=%q, expression=%q", ds.Name.Type.Value, _type)
 	}
 
 	addr := c.getMemoryIndex()
 	c.emit(LOAD_MEM, addr, register)
-	c.variables[ds.Name.Value] = variable{Addr: addr, Type: _type}
+
+	if ok := c.addNewVariable(ds.Name.Value, addr, _type); !ok {
+		log.Fatalf("redeclaration of variable %q", ds.Name.Value)
+	}
 }
 
 func (c *Compiler) compileExpression(statement ast.Expression) (name, register) {
@@ -195,4 +196,15 @@ func (c *Compiler) getUniqueLabel() string {
 	// TODO: maximize number of possible labels
 	c.labelIndex++
 	return "label" + strconv.FormatUint(c.labelIndex, 10)
+}
+
+func (c *Compiler) addNewVariable(name string, addr address, t name) bool {
+	scope := c.variables[len(c.variables)-1]
+
+	if _, ok := scope[name]; ok {
+		return false
+	}
+
+	scope[name] = variable{Addr: addr, Type: t}
+	return true
 }
