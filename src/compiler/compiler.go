@@ -56,9 +56,7 @@ func (c *Compiler) Compile(input []byte) ([]byte, errors) {
 	return c.output.Bytes(), c.errors
 }
 
-func (c *Compiler) emit(op command, arg1 interface{}, arg2 interface{}) {
-	//TODO make variadic
-
+func (c *Compiler) emit(op command, args ...interface{}) {
 	write := func(arg interface{}, id int) {
 		switch v := arg.(type) {
 		case int:
@@ -79,21 +77,16 @@ func (c *Compiler) emit(op command, arg1 interface{}, arg2 interface{}) {
 	}
 
 	c.output.WriteString(op)
-	if arg1 != nil {
+	for i, arg := range args {
 		c.output.WriteString(" ")
-		write(arg1, 1)
-
-		if arg2 != nil {
-			c.output.WriteString(" ")
-			write(arg2, 2)
-		}
+		write(arg, i)
 	}
 
 	c.output.WriteString("\n")
 }
 
 func (c *Compiler) emitLabel(label string) {
-	c.emit(label+":", nil, nil)
+	c.emit(label + ":")
 }
 
 func (c *Compiler) compileStatement(statement ast.Statement) {
@@ -173,7 +166,7 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (na
 
 		c.emitLabel(True)
 		c.emit(LOAD_VAL, register, BOOL_TRUE)
-		c.emit(JUMP, end, nil)
+		c.emit(JUMP, end)
 
 		c.emitLabel(False)
 		c.emit(LOAD_VAL, register, BOOL_FALSE)
@@ -193,7 +186,7 @@ func (c *Compiler) getMemoryIndex() address {
 }
 
 func (c *Compiler) getUniqueLabel() string {
-	// TODO: maximize number of possible labels
+	// TODO: maximize the number of possible labels
 	c.labelIndex++
 	return "label" + strconv.FormatUint(c.labelIndex, 10)
 }
