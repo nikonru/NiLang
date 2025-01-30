@@ -41,10 +41,11 @@ func main() {
 
 	c := compiler.New()
 	code, errors := c.Compile(input)
-	if len(errors) == 0 {
+	if len(errors) != 0 {
 		for _, err := range errors {
 			helper.PrintError(err, input)
 		}
+		log.Fatal("Failed to compile code")
 	}
 
 	output, err := os.Create(outputName)

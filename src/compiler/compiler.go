@@ -125,6 +125,8 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 		return c.compileBooleanLiteral(exp)
 	case *ast.PrefixExpression:
 		return c.compilePrefixExpression(exp)
+	case *ast.InfixExpression:
+		return c.compileInfixExpression(exp)
 	default:
 		log.Fatalf("type of expression is not handled. got=%T", exp)
 		return "", ""
@@ -178,6 +180,30 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (na
 	}
 
 	return Bool, register
+}
+
+func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name, register) {
+
+	//name, register := c.compileExpression(expression.Right)
+
+	switch expression.Operator {
+	case tokens.LT:
+		log.Fatalf("VIP %q")
+	case tokens.LE:
+		log.Fatalf("VIP")
+	case tokens.GT:
+		log.Fatalf("VIP")
+	case tokens.GE:
+		log.Fatalf("VIP")
+	case tokens.NEQUAL:
+		log.Fatalf("VIP")
+	case tokens.EQUAL:
+		log.Fatalf("VIP")
+	default:
+		log.Fatalf("type of prefix is not handled. got=%q", expression.Operator)
+	}
+
+	return Bool, AX
 }
 
 func (c *Compiler) getMemoryIndex() address {
