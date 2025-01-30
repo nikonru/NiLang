@@ -2,6 +2,7 @@ package main
 
 import (
 	"NiLang/src/compiler"
+	"NiLang/src/helper"
 	"io"
 	"log"
 	"os"
@@ -39,9 +40,11 @@ func main() {
 	}
 
 	c := compiler.New()
-	code, err := c.Compile(input)
-	if err != nil {
-		log.Fatal(err)
+	code, errors := c.Compile(input)
+	if len(errors) == 0 {
+		for _, err := range errors {
+			helper.PrintError(err, input)
+		}
 	}
 
 	output, err := os.Create(outputName)

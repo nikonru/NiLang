@@ -7,11 +7,12 @@ import (
 	"NiLang/src/parser"
 	"NiLang/src/tokens"
 	"bytes"
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
 )
+
+type errors = []helper.Error
 
 type Compiler struct {
 	output      bytes.Buffer
@@ -20,13 +21,15 @@ type Compiler struct {
 	scope *scope
 
 	labelIndex uint64
+
+	errors errors
 }
 
 func New() *Compiler {
 	return &Compiler{memoryIndex: -1, scope: newScope(""), labelIndex: 0}
 }
 
-func (c *Compiler) Compile(input []byte) ([]byte, error) {
+func (c *Compiler) Compile(input []byte) ([]byte, errors) {
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
@@ -35,15 +38,12 @@ func (c *Compiler) Compile(input []byte) ([]byte, error) {
 		log.Fatalf("parser.Parse() has returned nil")
 	}
 
-	_errors := parser.Errors()
-	if len(_errors) != 0 {
-		fmt.Printf("parser had %d error(s)\n", len(_errors))
+	errors := parser.Errors()
+	if len(errors) != 0 {
+		fmt.Printf("parser had %d error(s)\n", len(errors))
 		fmt.Print("parser error(s):\n")
-		for _, err := range _errors {
-			helper.PrintError(err, input)
-		}
 
-		return c.output.Bytes(), errors.New("parsing errors")
+		return c.output.Bytes(), errors
 	}
 
 	fmt.Println("PROGRAM TREE")
@@ -53,7 +53,7 @@ func (c *Compiler) Compile(input []byte) ([]byte, error) {
 	}
 	fmt.Println("END")
 	fmt.Println(c.scope.variables)
-	return c.output.Bytes(), nil
+	return c.output.Bytes(), c.errors
 }
 
 func (c *Compiler) emit(op command, arg1 interface{}, arg2 interface{}) {
@@ -111,14 +111,16 @@ func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 	_type, register := c.compileExpression(ds.Value)
 
 	if _type != ds.Name.Type.Value {
-		log.Fatalf("declared variable and expression have different types. variable=%q, expression=%q", ds.Name.Type.Value, _type)
+		err := helper.MakeError(ds.Name.Token, fmt.Sprintf("declared variable and expression have different types. variable=%q, expression=%q", ds.Name.Type.Value, _type))
+		c.addError(err)
 	}
 
 	addr := c.getMemoryIndex()
 	c.emit(LOAD_MEM, addr, register)
 
 	if ok := c.scope.AddVariable(ds.Name.Value, addr, _type); !ok {
-		log.Fatalf("redeclaration of variable %q", ds.Name.Value)
+		err := helper.MakeError(ds.Name.Token, fmt.Sprintf("redeclaration of variable %q", ds.Name.Value))
+		c.addError(err)
 	}
 }
 
@@ -158,7 +160,8 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (na
 	switch tokens.LookUpIdent(expression.Operator) {
 	case tokens.NOT:
 		if name != Bool {
-			log.Fatalf("expected boolean expression. got=%q", name)
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected boolean expression. got=%q", name))
+			c.addError(err)
 		}
 
 		end := c.getUniqueLabel()
@@ -193,4 +196,8 @@ func (c *Compiler) getUniqueLabel() string {
 	// TODO: maximize number of possible labels
 	c.labelIndex++
 	return "label" + strconv.FormatUint(c.labelIndex, 10)
+}
+
+func (c *Compiler) addError(error helper.Error) {
+	c.errors = append(c.errors, error)
 }
