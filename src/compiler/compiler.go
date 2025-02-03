@@ -109,7 +109,7 @@ func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 	}
 
 	addr := c.getMemoryIndex()
-	c.emit(LOAD_MEM, addr, register)
+	c.emit(LOAD_MEM_TO_REG, addr, register)
 
 	if ok := c.scope.AddVariable(ds.Name.Value, addr, _type); !ok {
 		err := helper.MakeError(ds.Name.Token, fmt.Sprintf("redeclaration of variable %q", ds.Name.Value))
@@ -134,7 +134,7 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 }
 
 func (c *Compiler) compileIntegralLiteral(expression *ast.IntegralLiteral) (name, register) {
-	c.emit(LOAD_VAL, AX, expression.Value)
+	c.emit(LOAD_VAL_TO_REG, AX, expression.Value)
 	return Int, AX
 }
 
@@ -144,18 +144,18 @@ func (c *Compiler) compileBooleanLiteral(expression *ast.BooleanLiteral) (name, 
 		value = BOOL_TRUE
 	}
 
-	c.emit(LOAD_VAL, AX, value)
+	c.emit(LOAD_VAL_TO_REG, AX, value)
 	return Bool, AX
 }
 
 func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (name, register) {
 
-	name, register := c.compileExpression(expression.Right)
+	_type, register := c.compileExpression(expression.Right)
 
 	switch tokens.LookUpIdent(expression.Operator) {
 	case tokens.NOT:
-		if name != Bool {
-			err := helper.MakeError(expression.Token, fmt.Sprintf("expected boolean expression. got=%q", name))
+		if _type != Bool {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected boolean expression. got=%q", _type))
 			c.addError(err)
 		}
 
@@ -167,11 +167,11 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (na
 		c.emit(JUMP_IF_EQUAL, register, False)
 
 		c.emitLabel(True)
-		c.emit(LOAD_VAL, register, BOOL_TRUE)
+		c.emit(LOAD_VAL_TO_REG, register, BOOL_TRUE)
 		c.emit(JUMP, end)
 
 		c.emitLabel(False)
-		c.emit(LOAD_VAL, register, BOOL_FALSE)
+		c.emit(LOAD_VAL_TO_REG, register, BOOL_FALSE)
 
 		c.emitLabel(end)
 
@@ -184,26 +184,58 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (na
 
 func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name, register) {
 
-	//name, register := c.compileExpression(expression.Right)
+	leftType, leftRegister := c.compileExpression(expression.Left)
+	buffer := c.getMemoryIndex()
+	c.emit(LOAD_REG_TO_MEM, buffer, leftRegister)
+
+	rightType, rightRegister := c.compileExpression(expression.Right)
+
+	if rightRegister != BX {
+		c.emit(LOAD_REG_TO_REG, BX, rightRegister)
+		rightRegister = BX
+	}
+
+	c.emit(LOAD_MEM_TO_REG, AX, buffer)
+	leftRegister = AX
+
+	emitComparison := func(jump command) (name, register) {
+		if leftType != Int || rightType != Int {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected int expression. got left=%q and right=%q", leftType, rightType))
+			c.addError(err)
+		}
+
+		end := c.getUniqueLabel()
+		True := c.getUniqueLabel()
+
+		c.emit(COMPARE, leftRegister, rightRegister)
+		c.emit(jump, True)
+		c.emit(LOAD_VAL_TO_REG, AX, BOOL_FALSE)
+		c.emit(JUMP, end)
+
+		c.emitLabel(True)
+		c.emit(LOAD_VAL_TO_REG, AX, BOOL_TRUE)
+
+		c.emitLabel(end)
+		return Bool, AX
+	}
 
 	switch expression.Operator {
 	case tokens.LT:
-		log.Fatalf("VIP %q")
+		return emitComparison(JUMP_IF_LESS_THAN)
 	case tokens.LE:
-		log.Fatalf("VIP")
+		return emitComparison(JUMP_IF_LESS_EQUAL_THAN)
 	case tokens.GT:
-		log.Fatalf("VIP")
+		return emitComparison(JUMP_IF_GREATER_THAN)
 	case tokens.GE:
-		log.Fatalf("VIP")
+		return emitComparison(JUMP_IF_GREATER_EQUAL_THAN)
 	case tokens.NEQUAL:
-		log.Fatalf("VIP")
+		return emitComparison(JUMP_IF_NOT_EQUAL)
 	case tokens.EQUAL:
-		log.Fatalf("VIP")
+		return emitComparison(JUMP_IF_EQUAL)
 	default:
-		log.Fatalf("type of prefix is not handled. got=%q", expression.Operator)
+		log.Fatalf("type of infix expression is not handled. got=%q", expression.Operator)
+		return "", ""
 	}
-
-	return Bool, AX
 }
 
 func (c *Compiler) getMemoryIndex() address {
