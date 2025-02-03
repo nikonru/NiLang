@@ -8,19 +8,22 @@ type scope struct {
 	functions map[name]function
 	types     map[name]name
 
+	usingScopes []name
+
 	parent   *scope
-	children []*scope
+	children map[name]*scope
 }
 
 func newScope(n name) *scope {
 	return &scope{
-		name:       n,
-		returnType: nil,
-		variables:  make(map[name]variable),
-		functions:  make(map[name]function),
-		types:      make(map[name]name),
-		parent:     nil,
-		children:   make([]*scope, 0)}
+		name:        n,
+		returnType:  nil,
+		variables:   make(map[name]variable),
+		functions:   make(map[name]function),
+		types:       make(map[name]name),
+		usingScopes: make([]name, 0),
+		parent:      nil,
+		children:    make(map[name]*scope, 0)}
 }
 
 func (s *scope) GetVariable(name name) (variable, bool) {
@@ -40,4 +43,8 @@ func (s *scope) AddVariable(name string, addr address, t name) bool {
 
 	s.variables[name] = variable{Name: name, Addr: addr, Type: t}
 	return true
+}
+
+func (s *scope) UsingScope(name string) {
+	s.usingScopes = append(s.usingScopes, name)
 }

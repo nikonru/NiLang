@@ -179,7 +179,8 @@ Alias Numbers::Int:
 
 func TestUsingStatement(test *testing.T) {
 	input := []byte(`Using bot
-Using world`)
+Using world
+Using world::compass`)
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
@@ -190,7 +191,7 @@ Using world`)
 	}
 	checkParseErrors(test, parser, input)
 
-	length := 2
+	length := 3
 	if len(program.Statements) != length {
 		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
 	}
@@ -198,14 +199,16 @@ Using world`)
 	tests := []struct {
 		expectedTypeLiteral string
 		expectedIdentifier  string
+		expectedScope       string
 	}{
-		{"Using", "bot"},
-		{"Using", "world"},
+		{"Using", "bot", ""},
+		{"Using", "world", ""},
+		{"Using", "compass", "world"},
 	}
 
 	for i, t := range tests {
 		statement := program.Statements[i]
-		if !testUsingStatement(test, statement, t.expectedTypeLiteral, t.expectedIdentifier) {
+		if !testUsingStatement(test, statement, t.expectedTypeLiteral, t.expectedIdentifier, t.expectedScope) {
 			return
 		}
 	}
@@ -1444,7 +1447,7 @@ func testIntegralLiteral(test *testing.T, expression ast.Expression, value int64
 	return true
 }
 
-func testUsingStatement(test *testing.T, statement ast.Statement, literal string, name string) bool {
+func testUsingStatement(test *testing.T, statement ast.Statement, literal string, name string, scope string) bool {
 	if statement.TokenLiteral() != literal {
 		test.Errorf("statement.TokenLiteral() is not Bool: got=%v", statement.TokenLiteral())
 		return false
@@ -1456,16 +1459,40 @@ func testUsingStatement(test *testing.T, statement ast.Statement, literal string
 		return false
 	}
 
-	if usingStatement.Name.Value != name {
-		test.Errorf("usingStatement.Name.Value is not *%v type: got=%v", name, statement)
+	switch _name := usingStatement.Name.(type) {
+	case *ast.Identifier:
+		if _name.Value != name {
+			test.Errorf("usingStatement.Name.Value is not *%v type: got=%v", name, statement)
+			return false
+		}
+
+		if _name.TokenLiteral() != name {
+			test.Errorf("usingStatement.Name.TokenLiteral is not *%v type: got=%v", name, statement)
+			return false
+		}
+	case *ast.ScopeExpression:
+		ident, ok := _name.Value.(*ast.Identifier)
+		if !ok {
+			test.Errorf("usingStatement.Name.Value is not ast.Identifier, got=%T", _name.Value)
+			return false
+		}
+
+		if !testIdentifier(test, ident, name) {
+			return false
+		}
+
+		_scope, ok := _name.Scope.(*ast.Identifier)
+		if !ok {
+			test.Fatalf("usingStatement.Name.Scope is not ast.Identifier, got=%T", _name.Scope)
+		}
+
+		if !testIdentifier(test, _scope, scope) {
+			return false
+		}
+	default:
+		test.Errorf("usingStatement.Name is not valid type: got=%T", _name)
 		return false
 	}
-
-	if usingStatement.Name.TokenLiteral() != name {
-		test.Errorf("usingStatement.Name.TokenLiteral is not *%v type: got=%v", name, statement)
-		return false
-	}
-
 	return true
 }
 

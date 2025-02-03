@@ -82,7 +82,7 @@ func (ds *DeclarationStatement) String() string {
 
 type UsingStatement struct {
 	Token tokens.Token
-	Name  *Identifier
+	Name  Expression
 }
 
 func (us *UsingStatement) statementNode()       {}

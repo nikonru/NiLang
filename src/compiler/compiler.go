@@ -105,6 +105,8 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 		c.compileExpression(stm.Expression)
 	case *ast.ReturnStatement:
 		c.compileReturnStatement(stm)
+	case *ast.UsingStatement:
+		c.compileUsingStatement(stm)
 	default:
 		log.Fatalf("type of statement is not handled. got=%T", statement)
 	}
@@ -148,6 +150,18 @@ func (c *Compiler) compileReturnStatement(rs *ast.ReturnStatement) {
 
 	c.emit(LOAD_REG_TO_REG, AX, register) // TODO: maybe we can select some area of memory for this
 	c.emit(RETURN)
+}
+
+func (c *Compiler) compileUsingStatement(us *ast.UsingStatement) {
+	switch name := us.Name.(type) {
+	case *ast.Identifier:
+		c.scope.UsingScope(name.Value)
+	case *ast.ScopeExpression:
+		return //TODO
+	default:
+		err := helper.MakeError(us.Token, fmt.Sprintf("expected identifier or scope expression of scope, got=%T", name))
+		c.addError(err)
+	}
 }
 
 func (c *Compiler) compileExpression(statement ast.Expression) (name, register) {

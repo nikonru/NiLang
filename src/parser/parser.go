@@ -174,11 +174,7 @@ func (p *Parser) parseUsingStatement() (bool, *ast.UsingStatement) {
 		return false, nil
 	}
 
-	statement.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
-
-	if !p.expectNewline() {
-		return false, nil
-	}
+	statement.Name = p.parseExpression(LOWEST)
 
 	return true, statement
 }
