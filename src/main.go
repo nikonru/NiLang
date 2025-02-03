@@ -3,24 +3,22 @@ package main
 import (
 	"NiLang/src/compiler"
 	"NiLang/src/helper"
+	"flag"
 	"io"
 	"log"
 	"os"
 )
 
 func main() {
+	stackSize := flag.Int("s", 128, "stack size in bytes")
+	outputFilename := flag.String("o", "bot.tor", "output file name")
+	flag.Parse()
 
-	args := os.Args[1:]
-
-	outputName := "bot.tor"
 	var fileName string
-	if len(args) < 1 || len(args) > 2 {
-		log.Fatal("Expected argument")
+	if flag.NArg() < 1 {
+		log.Fatal("Expected argument with path to code to compile")
 	} else {
-		fileName = args[0]
-		if len(args) > 1 {
-			outputName = args[1]
-		}
+		fileName = flag.Arg(0)
 	}
 
 	file, err := os.Open(fileName)
@@ -39,7 +37,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	c := compiler.New()
+	c := compiler.New(*stackSize)
 	code, errors := c.Compile(input)
 	if len(errors) != 0 {
 		for _, err := range errors {
@@ -48,7 +46,7 @@ func main() {
 		log.Fatal("Failed to compile code")
 	}
 
-	output, err := os.Create(outputName)
+	output, err := os.Create(*outputFilename)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -15,18 +15,26 @@ import (
 type errors = []helper.Error
 
 type Compiler struct {
-	output      bytes.Buffer
-	memoryIndex address
+	output           bytes.Buffer
+	memoryIndex      address
+	stackMemoryIndex address
 
 	scope *scope
 
 	labelIndex uint64
 
-	errors errors
+	maxStackAddress address
+	errors          errors
 }
 
-func New() *Compiler {
-	return &Compiler{memoryIndex: -1, scope: newScope(""), labelIndex: 0}
+func New(stackSize int) *Compiler {
+
+	return &Compiler{
+		memoryIndex:      address(stackSize),
+		stackMemoryIndex: -1,
+		scope:            newScope(""),
+		labelIndex:       0,
+		maxStackAddress:  address(stackSize)}
 }
 
 func (c *Compiler) Compile(input []byte) ([]byte, errors) {
@@ -98,6 +106,7 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 	default:
 		log.Fatalf("type of statement is not handled. got=%T", statement)
 	}
+	c.flushStackMemory()
 }
 
 func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
@@ -108,7 +117,7 @@ func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 		c.addError(err)
 	}
 
-	addr := c.getMemoryIndex()
+	addr := c.purchaseMemoryAddress()
 	c.emit(LOAD_MEM_TO_REG, addr, register)
 
 	if ok := c.scope.AddVariable(ds.Name.Value, addr, _type); !ok {
@@ -185,7 +194,7 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (na
 func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name, register) {
 
 	leftType, leftRegister := c.compileExpression(expression.Left)
-	buffer := c.getMemoryIndex()
+	buffer := c.purchaseStackMemoryAddress()
 	c.emit(LOAD_REG_TO_MEM, buffer, leftRegister)
 
 	rightType, rightRegister := c.compileExpression(expression.Right)
@@ -282,9 +291,21 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 	}
 }
 
-func (c *Compiler) getMemoryIndex() address {
+func (c *Compiler) purchaseMemoryAddress() address {
 	c.memoryIndex++
 	return c.memoryIndex
+}
+
+func (c *Compiler) purchaseStackMemoryAddress() address {
+	c.stackMemoryIndex++
+	if c.stackMemoryIndex >= c.maxStackAddress {
+		log.Fatalf("Stack overflow, StackSize=%d", c.maxStackAddress)
+	}
+	return c.stackMemoryIndex
+}
+
+func (c *Compiler) flushStackMemory() {
+	c.stackMemoryIndex = -1
 }
 
 func (c *Compiler) getUniqueLabel() string {
