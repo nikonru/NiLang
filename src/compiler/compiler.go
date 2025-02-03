@@ -118,7 +118,7 @@ func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 	}
 
 	addr := c.purchaseMemoryAddress()
-	c.emit(LOAD_MEM_TO_REG, addr, register)
+	c.emit(LOAD_REG_TO_MEM, addr, register)
 
 	if ok := c.scope.AddVariable(ds.Var.Name, addr, _type); !ok {
 		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("redeclaration of variable %q", ds.Var.Name))
@@ -136,6 +136,14 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 		return c.compilePrefixExpression(exp)
 	case *ast.InfixExpression:
 		return c.compileInfixExpression(exp)
+	case *ast.Identifier:
+		return c.compileIdentifier(exp)
+	case *ast.CallExpression:
+		log.Fatalf("VIP")
+		return "", ""
+	case *ast.ScopeExpression:
+		log.Fatalf("VIP")
+		return "", ""
 	default:
 		log.Fatalf("type of expression is not handled. got=%T", exp)
 		return "", ""
@@ -289,6 +297,17 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 		log.Fatalf("type of infix expression is not handled. got=%q", expression.Operator)
 		return "", ""
 	}
+}
+
+func (c *Compiler) compileIdentifier(expression *ast.Identifier) (name, register) {
+	if variable, ok := c.scope.GetVariable(expression.Value); ok {
+		c.emit(LOAD_MEM_TO_REG, AX, variable.Addr)
+		return variable.Type, AX
+	}
+
+	err := helper.MakeError(expression.Token, fmt.Sprintf("unknown identifier. got=%q", expression))
+	c.addError(err)
+	return "", ""
 }
 
 func (c *Compiler) purchaseMemoryAddress() address {
