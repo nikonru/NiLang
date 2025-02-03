@@ -157,7 +157,7 @@ func (c *Compiler) compileUsingStatement(us *ast.UsingStatement) {
 	case *ast.Identifier:
 		c.scope.UsingScope(name.Value)
 	case *ast.ScopeExpression:
-		return //TODO
+		return //TODO implement scope expression compiling and use it herre
 	default:
 		err := helper.MakeError(us.Token, fmt.Sprintf("expected identifier or scope expression of scope, got=%T", name))
 		c.addError(err)
