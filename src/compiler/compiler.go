@@ -150,12 +150,12 @@ func (c *Compiler) compileBooleanLiteral(expression *ast.BooleanLiteral) (name, 
 
 func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (name, register) {
 
-	name, register := c.compileExpression(expression.Right)
+	_type, register := c.compileExpression(expression.Right)
 
 	switch tokens.LookUpIdent(expression.Operator) {
 	case tokens.NOT:
-		if name != Bool {
-			err := helper.MakeError(expression.Token, fmt.Sprintf("expected boolean expression. got=%q", name))
+		if _type != Bool {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected boolean expression. got=%q", _type))
 			c.addError(err)
 		}
 
@@ -184,23 +184,48 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (na
 
 func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name, register) {
 
-	//name, register := c.compileExpression(expression.Right)
+	leftType, leftRegister := c.compileExpression(expression.Left)
+	c.emit(LOAD, CX, leftRegister)
+
+	rightType, rightRegister := c.compileExpression(expression.Right)
+	c.emit(LOAD, DX, rightRegister)
+
+	emitComparison := func(jump command) (name, register) {
+		if leftType != Int || rightType != Int {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected int expression. got left=%q and right=%q", leftType, rightType))
+			c.addError(err)
+		}
+
+		end := c.getUniqueLabel()
+		True := c.getUniqueLabel()
+
+		c.emit(COMPARE, AX, BX)
+		c.emit(jump, True)
+		c.emit(LOAD_VAL, AX, BOOL_FALSE)
+		c.emit(JUMP, end)
+
+		c.emitLabel(True)
+		c.emit(LOAD_VAL, AX, BOOL_TRUE)
+
+		c.emitLabel(end)
+		return Bool, AX
+	}
 
 	switch expression.Operator {
 	case tokens.LT:
-		log.Fatalf("VIP %q")
+		return emitComparison(JUMP_IF_LESS_THAN)
 	case tokens.LE:
-		log.Fatalf("VIP")
+		return emitComparison(JUMP_IF_LESS_EQUAL_THAN)
 	case tokens.GT:
-		log.Fatalf("VIP")
+		return emitComparison(JUMP_IF_GREATER_THAN)
 	case tokens.GE:
-		log.Fatalf("VIP")
+		return emitComparison(JUMP_IF_GREATER_EQUAL_THAN)
 	case tokens.NEQUAL:
-		log.Fatalf("VIP")
+		return emitComparison(JUMP_IF_NOT_EQUAL)
 	case tokens.EQUAL:
-		log.Fatalf("VIP")
+		return emitComparison(JUMP_IF_EQUAL)
 	default:
-		log.Fatalf("type of prefix is not handled. got=%q", expression.Operator)
+		log.Fatalf("type of infix expression is not handled. got=%q", expression.Operator)
 	}
 
 	return Bool, AX
