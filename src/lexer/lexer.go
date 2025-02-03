@@ -194,7 +194,7 @@ func (l *lexer) readNumberToken() tokens.Token {
 }
 
 func (l *lexer) skipComment() {
-	for !isNewline(l.char) {
+	for !isNewline(l.char) && l.char != 0 {
 		l.read()
 	}
 }
