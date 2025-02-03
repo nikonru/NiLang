@@ -1585,19 +1585,14 @@ func testEmptyCallExpression(test *testing.T, expression ast.Expression, value s
 	return true
 }
 
-func testTypedIdentifier(test *testing.T, expression ast.Statement, t string, value string) bool {
-	ident, ok := expression.(*ast.Variable)
-	if !ok {
-		test.Errorf("expression is not *ast.TypedIdentifier, got=%T", expression)
-		return false
-	}
+func testTypedIdentifier(test *testing.T, ident ast.Variable, t string, value string) bool {
 
 	if ident.Type != t {
 		return false
 	}
 
 	if ident.Name != value {
-		test.Errorf("expression is not %v, got=%v", value, expression)
+		test.Errorf("variable is not %v, got=%v", value, ident)
 		return false
 	}
 

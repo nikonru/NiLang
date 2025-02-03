@@ -10,7 +10,7 @@ func TestString(test *testing.T) {
 	program := &ast.Program{
 		Statements: []ast.Statement{
 			&ast.DeclarationStatement{
-				Var: &ast.Variable{
+				Var: ast.Variable{
 					Token: tokens.Token{Type: tokens.IDENT, Literal: "myVar", Line: 1, Offset: 4},
 					Type:  "Int",
 					Name:  "myVar"},

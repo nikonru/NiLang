@@ -20,6 +20,23 @@ type Expression interface {
 	expressionNode()
 }
 
+type Variable struct {
+	Token tokens.Token
+	Type  string
+	Name  string
+}
+
+func (ti *Variable) TokenLiteral() string { return ti.Token.Literal }
+
+func (ti *Variable) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ti.Type + " ")
+	out.WriteString(ti.Name)
+
+	return out.String()
+}
+
 type Program struct {
 	Statements []Statement
 }
@@ -43,7 +60,7 @@ func (p *Program) String() string {
 }
 
 type DeclarationStatement struct {
-	Var   *Variable
+	Var   Variable
 	Value Expression
 }
 
@@ -53,9 +70,7 @@ func (ds *DeclarationStatement) TokenLiteral() string { return "" }
 func (ds *DeclarationStatement) String() string {
 	var out bytes.Buffer
 
-	if ds.Var != nil {
-		out.WriteString(ds.Var.String() + " ")
-	}
+	out.WriteString(ds.Var.String() + " ")
 	out.WriteString("= ")
 
 	if ds.Value != nil {
@@ -151,7 +166,7 @@ func (ws *WhileStatement) String() string {
 
 type AliasStatement struct {
 	Token  tokens.Token
-	Var    *Variable
+	Var    Variable
 	Values []*DeclarationStatement
 }
 
@@ -162,9 +177,7 @@ func (as *AliasStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(as.TokenLiteral() + " ")
-	if as.Var != nil {
-		out.WriteString(as.Var.String() + "{\n")
-	}
+	out.WriteString(as.Var.String() + "{\n")
 	for i, v := range as.Values {
 		out.WriteString(v.String())
 		if i+1 != len(as.Values) {
@@ -177,8 +190,8 @@ func (as *AliasStatement) String() string {
 
 type FunctionStatement struct {
 	Token      tokens.Token
-	Var        *Variable
-	Parameters []*Variable
+	Var        Variable
+	Parameters []Variable
 	Body       *BlockStatement
 }
 
@@ -189,9 +202,7 @@ func (fs *FunctionStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(fs.TokenLiteral() + " ")
-	if fs.Var != nil {
-		out.WriteString(fs.Var.String() + "{\n")
-	}
+	out.WriteString(fs.Var.String() + "{\n")
 	if fs.Body != nil {
 		out.WriteString(fs.Body.String())
 	}
@@ -243,24 +254,6 @@ func (i *Identifier) expressionNode()      {}
 func (i *Identifier) statementNode()       {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 func (i *Identifier) String() string       { return i.Value }
-
-type Variable struct {
-	Token tokens.Token
-	Type  string
-	Name  string
-}
-
-func (ti *Variable) statementNode()       {}
-func (ti *Variable) TokenLiteral() string { return ti.Token.Literal }
-
-func (ti *Variable) String() string {
-	var out bytes.Buffer
-
-	out.WriteString(ti.Type + " ")
-	out.WriteString(ti.Name)
-
-	return out.String()
-}
 
 type IntegralLiteral struct {
 	Token tokens.Token

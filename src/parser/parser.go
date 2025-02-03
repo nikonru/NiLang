@@ -154,7 +154,7 @@ func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
 		return false, nil
 	}
 
-	ident := &ast.Variable{Token: p.current, Type: t, Name: p.current.Literal}
+	ident := ast.Variable{Token: p.current, Type: t, Name: p.current.Literal}
 
 	if !p.expectNext(tokens.ASSIGN) {
 		return false, nil
@@ -238,7 +238,7 @@ func (p *Parser) parseAliasStatement() (bool, *ast.AliasStatement) {
 		return false, nil
 	}
 
-	statement.Var = &ast.Variable{Token: p.current, Name: p.current.Literal}
+	statement.Var = ast.Variable{Token: p.current, Name: p.current.Literal}
 
 	if !p.expectNext(tokens.DCOLON) {
 		return false, nil
@@ -269,7 +269,7 @@ func (p *Parser) parseFunctionStatement() (bool, *ast.FunctionStatement) {
 		return false, nil
 	}
 
-	name := &ast.Variable{Token: p.current, Name: p.current.Literal}
+	name := ast.Variable{Token: p.current, Name: p.current.Literal}
 
 	if p.isNext(tokens.DCOLON) {
 		p.nextToken()
@@ -589,7 +589,7 @@ func (p *Parser) parseAliasValues(t string) []*ast.DeclarationStatement {
 			return nil
 		}
 
-		name := &ast.Variable{Token: p.current, Type: t, Name: p.current.Literal}
+		name := ast.Variable{Token: p.current, Type: t, Name: p.current.Literal}
 		declaration := &ast.DeclarationStatement{Var: name}
 
 		if !p.expectNext(tokens.ASSIGN) {
@@ -645,8 +645,8 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 	return args
 }
 
-func (p *Parser) parseFunctionParameters() []*ast.Variable {
-	parameters := []*ast.Variable{}
+func (p *Parser) parseFunctionParameters() []ast.Variable {
+	parameters := []ast.Variable{}
 
 	for !p.isNext(tokens.COLON) {
 		if len(parameters) != 0 {
@@ -658,7 +658,7 @@ func (p *Parser) parseFunctionParameters() []*ast.Variable {
 		if !p.expectNext(tokens.IDENT) {
 			return nil
 		}
-		parameter := &ast.Variable{Token: p.current, Name: p.current.Literal}
+		parameter := ast.Variable{Token: p.current, Name: p.current.Literal}
 
 		if !p.expectNext(tokens.PIDENT) {
 			return nil
