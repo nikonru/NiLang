@@ -112,16 +112,16 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 	_type, register := c.compileExpression(ds.Value)
 
-	if _type != ds.Name.Type.Value {
-		err := helper.MakeError(ds.Name.Token, fmt.Sprintf("declared variable and expression have different types. variable=%q, expression=%q", ds.Name.Type.Value, _type))
+	if _type != ds.Var.Type {
+		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("declared variable and expression have different types. variable=%q, expression=%q", ds.Var.Type, _type))
 		c.addError(err)
 	}
 
 	addr := c.purchaseMemoryAddress()
 	c.emit(LOAD_MEM_TO_REG, addr, register)
 
-	if ok := c.scope.AddVariable(ds.Name.Value, addr, _type); !ok {
-		err := helper.MakeError(ds.Name.Token, fmt.Sprintf("redeclaration of variable %q", ds.Name.Value))
+	if ok := c.scope.AddVariable(ds.Var.Name, addr, _type); !ok {
+		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("redeclaration of variable %q", ds.Var.Name))
 		c.addError(err)
 	}
 }

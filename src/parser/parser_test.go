@@ -151,7 +151,7 @@ Alias Numbers::Int:
 	}
 
 	expectedType := "Int"
-	if !testTypedIdentifier(test, statement.Name, expectedType, "Numbers") {
+	if !testTypedIdentifier(test, statement.Var, expectedType, "Numbers") {
 		return
 	}
 
@@ -435,7 +435,7 @@ Fun Z$v Int:
 		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
 	}
 
-	if !testTypedIdentifier(test, statement.Name, "Bool", "F") {
+	if !testTypedIdentifier(test, statement.Var, "Bool", "F") {
 		return
 	}
 
@@ -486,7 +486,7 @@ Fun Z$v Int:
 		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
 	}
 
-	if !testTypedIdentifier(test, statement.Name, "Int", "I") {
+	if !testTypedIdentifier(test, statement.Var, "Int", "I") {
 		return
 	}
 
@@ -533,7 +533,7 @@ Fun Z$v Int:
 		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
 	}
 
-	if !testTypedIdentifier(test, statement.Name, "Int", "G") {
+	if !testTypedIdentifier(test, statement.Var, "Int", "G") {
 		return
 	}
 
@@ -585,16 +585,16 @@ Fun Z$v Int:
 		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
 	}
 
-	if statement.Name.Type != nil {
-		test.Fatalf("statement.Name.Type is not `nil`, got=%v", statement.Name.Type)
+	if statement.Var.Type != "" {
+		test.Fatalf("statement.Name.Type is not `nil`, got=%v", statement.Var.Type)
 	}
 
-	if statement.Name.TokenLiteral() != "H" {
-		test.Fatalf("statement.Name.TokenLiteral() is not '%s', got=%s", "H", statement.Name.TokenLiteral())
+	if statement.Var.TokenLiteral() != "H" {
+		test.Fatalf("statement.Name.TokenLiteral() is not '%s', got=%s", "H", statement.Var.TokenLiteral())
 	}
 
-	if statement.Name.Value != "H" {
-		test.Fatalf("statement.Name.Value is not '%s', got=%s", "H", statement.Name.Value)
+	if statement.Var.Name != "H" {
+		test.Fatalf("statement.Name.Value is not '%s', got=%s", "H", statement.Var.Name)
 	}
 
 	length = 0
@@ -627,16 +627,16 @@ Fun Z$v Int:
 		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
 	}
 
-	if statement.Name.Type != nil {
-		test.Fatalf("statement.Name.Type is not `nil`, got=%v", statement.Name.Type)
+	if statement.Var.Type != "" {
+		test.Fatalf("statement.Name.Type is not `nil`, got=%v", statement.Var.Type)
 	}
 
-	if statement.Name.TokenLiteral() != "Z" {
-		test.Fatalf("statement.Name.TokenLiteral() is not '%s', got=%s", "Z", statement.Name.TokenLiteral())
+	if statement.Var.TokenLiteral() != "Z" {
+		test.Fatalf("statement.Name.TokenLiteral() is not '%s', got=%s", "Z", statement.Var.TokenLiteral())
 	}
 
-	if statement.Name.Value != "Z" {
-		test.Fatalf("statement.Name.Value is not '%s', got=%s", "Z", statement.Name.Value)
+	if statement.Var.Name != "Z" {
+		test.Fatalf("statement.Name.Value is not '%s', got=%s", "Z", statement.Var.Name)
 	}
 
 	length = 1
@@ -703,7 +703,7 @@ Fun F::Bool$max Int, default Bool:
 		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
 	}
 
-	if !testTypedIdentifier(test, statement.Name, "Bool", "F") {
+	if !testTypedIdentifier(test, statement.Var, "Bool", "F") {
 		return
 	}
 
@@ -1481,23 +1481,18 @@ func testDeclarationStatement(test *testing.T, statement ast.Statement, t string
 		return false
 	}
 
-	if declarationStatement.Name.Type.Value != t {
-		test.Errorf("declarationStatement.Name.Type.Value is not *%v type: got=%v", t, declarationStatement.Name.Type.Value)
+	if declarationStatement.Var.Type != t {
+		test.Errorf("declarationStatement.Name.Type is not *%v type: got=%v", t, declarationStatement.Var.Type)
 		return false
 	}
 
-	if declarationStatement.Name.Type.TokenLiteral() != t {
-		test.Errorf("declarationStatement.Name.Type.TokenLiteral() is not *%v type: got=%v", t, declarationStatement.Name.Type.TokenLiteral())
+	if declarationStatement.Var.Name != name {
+		test.Errorf("declarationStatement.Name.Value is not *%v type: got=%v", name, declarationStatement.Var.Name)
 		return false
 	}
 
-	if declarationStatement.Name.Value != name {
-		test.Errorf("declarationStatement.Name.Value is not *%v type: got=%v", name, declarationStatement.Name.Value)
-		return false
-	}
-
-	if declarationStatement.Name.TokenLiteral() != name {
-		test.Errorf("declarationStatement.Name.TokenLiteral is not *%v type: got=%v", name, declarationStatement.Name.TokenLiteral())
+	if declarationStatement.Var.TokenLiteral() != name {
+		test.Errorf("declarationStatement.Name.TokenLiteral is not *%v type: got=%v", name, declarationStatement.Var.TokenLiteral())
 		return false
 	}
 
@@ -1590,18 +1585,18 @@ func testEmptyCallExpression(test *testing.T, expression ast.Expression, value s
 	return true
 }
 
-func testTypedIdentifier(test *testing.T, expression ast.Expression, t string, value string) bool {
-	ident, ok := expression.(*ast.TypedIdentifier)
+func testTypedIdentifier(test *testing.T, expression ast.Statement, t string, value string) bool {
+	ident, ok := expression.(*ast.Variable)
 	if !ok {
 		test.Errorf("expression is not *ast.TypedIdentifier, got=%T", expression)
 		return false
 	}
 
-	if !testIdentifier(test, ident.Type, t) {
+	if ident.Type != t {
 		return false
 	}
 
-	if ident.Value != value {
+	if ident.Name != value {
 		test.Errorf("expression is not %v, got=%v", value, expression)
 		return false
 	}

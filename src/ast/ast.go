@@ -43,7 +43,7 @@ func (p *Program) String() string {
 }
 
 type DeclarationStatement struct {
-	Name  *TypedIdentifier
+	Var   *Variable
 	Value Expression
 }
 
@@ -53,8 +53,8 @@ func (ds *DeclarationStatement) TokenLiteral() string { return "" }
 func (ds *DeclarationStatement) String() string {
 	var out bytes.Buffer
 
-	if ds.Name != nil {
-		out.WriteString(ds.Name.String() + " ")
+	if ds.Var != nil {
+		out.WriteString(ds.Var.String() + " ")
 	}
 	out.WriteString("= ")
 
@@ -151,7 +151,7 @@ func (ws *WhileStatement) String() string {
 
 type AliasStatement struct {
 	Token  tokens.Token
-	Name   *TypedIdentifier
+	Var    *Variable
 	Values []*DeclarationStatement
 }
 
@@ -162,8 +162,8 @@ func (as *AliasStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(as.TokenLiteral() + " ")
-	if as.Name != nil {
-		out.WriteString(as.Name.String() + "{\n")
+	if as.Var != nil {
+		out.WriteString(as.Var.String() + "{\n")
 	}
 	for i, v := range as.Values {
 		out.WriteString(v.String())
@@ -177,8 +177,8 @@ func (as *AliasStatement) String() string {
 
 type FunctionStatement struct {
 	Token      tokens.Token
-	Name       *TypedIdentifier
-	Parameters []*TypedIdentifier
+	Var        *Variable
+	Parameters []*Variable
 	Body       *BlockStatement
 }
 
@@ -189,8 +189,8 @@ func (fs *FunctionStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(fs.TokenLiteral() + " ")
-	if fs.Name != nil {
-		out.WriteString(fs.Name.String() + "{\n")
+	if fs.Var != nil {
+		out.WriteString(fs.Var.String() + "{\n")
 	}
 	if fs.Body != nil {
 		out.WriteString(fs.Body.String())
@@ -243,23 +243,20 @@ func (i *Identifier) statementNode()       {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 func (i *Identifier) String() string       { return i.Value }
 
-type TypedIdentifier struct {
+type Variable struct {
 	Token tokens.Token
-	Type  *Identifier
-	Value string
+	Type  string
+	Name  string
 }
 
-func (ti *TypedIdentifier) expressionNode()      {}
-func (ti *TypedIdentifier) statementNode()       {}
-func (ti *TypedIdentifier) TokenLiteral() string { return ti.Token.Literal }
+func (ti *Variable) statementNode()       {}
+func (ti *Variable) TokenLiteral() string { return ti.Token.Literal }
 
-func (ti *TypedIdentifier) String() string {
+func (ti *Variable) String() string {
 	var out bytes.Buffer
 
-	if ti.Type != nil {
-		out.WriteString(ti.Type.String() + " ")
-	}
-	out.WriteString(ti.Value)
+	out.WriteString(ti.Type + " ")
+	out.WriteString(ti.Name)
 
 	return out.String()
 }
