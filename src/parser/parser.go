@@ -69,6 +69,8 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerInfix(tokens.GE, p.parseInfixExpression)
 	p.registerInfix(tokens.NEQUAL, p.parseInfixExpression)
 	p.registerInfix(tokens.EQUAL, p.parseInfixExpression)
+	p.registerInfix(tokens.AND, p.parseInfixExpression)
+	p.registerInfix(tokens.OR, p.parseInfixExpression)
 	p.registerInfix(tokens.DOLLAR, p.parseCallExpression)
 	p.registerInfix(tokens.DCOLON, p.parseScopeExpression)
 

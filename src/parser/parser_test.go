@@ -901,9 +901,9 @@ func TestParsingPrefixExpression(test *testing.T) {
 func TestParsingInfixExpression(test *testing.T) {
 	infixTests := []struct {
 		Input      []byte
-		LeftValue  int64
+		LeftValue  interface{}
 		Operator   string
-		RightValue int64
+		RightValue interface{}
 	}{
 		{[]byte(`5 > 6`), 5, ">", 6},
 		{[]byte(`5 >= 6`), 5, ">=", 6},
@@ -911,6 +911,10 @@ func TestParsingInfixExpression(test *testing.T) {
 		{[]byte(`6 <= 7`), 6, "<=", 7},
 		{[]byte(`6 == 6`), 6, "==", 6},
 		{[]byte(`1 != 20`), 1, "!=", 20},
+		{[]byte(`False And True`), false, "And", true},
+		{[]byte(`False And False`), false, "And", false},
+		{[]byte(`True Or True`), true, "Or", true},
+		{[]byte(`False Or True`), false, "Or", true},
 	}
 
 	for _, testCase := range infixTests {
