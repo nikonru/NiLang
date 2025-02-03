@@ -152,7 +152,7 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (na
 
 	_type, register := c.compileExpression(expression.Right)
 
-	switch tokens.LookUpIdent(expression.Operator) {
+	switch expression.Operator {
 	case tokens.NOT:
 		if _type != Bool {
 			err := helper.MakeError(expression.Token, fmt.Sprintf("expected boolean expression. got=%q", _type))
@@ -200,7 +200,7 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 
 	emitComparison := func(jump command) (name, register) {
 		if leftType != Int || rightType != Int {
-			err := helper.MakeError(expression.Token, fmt.Sprintf("expected int expression. got left=%q and right=%q", leftType, rightType))
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected int expression(s). got left=%q and right=%q", leftType, rightType))
 			c.addError(err)
 		}
 
@@ -232,6 +232,50 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 		return emitComparison(JUMP_IF_NOT_EQUAL)
 	case tokens.EQUAL:
 		return emitComparison(JUMP_IF_EQUAL)
+	case tokens.AND:
+		if leftType != Bool || rightType != Bool {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected bool expression(s). got left=%q and right=%q", leftType, rightType))
+			c.addError(err)
+		}
+
+		end := c.getUniqueLabel()
+		False := c.getUniqueLabel()
+
+		c.emit(COMPARE_WITH_VALUE, leftRegister, BOOL_FALSE)
+		c.emit(JUMP_IF_EQUAL, False)
+		c.emit(COMPARE_WITH_VALUE, rightRegister, BOOL_FALSE)
+		c.emit(JUMP_IF_EQUAL, False)
+
+		c.emit(LOAD_VAL_TO_REG, AX, BOOL_TRUE)
+		c.emit(JUMP, end)
+
+		c.emitLabel(False)
+		c.emit(LOAD_VAL_TO_REG, AX, BOOL_FALSE)
+
+		c.emitLabel(end)
+		return Bool, AX
+	case tokens.OR:
+		if leftType != Bool || rightType != Bool {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected bool expression(s). got left=%q and right=%q", leftType, rightType))
+			c.addError(err)
+		}
+
+		end := c.getUniqueLabel()
+		True := c.getUniqueLabel()
+
+		c.emit(COMPARE_WITH_VALUE, leftRegister, BOOL_TRUE)
+		c.emit(JUMP_IF_EQUAL, True)
+		c.emit(COMPARE_WITH_VALUE, rightRegister, BOOL_TRUE)
+		c.emit(JUMP_IF_EQUAL, True)
+
+		c.emit(LOAD_VAL_TO_REG, AX, BOOL_FALSE)
+		c.emit(JUMP, end)
+
+		c.emitLabel(True)
+		c.emit(LOAD_VAL_TO_REG, AX, BOOL_TRUE)
+
+		c.emitLabel(end)
+		return Bool, AX
 	default:
 		log.Fatalf("type of infix expression is not handled. got=%q", expression.Operator)
 		return "", ""
