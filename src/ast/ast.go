@@ -228,8 +228,9 @@ func (rs *ReturnStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(rs.TokenLiteral() + " ")
-	out.WriteString(rs.Value.String())
-
+	if rs.Value != nil {
+		out.WriteString(rs.Value.String())
+	}
 	return out.String()
 }
 

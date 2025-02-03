@@ -1,7 +1,8 @@
 package compiler
 
 type scope struct {
-	name name
+	name       name
+	returnType interface{} //this is optional field for string representing return type
 
 	variables map[name]variable
 	functions map[name]function
@@ -13,12 +14,13 @@ type scope struct {
 
 func newScope(n name) *scope {
 	return &scope{
-		name:      n,
-		variables: make(map[name]variable),
-		functions: make(map[name]function),
-		types:     make(map[name]name),
-		parent:    nil,
-		children:  make([]*scope, 0)}
+		name:       n,
+		returnType: nil,
+		variables:  make(map[name]variable),
+		functions:  make(map[name]function),
+		types:      make(map[name]name),
+		parent:     nil,
+		children:   make([]*scope, 0)}
 }
 
 func (s *scope) GetVariable(name name) (variable, bool) {

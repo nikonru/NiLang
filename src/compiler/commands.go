@@ -20,4 +20,6 @@ const (
 	LOAD_VAL_TO_REG = "ldv"
 	LOAD_REG_TO_MEM = "ldr"
 	LOAD_MEM_TO_REG = "ldm"
+
+	RETURN = "ret"
 )

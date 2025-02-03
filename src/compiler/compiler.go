@@ -56,8 +56,8 @@ func (c *Compiler) Compile(input []byte) ([]byte, errors) {
 
 	fmt.Println("PROGRAM TREE")
 	for _, statement := range program.Statements {
-		c.compileStatement(statement)
 		fmt.Println(statement.String())
+		c.compileStatement(statement)
 	}
 	fmt.Println("END")
 	fmt.Println(c.scope.variables)
@@ -103,6 +103,8 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 		c.compileDeclarationStatement(stm)
 	case *ast.ExpressionStatement:
 		c.compileExpression(stm.Expression)
+	case *ast.ReturnStatement:
+		c.compileReturnStatement(stm)
 	default:
 		log.Fatalf("type of statement is not handled. got=%T", statement)
 	}
@@ -126,6 +128,28 @@ func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 	}
 }
 
+func (c *Compiler) compileReturnStatement(rs *ast.ReturnStatement) {
+	returnType, ok := c.scope.returnType.(string)
+
+	if !ok {
+		err := helper.MakeError(rs.Token, "unexpected return statement")
+		c.addError(err)
+	}
+
+	var _type, register name
+	if rs.Value != nil {
+		_type, register = c.compileExpression(rs.Value)
+	}
+
+	if returnType != _type {
+		err := helper.MakeError(rs.Token, fmt.Sprintf("expected return of type=%q, got=%q", returnType, _type))
+		c.addError(err)
+	}
+
+	c.emit(LOAD_REG_TO_REG, AX, register) // TODO: maybe we can select some area of memory for this
+	c.emit(RETURN)
+}
+
 func (c *Compiler) compileExpression(statement ast.Expression) (name, register) {
 	switch exp := statement.(type) {
 	case *ast.IntegralLiteral:
@@ -139,10 +163,10 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 	case *ast.Identifier:
 		return c.compileIdentifier(exp)
 	case *ast.CallExpression:
-		log.Fatalf("VIP")
+		log.Fatalf("WIP")
 		return "", ""
 	case *ast.ScopeExpression:
-		log.Fatalf("VIP")
+		log.Fatalf("WIP")
 		return "", ""
 	default:
 		log.Fatalf("type of expression is not handled. got=%T", exp)
