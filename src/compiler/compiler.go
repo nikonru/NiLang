@@ -109,6 +109,8 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 		c.compileUsingStatement(stm)
 	case *ast.AssignmentStatement:
 		c.compileAssignmentStatement(stm)
+	case *ast.ScopeStatement:
+		c.compileScopeStatement(stm)
 	default:
 		log.Fatalf("type of statement is not handled. got=%T", statement)
 	}
@@ -181,6 +183,22 @@ func (c *Compiler) compileAssignmentStatement(as *ast.AssignmentStatement) {
 	}
 
 	c.emit(LOAD_TO_MEM_FROM_REG, variable.Addr, register)
+}
+
+func (c *Compiler) compileScopeStatement(ss *ast.ScopeStatement) {
+
+	c.enterNamedScope(ss.Name.Value)
+
+	if ok := c.scope.GetParent().AddScope(c.scope); !ok {
+		err := helper.MakeError(ss.Name.Token, fmt.Sprintf("redeclaration of scope %q", c.scope.name))
+		c.addError(err)
+	}
+
+	for _, statement := range ss.Body.Statements {
+		c.compileStatement(statement)
+	}
+
+	c.leaveScope()
 }
 
 func (c *Compiler) compileExpression(statement ast.Expression) (name, register) {
@@ -392,4 +410,23 @@ func (c *Compiler) getUniqueLabel() string {
 
 func (c *Compiler) addError(error helper.Error) {
 	c.errors = append(c.errors, error)
+}
+
+func (c *Compiler) enterNamedScope(name name) {
+	scope := newScope(name)
+	scope.SetParent(c.scope)
+	c.scope = scope
+}
+
+func (c *Compiler) enterScope() {
+	c.enterNamedScope("")
+}
+
+func (c *Compiler) leaveScope() {
+	parent := c.scope.GetParent()
+	if parent != nil {
+		c.scope = parent
+	} else {
+		log.Fatal("leaving global scope")
+	}
 }

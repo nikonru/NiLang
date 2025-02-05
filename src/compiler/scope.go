@@ -54,8 +54,25 @@ func (s *scope) AddVariable(name string, addr address, t name) bool {
 	return true
 }
 
+func (s *scope) AddScope(scope *scope) bool {
+	if _, ok := s.children[scope.name]; ok {
+		return false
+	}
+
+	s.children[scope.name] = scope
+	return true
+}
+
 func (s *scope) UsingScope(name string) {
 	s.usingScopes = append(s.usingScopes, name)
+}
+
+func (s *scope) GetParent() *scope {
+	return s.parent
+}
+
+func (s *scope) SetParent(scope *scope) {
+	s.parent = scope
 }
 
 func (s *scope) getLocalVariable(name name) (variable, bool) {
