@@ -107,6 +107,8 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 		c.compileReturnStatement(stm)
 	case *ast.UsingStatement:
 		c.compileUsingStatement(stm)
+	case *ast.AssignmentStatement:
+		c.compileAssignmentStatement(stm)
 	default:
 		log.Fatalf("type of statement is not handled. got=%T", statement)
 	}
@@ -122,7 +124,7 @@ func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 	}
 
 	addr := c.purchaseMemoryAddress()
-	c.emit(LOAD_REG_TO_MEM, addr, register)
+	c.emit(LOAD_TO_MEM_FROM_REG, addr, register)
 
 	if ok := c.scope.AddVariable(ds.Var.Name, addr, _type); !ok {
 		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("redeclaration of variable %q", ds.Var.Name))
@@ -148,7 +150,7 @@ func (c *Compiler) compileReturnStatement(rs *ast.ReturnStatement) {
 		c.addError(err)
 	}
 
-	c.emit(LOAD_REG_TO_REG, AX, register) // TODO: maybe we can select some area of memory for this
+	c.emit(LOAD_TO_REG_FROM_REG, AX, register) // TODO: maybe we can select some area of memory for this
 	c.emit(RETURN)
 }
 
@@ -157,11 +159,28 @@ func (c *Compiler) compileUsingStatement(us *ast.UsingStatement) {
 	case *ast.Identifier:
 		c.scope.UsingScope(name.Value)
 	case *ast.ScopeExpression:
-		return //TODO implement scope expression compiling and use it herre
+		log.Fatal("WIP") //TODO implement scope expression compiling and use it here
 	default:
 		err := helper.MakeError(us.Token, fmt.Sprintf("expected identifier or scope expression of scope, got=%T", name))
 		c.addError(err)
 	}
+}
+
+func (c *Compiler) compileAssignmentStatement(as *ast.AssignmentStatement) {
+	_type, register := c.compileExpression(as.Value)
+	variable, ok := c.scope.GetVariable(as.Name.Value)
+
+	if !ok {
+		err := helper.MakeError(as.Name.Token, fmt.Sprintf("assigning to undeclared variable '%q'", as.Name.Value))
+		c.addError(err)
+	}
+
+	if variable.Type != _type {
+		err := helper.MakeError(as.Name.Token, fmt.Sprintf("expected expression of type=%q, got=%q", variable.Type, _type))
+		c.addError(err)
+	}
+
+	c.emit(LOAD_TO_MEM_FROM_REG, variable.Addr, register)
 }
 
 func (c *Compiler) compileExpression(statement ast.Expression) (name, register) {
@@ -189,7 +208,7 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 }
 
 func (c *Compiler) compileIntegralLiteral(expression *ast.IntegralLiteral) (name, register) {
-	c.emit(LOAD_VAL_TO_REG, AX, expression.Value)
+	c.emit(LOAD_TO_REG_FROM_VAL, AX, expression.Value)
 	return Int, AX
 }
 
@@ -199,7 +218,7 @@ func (c *Compiler) compileBooleanLiteral(expression *ast.BooleanLiteral) (name, 
 		value = BOOL_TRUE
 	}
 
-	c.emit(LOAD_VAL_TO_REG, AX, value)
+	c.emit(LOAD_TO_REG_FROM_VAL, AX, value)
 	return Bool, AX
 }
 
@@ -222,11 +241,11 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (na
 		c.emit(JUMP_IF_EQUAL, register, False)
 
 		c.emitLabel(True)
-		c.emit(LOAD_VAL_TO_REG, register, BOOL_TRUE)
+		c.emit(LOAD_TO_REG_FROM_VAL, register, BOOL_TRUE)
 		c.emit(JUMP, end)
 
 		c.emitLabel(False)
-		c.emit(LOAD_VAL_TO_REG, register, BOOL_FALSE)
+		c.emit(LOAD_TO_REG_FROM_VAL, register, BOOL_FALSE)
 
 		c.emitLabel(end)
 
@@ -241,16 +260,16 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 
 	leftType, leftRegister := c.compileExpression(expression.Left)
 	buffer := c.purchaseStackMemoryAddress()
-	c.emit(LOAD_REG_TO_MEM, buffer, leftRegister)
+	c.emit(LOAD_TO_MEM_FROM_REG, buffer, leftRegister)
 
 	rightType, rightRegister := c.compileExpression(expression.Right)
 
 	if rightRegister != BX {
-		c.emit(LOAD_REG_TO_REG, BX, rightRegister)
+		c.emit(LOAD_TO_REG_FROM_REG, BX, rightRegister)
 		rightRegister = BX
 	}
 
-	c.emit(LOAD_MEM_TO_REG, AX, buffer)
+	c.emit(LOAD_TO_REG_FROM_MEM, AX, buffer)
 	leftRegister = AX
 
 	emitComparison := func(jump command) (name, register) {
@@ -264,11 +283,11 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 
 		c.emit(COMPARE, leftRegister, rightRegister)
 		c.emit(jump, True)
-		c.emit(LOAD_VAL_TO_REG, AX, BOOL_FALSE)
+		c.emit(LOAD_TO_REG_FROM_VAL, AX, BOOL_FALSE)
 		c.emit(JUMP, end)
 
 		c.emitLabel(True)
-		c.emit(LOAD_VAL_TO_REG, AX, BOOL_TRUE)
+		c.emit(LOAD_TO_REG_FROM_VAL, AX, BOOL_TRUE)
 
 		c.emitLabel(end)
 		return Bool, AX
@@ -301,11 +320,11 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 		c.emit(COMPARE_WITH_VALUE, rightRegister, BOOL_FALSE)
 		c.emit(JUMP_IF_EQUAL, False)
 
-		c.emit(LOAD_VAL_TO_REG, AX, BOOL_TRUE)
+		c.emit(LOAD_TO_REG_FROM_VAL, AX, BOOL_TRUE)
 		c.emit(JUMP, end)
 
 		c.emitLabel(False)
-		c.emit(LOAD_VAL_TO_REG, AX, BOOL_FALSE)
+		c.emit(LOAD_TO_REG_FROM_VAL, AX, BOOL_FALSE)
 
 		c.emitLabel(end)
 		return Bool, AX
@@ -323,11 +342,11 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 		c.emit(COMPARE_WITH_VALUE, rightRegister, BOOL_TRUE)
 		c.emit(JUMP_IF_EQUAL, True)
 
-		c.emit(LOAD_VAL_TO_REG, AX, BOOL_FALSE)
+		c.emit(LOAD_TO_REG_FROM_VAL, AX, BOOL_FALSE)
 		c.emit(JUMP, end)
 
 		c.emitLabel(True)
-		c.emit(LOAD_VAL_TO_REG, AX, BOOL_TRUE)
+		c.emit(LOAD_TO_REG_FROM_VAL, AX, BOOL_TRUE)
 
 		c.emitLabel(end)
 		return Bool, AX
@@ -339,7 +358,7 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 
 func (c *Compiler) compileIdentifier(expression *ast.Identifier) (name, register) {
 	if variable, ok := c.scope.GetVariable(expression.Value); ok {
-		c.emit(LOAD_MEM_TO_REG, AX, variable.Addr)
+		c.emit(LOAD_TO_REG_FROM_MEM, AX, variable.Addr)
 		return variable.Type, AX
 	}
 
