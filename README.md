@@ -31,6 +31,8 @@ Alias Numbers::Int:
     two = 2
     four = 4
 
+Numbers four = numbers::four
+
 Scope names:
     max = 1000
 

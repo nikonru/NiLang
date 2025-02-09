@@ -181,7 +181,7 @@ func (c *Compiler) compileAssignmentStatement(as *ast.AssignmentStatement) {
 	variable, ok := c.scope.GetVariable(as.Name.Value)
 
 	if !ok {
-		err := helper.MakeError(as.Name.Token, fmt.Sprintf("assigning to undeclared variable '%q'", as.Name.Value))
+		err := helper.MakeError(as.Name.Token, fmt.Sprintf("assigning to undeclared variable %q", as.Name.Value))
 		c.addError(err)
 	}
 
@@ -238,8 +238,7 @@ func (c *Compiler) compileWhileStatement(ws *ast.WhileStatement) {
 }
 
 func (c *Compiler) compileAliasStatement(as *ast.AliasStatement) {
-
-	c.enterNamedScope(as.Var.Name)
+	c.enterNamedScope(helper.FirstToLowerCase(as.Var.Name))
 
 	if ok := c.scope.GetParent().AddScope(c.scope); !ok {
 		err := helper.MakeError(as.Token, fmt.Sprintf("redeclaration of scope/alias %q", c.scope.name))
@@ -292,7 +291,7 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 	case *ast.ScopeExpression:
 		scope, ok := c.findScope(exp, c.scope)
 		if !ok {
-			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined scope/alias %q", exp.Value.Value))
+			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined scope/alias %q", exp.Scope))
 			c.addError(err)
 		}
 		return c.compileIdentifierFromScope(exp.Value, scope)
@@ -479,8 +478,7 @@ func (c *Compiler) findScope(expression *ast.ScopeExpression, scope *scope) (*sc
 	case *ast.Identifier:
 		return scope.GetScope(exp.Value)
 	default:
-		log.Fatalf("type of scope expression is not handled %T", expression.Scope)
-		return nil, false
+		return scope, false
 	}
 }
 
