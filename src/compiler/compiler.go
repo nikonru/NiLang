@@ -111,6 +111,8 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 		c.compileAssignmentStatement(stm)
 	case *ast.ScopeStatement:
 		c.compileScopeStatement(stm)
+	case *ast.WhileStatement:
+		c.compileWhileStatement(stm)
 	default:
 		log.Fatalf("type of statement is not handled. got=%T", statement)
 	}
@@ -197,6 +199,34 @@ func (c *Compiler) compileScopeStatement(ss *ast.ScopeStatement) {
 	for _, statement := range ss.Body.Statements {
 		c.compileStatement(statement)
 	}
+
+	c.leaveScope()
+}
+
+func (c *Compiler) compileWhileStatement(ws *ast.WhileStatement) {
+
+	loop := c.getUniqueLabel()
+	end := c.getUniqueLabel()
+
+	c.emitLabel(loop)
+	_type, register := c.compileExpression(ws.Condition)
+
+	if _type != Bool {
+		err := helper.MakeError(ws.Token, fmt.Sprintf("expected boolean condition in while loop, got %q", _type))
+		c.addError(err)
+	}
+
+	c.emit(COMPARE_WITH_VALUE, register, BOOL_TRUE)
+	c.emit(JUMP_IF_NOT_EQUAL, end)
+
+	c.enterScope()
+
+	for _, statement := range ws.Body.Statements {
+		c.compileStatement(statement)
+	}
+
+	c.emit(JUMP, loop)
+	c.emitLabel(end)
 
 	c.leaveScope()
 }

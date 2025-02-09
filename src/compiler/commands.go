@@ -3,9 +3,11 @@ package compiler
 type command = string
 
 const (
+	// COMPARE [a] [b] ?a>=b ?a==b ?a<b ?a!=b
 	COMPARE            = "cmp"
 	COMPARE_WITH_VALUE = "cmpv"
 
+	//JUMP [label]
 	JUMP                 = "jmp"
 	JUMP_IF_EQUAL        = "jme"
 	JUMP_IF_NOT_EQUAL    = "jne"
