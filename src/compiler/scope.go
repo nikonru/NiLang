@@ -6,7 +6,6 @@ type scope struct {
 
 	variables map[name]variable
 	functions map[name]function
-	aliases   map[name]name
 
 	usingScopes []name
 
@@ -20,7 +19,6 @@ func newScope(n name) *scope {
 		returnType:  nil,
 		variables:   make(map[name]variable),
 		functions:   make(map[name]function),
-		aliases:     make(map[name]name),
 		usingScopes: make([]name, 0),
 		parent:      nil,
 		children:    make(map[name]*scope, 0)}

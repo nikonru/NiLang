@@ -113,6 +113,8 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 		c.compileScopeStatement(stm)
 	case *ast.WhileStatement:
 		c.compileWhileStatement(stm)
+	case *ast.AliasStatement:
+		c.compileAliasStatement(stm)
 	default:
 		log.Fatalf("type of statement is not handled. got=%T", statement)
 	}
@@ -127,13 +129,17 @@ func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 		c.addError(err)
 	}
 
-	addr := c.purchaseMemoryAddress()
-	c.emit(LOAD_TO_MEM_FROM_REG, addr, register)
-
-	if ok := c.scope.AddVariable(ds.Var.Name, addr, _type); !ok {
+	if ok := c.addNewVariable(register, ds.Var.Name, ds.Var.Type); !ok {
 		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("redeclaration of variable %q", ds.Var.Name))
 		c.addError(err)
 	}
+}
+
+func (c *Compiler) addNewVariable(register register, name name, t name) bool {
+	addr := c.purchaseMemoryAddress()
+	c.emit(LOAD_TO_MEM_FROM_REG, addr, register)
+
+	return c.scope.AddVariable(name, addr, t)
 }
 
 func (c *Compiler) compileReturnStatement(rs *ast.ReturnStatement) {
@@ -192,7 +198,7 @@ func (c *Compiler) compileScopeStatement(ss *ast.ScopeStatement) {
 	c.enterNamedScope(ss.Name.Value)
 
 	if ok := c.scope.GetParent().AddScope(c.scope); !ok {
-		err := helper.MakeError(ss.Name.Token, fmt.Sprintf("redeclaration of scope %q", c.scope.name))
+		err := helper.MakeError(ss.Name.Token, fmt.Sprintf("redeclaration of scope/alias %q", c.scope.name))
 		c.addError(err)
 	}
 
@@ -227,6 +233,43 @@ func (c *Compiler) compileWhileStatement(ws *ast.WhileStatement) {
 
 	c.emit(JUMP, loop)
 	c.emitLabel(end)
+
+	c.leaveScope()
+}
+
+func (c *Compiler) compileAliasStatement(as *ast.AliasStatement) {
+
+	c.enterNamedScope(as.Var.Name)
+
+	if ok := c.scope.GetParent().AddScope(c.scope); !ok {
+		err := helper.MakeError(as.Token, fmt.Sprintf("redeclaration of scope/alias %q", c.scope.name))
+		c.addError(err)
+	}
+
+	if as.Var.Type != Bool && as.Var.Type != Int {
+		err := helper.MakeError(as.Token, fmt.Sprintf("expected alias to be primitive type(Bool, Int), got %q", as.Var.Type))
+		c.addError(err)
+	}
+
+	for _, val := range as.Values {
+		switch v := val.Value.(type) {
+		case *ast.IntegralLiteral, *ast.BooleanLiteral:
+			_type, register := c.compileExpression(val.Value)
+
+			if _type != as.Var.Type {
+				err := helper.MakeError(val.Var.Token, fmt.Sprintf("declared alias and expression have different types. alias=%q, expression=%q", as.Var.Type, _type))
+				c.addError(err)
+			}
+
+			if ok := c.addNewVariable(register, val.Var.Name, as.Var.Type); !ok {
+				err := helper.MakeError(val.Var.Token, fmt.Sprintf("redeclaration of alias %q", val.Var.Name))
+				c.addError(err)
+			}
+		default:
+			err := helper.MakeError(val.Var.Token, fmt.Sprintf("expected literal expression, got %T", v))
+			c.addError(err)
+		}
+	}
 
 	c.leaveScope()
 }
