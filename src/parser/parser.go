@@ -675,7 +675,7 @@ func (p *Parser) parseScopeExpression(scope ast.Expression) ast.Expression {
 		return nil
 	}
 
-	exp.Value = p.parseIdentifier()
+	exp.Value = p.parseIdentifier().(*ast.Identifier)
 
 	if p.isCurrent(tokens.PIDENT) {
 		if p.isNext(tokens.DOLLAR) {
@@ -688,15 +688,6 @@ func (p *Parser) parseScopeExpression(scope ast.Expression) ast.Expression {
 	}
 
 	return exp
-}
-
-func (p *Parser) expectNewline() bool {
-	if !p.isNext(tokens.EOF) {
-		if !p.expectNext(tokens.NEWLINE) {
-			return false
-		}
-	}
-	return true
 }
 
 func (p *Parser) nextPrecendence() int {

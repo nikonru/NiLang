@@ -65,6 +65,14 @@ func (s *scope) UsingScope(name string) {
 	s.usingScopes = append(s.usingScopes, name)
 }
 
+func (s *scope) GetScope(name name) (*scope, bool) {
+	if child, ok := s.children[name]; ok {
+		return child, true
+	}
+
+	return nil, false
+}
+
 func (s *scope) GetParent() *scope {
 	return s.parent
 }

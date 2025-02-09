@@ -431,7 +431,12 @@ func (ce *CallExpression) String() string {
 type ScopeExpression struct {
 	Token tokens.Token
 	Scope Expression
-	Value Expression
+	Value *Identifier
+	// e.g. world::compass::south
+	// Scope: world::compass
+	//   - Scope: world
+	//   - Value: compass
+	// Value: south
 }
 
 func (se *ScopeExpression) expressionNode()      {}
@@ -443,7 +448,9 @@ func (se *ScopeExpression) String() string {
 
 	out.WriteString(se.Scope.String())
 	out.WriteString("::")
-	out.WriteString(se.Value.String())
+	if se.Value != nil {
+		out.WriteString(se.Value.String())
+	}
 
 	return out.String()
 }

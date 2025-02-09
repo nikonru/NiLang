@@ -1233,12 +1233,7 @@ world::Set$1`)
 		return
 	}
 
-	ident, ok := exp.Value.(*ast.Identifier)
-	if !ok {
-		test.Fatalf("exp.Value is not ast.Identifier, got=%T", exp.Value)
-	}
-
-	if !testIdentifier(test, ident, "max") {
+	if !testIdentifier(test, exp.Value, "max") {
 		return
 	}
 
@@ -1297,21 +1292,11 @@ world::Set$1`)
 		return
 	}
 
-	ident, ok = superScope.Value.(*ast.Identifier)
-	if !ok {
-		test.Fatalf("exp.Value is not ast.Identifier, got=%T", superScope.Value)
-	}
-
-	if !testIdentifier(test, ident, "compass") {
+	if !testIdentifier(test, superScope.Value, "compass") {
 		return
 	}
 
-	ident, ok = exp.Value.(*ast.Identifier)
-	if !ok {
-		test.Fatalf("exp.Value is not ast.ScopeExpression, got=%T", exp.Value)
-	}
-
-	if !testIdentifier(test, ident, "south") {
+	if !testIdentifier(test, exp.Value, "south") {
 		return
 	}
 
@@ -1471,13 +1456,7 @@ func testUsingStatement(test *testing.T, statement ast.Statement, literal string
 			return false
 		}
 	case *ast.ScopeExpression:
-		ident, ok := _name.Value.(*ast.Identifier)
-		if !ok {
-			test.Errorf("usingStatement.Name.Value is not ast.Identifier, got=%T", _name.Value)
-			return false
-		}
-
-		if !testIdentifier(test, ident, name) {
+		if !testIdentifier(test, _name.Value, name) {
 			return false
 		}
 

@@ -290,8 +290,12 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 		log.Fatalf("WIP")
 		return "", ""
 	case *ast.ScopeExpression:
-		log.Fatalf("WIP")
-		return "", ""
+		scope, ok := c.findScope(exp, c.scope)
+		if !ok {
+			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined scope/alias %q", exp.Value.Value))
+			c.addError(err)
+		}
+		return c.compileIdentifierFromScope(exp.Value, scope)
 	default:
 		log.Fatalf("type of expression is not handled. got=%T", exp)
 		return "", ""
@@ -448,14 +452,36 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 }
 
 func (c *Compiler) compileIdentifier(expression *ast.Identifier) (name, register) {
-	if variable, ok := c.scope.GetVariable(expression.Value); ok {
+	return c.compileIdentifierFromScope(expression, c.scope)
+}
+
+func (c *Compiler) compileIdentifierFromScope(expression *ast.Identifier, scope *scope) (name, register) {
+	// TODO check if scope is nil
+	if variable, ok := scope.GetVariable(expression.Value); ok {
 		c.emit(LOAD_TO_REG_FROM_MEM, AX, variable.Addr)
 		return variable.Type, AX
 	}
 
-	err := helper.MakeError(expression.Token, fmt.Sprintf("unknown identifier. got=%q", expression))
+	err := helper.MakeError(expression.Token, fmt.Sprintf("undefined identifier. got=%q", expression))
 	c.addError(err)
 	return "", ""
+}
+
+func (c *Compiler) findScope(expression *ast.ScopeExpression, scope *scope) (*scope, bool) {
+	switch exp := expression.Scope.(type) {
+	case *ast.ScopeExpression:
+		s, ok := c.findScope(exp, scope)
+		if !ok {
+			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined scope/alias %q", exp.Value.Value))
+			c.addError(err)
+		}
+		return s.GetScope(exp.Value.Value)
+	case *ast.Identifier:
+		return scope.GetScope(exp.Value)
+	default:
+		log.Fatalf("type of scope expression is not handled %T", expression.Scope)
+		return nil, false
+	}
 }
 
 func (c *Compiler) purchaseMemoryAddress() address {
