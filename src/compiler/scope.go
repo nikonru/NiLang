@@ -7,7 +7,7 @@ type scope struct {
 	variables map[name]variable
 	functions map[name]function
 
-	usingScopes []name
+	usingScopes []*scope
 
 	parent   *scope
 	children map[name]*scope
@@ -19,7 +19,7 @@ func newScope(n name) *scope {
 		returnType:  nil,
 		variables:   make(map[name]variable),
 		functions:   make(map[name]function),
-		usingScopes: make([]name, 0),
+		usingScopes: make([]*scope, 0),
 		parent:      nil,
 		children:    make(map[name]*scope, 0)}
 }
@@ -30,10 +30,8 @@ func (s *scope) GetVariable(name name) (variable, bool) {
 	}
 
 	for _, scope := range s.usingScopes {
-		if child, ok := s.children[scope]; ok {
-			if variable, ok := child.getLocalVariable(name); ok {
-				return variable, true
-			}
+		if variable, ok := scope.getLocalVariable(name); ok {
+			return variable, true
 		}
 	}
 
@@ -61,8 +59,8 @@ func (s *scope) AddScope(scope *scope) bool {
 	return true
 }
 
-func (s *scope) UsingScope(name string) {
-	s.usingScopes = append(s.usingScopes, name)
+func (s *scope) UsingScope(scope *scope) {
+	s.usingScopes = append(s.usingScopes, scope)
 }
 
 func (s *scope) GetScope(name name) (*scope, bool) {

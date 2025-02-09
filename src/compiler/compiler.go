@@ -165,15 +165,30 @@ func (c *Compiler) compileReturnStatement(rs *ast.ReturnStatement) {
 }
 
 func (c *Compiler) compileUsingStatement(us *ast.UsingStatement) {
+	var s *scope
+	var ok bool
+
 	switch name := us.Name.(type) {
 	case *ast.Identifier:
-		c.scope.UsingScope(name.Value)
+		s, ok = c.scope.GetScope(name.Value)
 	case *ast.ScopeExpression:
-		log.Fatal("WIP") //TODO implement scope expression compiling and use it here
+		s, ok = c.findScope(name, c.scope)
+		if !ok {
+			err := helper.MakeError(us.Token, "undefined scope/alias expression")
+			c.addError(err)
+		}
+		s, ok = s.GetScope(name.Value.Value)
 	default:
 		err := helper.MakeError(us.Token, fmt.Sprintf("expected identifier or scope expression of scope, got=%T", name))
 		c.addError(err)
 	}
+
+	if !ok {
+		err := helper.MakeError(us.Token, "undefined scope/alias expression")
+		c.addError(err)
+	}
+
+	c.scope.UsingScope(s)
 }
 
 func (c *Compiler) compileAssignmentStatement(as *ast.AssignmentStatement) {
