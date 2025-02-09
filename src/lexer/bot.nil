@@ -8,7 +8,7 @@ While hungry:
     If GetEnergy > maxEnergy:
         Fork$ world::Forward
         hungry = False
-Dir dir = GetDir
+Dir dir1 = GetDir
 # you may remove `bot::`, since we have already written 'using bot'
-bot::Move$ RotateClockwise$ dir  
+bot::Move$ RotateClockwise$ dir1  
 # this is the end of an example

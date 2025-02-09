@@ -166,7 +166,10 @@ func (l *lexer) readNumber() []byte {
 }
 
 func (l *lexer) readIdent() []byte {
-	return l.readSequence(isLetter)
+	check := func(char byte) bool {
+		return isDigit(char) || isLetter(char)
+	}
+	return l.readSequence(check)
 }
 
 func (l *lexer) readIndent() int {

@@ -72,7 +72,7 @@ func TestLexer(t *testing.T) {
 		{tokens.FALSE, "False"},
 		{tokens.NEWLINE, "newline"},
 		{tokens.PIDENT, "Dir"},
-		{tokens.IDENT, "dir"},
+		{tokens.IDENT, "dir1"},
 		{tokens.ASSIGN, "="},
 		{tokens.PIDENT, "GetDir"},
 		{tokens.NEWLINE, "newline"},
@@ -82,7 +82,7 @@ func TestLexer(t *testing.T) {
 		{tokens.DOLLAR, "$"},
 		{tokens.PIDENT, "RotateClockwise"},
 		{tokens.DOLLAR, "$"},
-		{tokens.IDENT, "dir"},
+		{tokens.IDENT, "dir1"},
 		{tokens.NEWLINE, "newline"},
 		{tokens.EOF, ""},
 	}
