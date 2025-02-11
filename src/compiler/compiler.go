@@ -186,9 +186,9 @@ func (c *Compiler) compileUsingStatement(us *ast.UsingStatement) {
 	if !ok {
 		err := helper.MakeError(us.Token, "undefined scope/alias expression")
 		c.addError(err)
+	} else {
+		c.scope.UsingScope(s)
 	}
-
-	c.scope.UsingScope(s)
 }
 
 func (c *Compiler) compileAssignmentStatement(as *ast.AssignmentStatement) {
@@ -308,12 +308,13 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 		if !ok {
 			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined scope/alias %q", exp.Scope))
 			c.addError(err)
+		} else {
+			return c.compileIdentifierFromScope(exp.Value, scope)
 		}
-		return c.compileIdentifierFromScope(exp.Value, scope)
 	default:
 		log.Fatalf("type of expression is not handled. got=%T", exp)
-		return "", ""
 	}
+	return "", ""
 }
 
 func (c *Compiler) compileIntegralLiteral(expression *ast.IntegralLiteral) (name, register) {
