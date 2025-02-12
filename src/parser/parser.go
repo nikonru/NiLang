@@ -6,6 +6,7 @@ import (
 	"NiLang/src/lexer"
 	"NiLang/src/tokens"
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -141,6 +142,11 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 
 		if p.isCurrent(tokens.PIDENT) && p.isNext(tokens.IDENT) {
 			return p.parseDeclarationStatement()
+		}
+
+		if p.isCurrent(tokens.IDENT) && p.isNext(tokens.DCOLON) {
+			log.Fatalf("TODO parsing scope expression for type")
+			return p.parseAssignmentStatement()
 		}
 
 		return p.parseExpressionStatement()
