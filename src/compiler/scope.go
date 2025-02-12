@@ -68,6 +68,23 @@ func (s *scope) GetScope(name name) (*scope, bool) {
 		return child, true
 	}
 
+	for _, scope := range s.usingScopes {
+		if scope.name == name {
+			return scope, true
+		}
+
+		if _scope, ok := scope.GetScope(name); ok {
+			return _scope, true
+		}
+	}
+
+	if s.parent != nil {
+		if s.parent.name == name {
+			return s.parent, true
+		}
+		return s.parent.GetScope(name)
+	}
+
 	return nil, false
 }
 

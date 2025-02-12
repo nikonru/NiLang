@@ -305,15 +305,6 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 		return "", ""
 	case *ast.ScopeExpression:
 		scope, ok := c.findScope(exp, c.scope)
-
-		if !ok {
-			for _, usedScope := range c.scope.usingScopes {
-				if scope, ok = c.findScope(exp, usedScope); ok {
-					break
-				}
-			}
-		}
-
 		if !ok {
 			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined scope/alias %q", exp.Scope))
 			c.addError(err)
