@@ -42,7 +42,9 @@ func TestGeneral(test *testing.T) {
 func TestDeclarationStatement(test *testing.T) {
 	input := []byte(`Bool x = False
 Int number = 1400
-Dir face = forward`)
+Dir face = forward
+bot::Status stat = ok
+world::compass::Dir face = south`)
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
@@ -53,7 +55,7 @@ Dir face = forward`)
 	}
 	checkParseErrors(test, parser, input)
 
-	length := 3
+	length := 5
 	if len(program.Statements) != length {
 		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
 	}
@@ -66,6 +68,8 @@ Dir face = forward`)
 		{"Bool", "x", false},
 		{"Int", "number", 1400},
 		{"Dir", "face", "forward"},
+		{"Status", "stat", "ok"},
+		{"Dir", "face", "south"},
 	}
 
 	for i, t := range tests {
@@ -151,6 +155,59 @@ Alias Numbers::Int:
 	}
 
 	expectedType := "Int"
+	if !testTypedIdentifier(test, statement.Var, expectedType, "Numbers") {
+		return
+	}
+
+	tests := []struct {
+		expectedName  string
+		expectedValue interface{}
+	}{
+		{"one", 1},
+		{"two", 2},
+		{"four", 4},
+	}
+
+	for i, testCase := range tests {
+		stm := statement.Values[i]
+
+		if !testDeclarationStatement(test, stm, expectedType, testCase.expectedName) {
+			return
+		}
+
+		if !testLiteralExpression(test, stm.Value, testCase.expectedValue) {
+			return
+		}
+	}
+}
+
+func TestAliasStatementWithComplexType(test *testing.T) {
+	input := []byte(`
+Alias Numbers::bot::Dir:
+    one = 1
+    two = 2
+    four = 4`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 1
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.AliasStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.ReturnStatement, got=%T", program.Statements[0])
+	}
+
+	expectedType := "Dir"
 	if !testTypedIdentifier(test, statement.Var, expectedType, "Numbers") {
 		return
 	}
@@ -411,6 +468,9 @@ Fun H:
 
 Fun Z$v Int:
     Foo
+
+Fun K::bot::Dir:
+    Foo
 `)
 
 	lexer := lexer.New(input)
@@ -422,7 +482,7 @@ Fun Z$v Int:
 	}
 	checkParseErrors(test, parser, input)
 
-	length := 5
+	length := 6
 	if len(program.Statements) != length {
 		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
 	}
@@ -654,6 +714,48 @@ Fun Z$v Int:
 
 	if !testTypedIdentifier(test, statement.Parameters[0], "Int", "v") {
 		return
+	}
+
+	expStatement, ok = statement.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("statement.Body.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Body.Statements[0])
+	}
+
+	if !testEmptyCallExpression(test, expStatement.Expression, "Foo") {
+		return
+	}
+
+	//-5-
+
+	statement, ok = program.Statements[5].(*ast.FunctionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[3] is not ast.FunnctionStatement, got=%T", program.Statements[3])
+	}
+
+	if statement.TokenLiteral() != "Fun" {
+		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
+	}
+
+	if !testTypedIdentifier(test, statement.Var, "Dir", "K") {
+		return
+	}
+
+	if statement.Var.TokenLiteral() != "K" {
+		test.Fatalf("statement.Name.TokenLiteral() is not '%s', got=%s", "K", statement.Var.TokenLiteral())
+	}
+
+	if statement.Var.Name != "K" {
+		test.Fatalf("statement.Name.Value is not '%s', got=%s", "K", statement.Var.Name)
+	}
+
+	length = 0
+	if len(statement.Parameters) != length {
+		test.Fatalf("wrong number of parameters in H, expected=%d, got=%d", length, len(statement.Parameters))
+	}
+
+	length = 1
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in H, expected=%d, got=%d", length, len(statement.Body.Statements))
 	}
 
 	expStatement, ok = statement.Body.Statements[0].(*ast.ExpressionStatement)
@@ -1615,7 +1717,7 @@ func testTypedIdentifier(test *testing.T, ident ast.Variable, t string, value st
 			return false
 		}
 	default:
-		test.Errorf("ident.Type is not expected type: got=%T", ident.Type)
+		test.Errorf("ident.Type of %v is not expected type: got=%T", t, ident.Type)
 		return false
 	}
 

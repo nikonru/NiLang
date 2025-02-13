@@ -195,12 +195,18 @@ func (p *Parser) parseType() ast.Expression {
 			p.addError(error)
 		}
 
-		t, ok := exp.Expression.(*ast.ScopeExpression)
-		if !ok {
-			error := helper.MakeError(p.current, fmt.Sprintf("expected scope expression, got=%T", t))
+		switch t := exp.Expression.(type) {
+		case *ast.ScopeExpression:
+			return t
+		case *ast.CallExpression:
+			scope, isScopeExpression := t.Function.(*ast.ScopeExpression)
+			if isScopeExpression {
+				return scope
+			}
+		default:
+			error := helper.MakeError(p.current, fmt.Sprintf("expected scope expression, got=%T", exp.Expression))
 			p.addError(error)
 		}
-		return t
 	}
 
 	error := helper.MakeError(p.current, fmt.Sprintf("type starts with the wrong token expected %q or %q, got=%q",
@@ -310,8 +316,10 @@ func (p *Parser) parseFunctionStatement() (bool, *ast.FunctionStatement) {
 
 	if p.isNext(tokens.DCOLON) {
 		p.nextToken()
-		p.nextToken()
-		name.Type = p.parseType()
+		if p.isNext(tokens.PIDENT) || p.isNext(tokens.IDENT) {
+			p.nextToken()
+			name.Type = p.parseType()
+		}
 	} else {
 		name.Type = nil
 	}
