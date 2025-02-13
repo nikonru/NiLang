@@ -302,6 +302,10 @@ func (p *Parser) parseAliasStatement() (bool, *ast.AliasStatement) {
 		return false, statement
 	}
 
+	if p.isCurrent(tokens.NEWLINE) {
+		p.nextToken()
+		p.pleaseDontSkipToken = true
+	}
 	return true, statement
 }
 
@@ -609,6 +613,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 			break
 		}
 	}
+
 	return block
 }
 
@@ -626,7 +631,11 @@ func (p *Parser) parseAliasValues(t ast.Expression) []*ast.DeclarationStatement 
 		return nil
 	}
 
-	for level == p.level && !p.isCurrent(tokens.EOF) {
+	isInBlock := func() bool {
+		return level == p.level && !p.isCurrent(tokens.EOF)
+	}
+
+	for isInBlock() {
 		if !p.isCurrent(tokens.IDENT) {
 			p.error(tokens.IDENT, p.current, "current")
 			return nil
@@ -643,6 +652,10 @@ func (p *Parser) parseAliasValues(t ast.Expression) []*ast.DeclarationStatement 
 		declaration.Value = p.parseExpression(LOWEST)
 
 		statements = append(statements, declaration)
+
+		if !isInBlock() {
+			break
+		}
 
 		if !p.gotoNextLine() {
 			break

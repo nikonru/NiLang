@@ -181,6 +181,40 @@ Alias Numbers::Int:
 	}
 }
 
+func TestAliasStatementInScope(test *testing.T) {
+	input := []byte(`
+Scope fas:
+    Alias Number::Int:
+        one = 1
+
+    Alias Codes::Int:
+        one = 1`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 1
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ScopeStatement)
+	if !ok {
+		test.Fatalf("program.Statements[0] is not ast.ScopeStatement, got=%T", program.Statements[0])
+	}
+
+	length = 2
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in body of the scope, expected=%d, got=%T", length, len(statement.Body.Statements))
+	}
+}
+
 func TestAliasStatementWithComplexType(test *testing.T) {
 	input := []byte(`
 Alias Numbers::bot::Dir:
