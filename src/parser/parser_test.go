@@ -588,7 +588,7 @@ Fun Z$v Int:
 		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
 	}
 
-	if statement.Var.Type != "" {
+	if statement.Var.Type != nil {
 		test.Fatalf("statement.Name.Type is not `nil`, got=%v", statement.Var.Type)
 	}
 
@@ -630,7 +630,7 @@ Fun Z$v Int:
 		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
 	}
 
-	if statement.Var.Type != "" {
+	if statement.Var.Type != nil {
 		test.Fatalf("statement.Name.Type is not `nil`, got=%v", statement.Var.Type)
 	}
 
@@ -1487,8 +1487,19 @@ func testDeclarationStatement(test *testing.T, statement ast.Statement, t string
 		return false
 	}
 
-	if declarationStatement.Var.Type != t {
-		test.Errorf("declarationStatement.Name.Type is not *%v type: got=%v", t, declarationStatement.Var.Type)
+	switch _type := declarationStatement.Var.Type.(type) {
+	case *ast.Identifier:
+		if _type.Value != t {
+			test.Errorf("declarationStatement.Var.Type is not %v type: got=%v", t, declarationStatement.Var.Type)
+			return false
+		}
+	case *ast.ScopeExpression:
+		if _type.Value.Value != t {
+			test.Errorf("declarationStatement.Var.Type is not %v type: got=%v", t, declarationStatement.Var.Type)
+			return false
+		}
+	default:
+		test.Errorf("declarationStatement.Var.Type is not expected type: got=%T", declarationStatement.Var.Type)
 		return false
 	}
 
@@ -1592,8 +1603,19 @@ func testEmptyCallExpression(test *testing.T, expression ast.Expression, value s
 }
 
 func testTypedIdentifier(test *testing.T, ident ast.Variable, t string, value string) bool {
-
-	if ident.Type != t {
+	switch _type := ident.Type.(type) {
+	case *ast.Identifier:
+		if _type.Value != t {
+			test.Errorf("ident.Type is not %v type: got=%v", t, ident.Type)
+			return false
+		}
+	case *ast.ScopeExpression:
+		if _type.Value.Value != t {
+			test.Errorf("ident.Type is not %v type: got=%v", t, ident.Type)
+			return false
+		}
+	default:
+		test.Errorf("ident.Type is not expected type: got=%T", ident.Type)
 		return false
 	}
 

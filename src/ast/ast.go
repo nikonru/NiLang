@@ -22,7 +22,7 @@ type Expression interface {
 
 type Variable struct {
 	Token tokens.Token
-	Type  string
+	Type  Expression
 	Name  string
 }
 
@@ -31,7 +31,7 @@ func (ti *Variable) TokenLiteral() string { return ti.Token.Literal }
 func (ti *Variable) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(ti.Type + " ")
+	out.WriteString(ti.Type.String() + " ")
 	out.WriteString(ti.Name)
 
 	return out.String()
@@ -190,7 +190,7 @@ func (as *AliasStatement) String() string {
 
 type FunctionStatement struct {
 	Token      tokens.Token
-	Var        Variable
+	Var        Variable //it has nil type in case of void function
 	Parameters []Variable
 	Body       *BlockStatement
 }

@@ -41,7 +41,7 @@ func (s *scope) GetVariable(name name) (variable, bool) {
 	return variable{}, false
 }
 
-func (s *scope) AddVariable(name string, addr address, t name) bool {
+func (s *scope) AddVariable(name string, addr address, t Type) bool {
 	if _, ok := s.variables[name]; ok {
 		return false
 	}

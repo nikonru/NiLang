@@ -6,7 +6,6 @@ import (
 	"NiLang/src/lexer"
 	"NiLang/src/tokens"
 	"fmt"
-	"log"
 	"strconv"
 )
 
@@ -141,20 +140,33 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 		}
 
 		if p.isCurrent(tokens.PIDENT) && p.isNext(tokens.IDENT) {
-			return p.parseDeclarationStatement()
+			return p.parseDeclarationStatement(true)
 		}
 
-		if p.isCurrent(tokens.IDENT) && p.isNext(tokens.DCOLON) {
-			log.Fatalf("TODO parsing scope expression for type")
-			return p.parseAssignmentStatement()
+		ok, expression := p.parseExpressionStatement()
+
+		if _type, ok := expression.Expression.(*ast.CallExpression); ok {
+			scope, isScopeExpression := _type.Function.(*ast.ScopeExpression)
+
+			isOnTheSameLine := p.current.Line == p.next.Line
+			if p.isNext(tokens.IDENT) && isOnTheSameLine && len(_type.Arguments) == 0 && isScopeExpression {
+				ok, ds := p.parseDeclarationStatement(false)
+				if ok {
+					ds.Var.Type = scope
+				}
+				return ok, ds
+			}
 		}
 
-		return p.parseExpressionStatement()
+		return ok, expression
 	}
 }
 
-func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
-	t := p.current.Literal
+func (p *Parser) parseDeclarationStatement(parseType bool) (bool, *ast.DeclarationStatement) {
+	var t ast.Expression
+	if parseType {
+		t = p.parseType()
+	}
 
 	if !p.expectNext(tokens.IDENT) {
 		return false, nil
@@ -171,6 +183,31 @@ func (p *Parser) parseDeclarationStatement() (bool, *ast.DeclarationStatement) {
 	statement.Value = p.parseExpression(LOWEST)
 
 	return true, statement
+}
+
+func (p *Parser) parseType() ast.Expression {
+	if p.isCurrent(tokens.PIDENT) {
+		return &ast.Identifier{Token: p.current, Value: p.current.Literal}
+	} else if p.isCurrent(tokens.IDENT) {
+		ok, exp := p.parseExpressionStatement()
+		if !ok {
+			error := helper.MakeError(p.current, "couldn't parse type expression")
+			p.addError(error)
+		}
+
+		t, ok := exp.Expression.(*ast.ScopeExpression)
+		if !ok {
+			error := helper.MakeError(p.current, fmt.Sprintf("expected scope expression, got=%T", t))
+			p.addError(error)
+		}
+		return t
+	}
+
+	error := helper.MakeError(p.current, fmt.Sprintf("type starts with the wrong token expected %q or %q, got=%q",
+		tokens.PIDENT, tokens.IDENT, p.current))
+	p.addError(error)
+
+	return nil
 }
 
 func (p *Parser) parseUsingStatement() (bool, *ast.UsingStatement) {
@@ -246,11 +283,9 @@ func (p *Parser) parseAliasStatement() (bool, *ast.AliasStatement) {
 		return false, nil
 	}
 
-	if !p.expectNext(tokens.PIDENT) {
-		return false, nil
-	}
+	p.nextToken()
 
-	statement.Var.Type = p.current.Literal
+	statement.Var.Type = p.parseType()
 
 	if !p.gotoBlockStatement() {
 		return false, nil
@@ -275,12 +310,10 @@ func (p *Parser) parseFunctionStatement() (bool, *ast.FunctionStatement) {
 
 	if p.isNext(tokens.DCOLON) {
 		p.nextToken()
-		if !p.expectNext(tokens.PIDENT) {
-			return false, nil
-		}
-		name.Type = p.current.Literal
+		p.nextToken()
+		name.Type = p.parseType()
 	} else {
-		name.Type = "" //NOTE: it's basically void
+		name.Type = nil
 	}
 
 	statement.Var = name
@@ -571,7 +604,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	return block
 }
 
-func (p *Parser) parseAliasValues(t string) []*ast.DeclarationStatement {
+func (p *Parser) parseAliasValues(t ast.Expression) []*ast.DeclarationStatement {
 	statements := []*ast.DeclarationStatement{}
 
 	level := p.level
@@ -662,10 +695,8 @@ func (p *Parser) parseFunctionParameters() []ast.Variable {
 		}
 		parameter := ast.Variable{Token: p.current, Name: p.current.Literal}
 
-		if !p.expectNext(tokens.PIDENT) {
-			return nil
-		}
-		parameter.Type = p.current.Literal
+		p.nextToken()
+		parameter.Type = p.parseType()
 
 		parameters = append(parameters, parameter)
 	}

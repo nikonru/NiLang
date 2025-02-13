@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 )
 
@@ -124,18 +125,23 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 	_type, register := c.compileExpression(ds.Value)
 
-	if _type != ds.Var.Type {
+	var_type, ok := c.findType(&ds.Var)
+	if !ok {
+		return
+	}
+
+	if _type != var_type {
 		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("declared variable and expression have different types. variable=%q, expression=%q", ds.Var.Type, _type))
 		c.addError(err)
 	}
 
-	if ok := c.addNewVariable(register, ds.Var.Name, ds.Var.Type); !ok {
+	if ok := c.addNewVariable(register, ds.Var.Name, var_type); !ok {
 		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("redeclaration of variable %q", ds.Var.Name))
 		c.addError(err)
 	}
 }
 
-func (c *Compiler) addNewVariable(register register, name name, t name) bool {
+func (c *Compiler) addNewVariable(register register, name name, t Type) bool {
 	addr := c.purchaseMemoryAddress()
 	c.emit(LOAD_TO_MEM_FROM_REG, addr, register)
 
@@ -143,14 +149,15 @@ func (c *Compiler) addNewVariable(register register, name name, t name) bool {
 }
 
 func (c *Compiler) compileReturnStatement(rs *ast.ReturnStatement) {
-	returnType, ok := c.scope.returnType.(string)
+	returnType, ok := c.scope.returnType.(Type)
 
 	if !ok {
 		err := helper.MakeError(rs.Token, "unexpected return statement")
 		c.addError(err)
 	}
 
-	var _type, register name
+	var register name
+	var _type Type
 	if rs.Value != nil {
 		_type, register = c.compileExpression(rs.Value)
 	}
@@ -232,7 +239,7 @@ func (c *Compiler) compileWhileStatement(ws *ast.WhileStatement) {
 	c.emitLabel(loop)
 	_type, register := c.compileExpression(ws.Condition)
 
-	if _type != Bool {
+	if _type != builtIn(Bool) {
 		err := helper.MakeError(ws.Token, fmt.Sprintf("expected boolean condition in while loop, got %q", _type))
 		c.addError(err)
 	}
@@ -260,35 +267,35 @@ func (c *Compiler) compileAliasStatement(as *ast.AliasStatement) {
 		c.addError(err)
 	}
 
-	if as.Var.Type != Bool && as.Var.Type != Int {
+	t, ok := as.Var.Type.(*ast.Identifier)
+	if !ok && t.Value != Bool && t.Value != Int {
 		err := helper.MakeError(as.Token, fmt.Sprintf("expected alias to be primitive type(Bool, Int), got %q", as.Var.Type))
 		c.addError(err)
-	}
+	} else {
+		for _, val := range as.Values {
+			switch v := val.Value.(type) {
+			case *ast.IntegralLiteral, *ast.BooleanLiteral:
+				_type, register := c.compileExpression(val.Value)
 
-	for _, val := range as.Values {
-		switch v := val.Value.(type) {
-		case *ast.IntegralLiteral, *ast.BooleanLiteral:
-			_type, register := c.compileExpression(val.Value)
+				if _type.Name != t.Value {
+					err := helper.MakeError(val.Var.Token, fmt.Sprintf("declared alias and expression have different types. alias=%q, expression=%q", as.Var.Type, _type))
+					c.addError(err)
+				}
 
-			if _type != as.Var.Type {
-				err := helper.MakeError(val.Var.Token, fmt.Sprintf("declared alias and expression have different types. alias=%q, expression=%q", as.Var.Type, _type))
+				if ok := c.addNewVariable(register, val.Var.Name, Type{Scope: nil, Name: t.Value}); !ok {
+					err := helper.MakeError(val.Var.Token, fmt.Sprintf("redeclaration of alias %q", val.Var.Name))
+					c.addError(err)
+				}
+			default:
+				err := helper.MakeError(val.Var.Token, fmt.Sprintf("expected literal expression, got %T", v))
 				c.addError(err)
 			}
-
-			if ok := c.addNewVariable(register, val.Var.Name, as.Var.Type); !ok {
-				err := helper.MakeError(val.Var.Token, fmt.Sprintf("redeclaration of alias %q", val.Var.Name))
-				c.addError(err)
-			}
-		default:
-			err := helper.MakeError(val.Var.Token, fmt.Sprintf("expected literal expression, got %T", v))
-			c.addError(err)
 		}
 	}
-
 	c.leaveScope()
 }
 
-func (c *Compiler) compileExpression(statement ast.Expression) (name, register) {
+func (c *Compiler) compileExpression(statement ast.Expression) (Type, register) {
 	switch exp := statement.(type) {
 	case *ast.IntegralLiteral:
 		return c.compileIntegralLiteral(exp)
@@ -302,7 +309,7 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 		return c.compileIdentifier(exp)
 	case *ast.CallExpression:
 		log.Fatalf("WIP")
-		return "", ""
+		return Type{}, ""
 	case *ast.ScopeExpression:
 		scope, ok := c.findScope(exp, c.scope)
 		if !ok {
@@ -314,31 +321,31 @@ func (c *Compiler) compileExpression(statement ast.Expression) (name, register) 
 	default:
 		log.Fatalf("type of expression is not handled. got=%T", exp)
 	}
-	return "", ""
+	return Type{}, ""
 }
 
-func (c *Compiler) compileIntegralLiteral(expression *ast.IntegralLiteral) (name, register) {
+func (c *Compiler) compileIntegralLiteral(expression *ast.IntegralLiteral) (Type, register) {
 	c.emit(LOAD_TO_REG_FROM_VAL, AX, expression.Value)
-	return Int, AX
+	return builtIn(Int), AX
 }
 
-func (c *Compiler) compileBooleanLiteral(expression *ast.BooleanLiteral) (name, register) {
+func (c *Compiler) compileBooleanLiteral(expression *ast.BooleanLiteral) (Type, register) {
 	value := BOOL_FALSE
 	if expression.Value {
 		value = BOOL_TRUE
 	}
 
 	c.emit(LOAD_TO_REG_FROM_VAL, AX, value)
-	return Bool, AX
+	return builtIn(Bool), AX
 }
 
-func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (name, register) {
+func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (Type, register) {
 
 	_type, register := c.compileExpression(expression.Right)
 
 	switch expression.Operator {
 	case tokens.NOT:
-		if _type != Bool {
+		if _type != builtIn(Bool) {
 			err := helper.MakeError(expression.Token, fmt.Sprintf("expected boolean expression. got=%q", _type))
 			c.addError(err)
 		}
@@ -363,10 +370,10 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (na
 		log.Fatalf("type of prefix is not handled. got=%q", expression.Operator)
 	}
 
-	return Bool, register
+	return builtIn(Bool), register
 }
 
-func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name, register) {
+func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (Type, register) {
 
 	leftType, leftRegister := c.compileExpression(expression.Left)
 	buffer := c.purchaseStackMemoryAddress()
@@ -382,8 +389,8 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 	c.emit(LOAD_TO_REG_FROM_MEM, AX, buffer)
 	leftRegister = AX
 
-	emitComparison := func(jump command) (name, register) {
-		if leftType != Int || rightType != Int {
+	emitComparison := func(jump command) (Type, register) {
+		if leftType != builtIn(Int) || rightType != builtIn(Int) {
 			err := helper.MakeError(expression.Token, fmt.Sprintf("expected int expression(s). got left=%q and right=%q", leftType, rightType))
 			c.addError(err)
 		}
@@ -400,7 +407,7 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 		c.emit(LOAD_TO_REG_FROM_VAL, AX, BOOL_TRUE)
 
 		c.emitLabel(end)
-		return Bool, AX
+		return builtIn(Bool), AX
 	}
 
 	switch expression.Operator {
@@ -417,7 +424,7 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 	case tokens.EQUAL:
 		return emitComparison(JUMP_IF_EQUAL)
 	case tokens.AND:
-		if leftType != Bool || rightType != Bool {
+		if leftType != builtIn(Bool) || rightType != builtIn(Bool) {
 			err := helper.MakeError(expression.Token, fmt.Sprintf("expected bool expression(s). got left=%q and right=%q", leftType, rightType))
 			c.addError(err)
 		}
@@ -437,9 +444,9 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 		c.emit(LOAD_TO_REG_FROM_VAL, AX, BOOL_FALSE)
 
 		c.emitLabel(end)
-		return Bool, AX
+		return builtIn(Bool), AX
 	case tokens.OR:
-		if leftType != Bool || rightType != Bool {
+		if leftType != builtIn(Bool) || rightType != builtIn(Bool) {
 			err := helper.MakeError(expression.Token, fmt.Sprintf("expected bool expression(s). got left=%q and right=%q", leftType, rightType))
 			c.addError(err)
 		}
@@ -459,18 +466,18 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (name
 		c.emit(LOAD_TO_REG_FROM_VAL, AX, BOOL_TRUE)
 
 		c.emitLabel(end)
-		return Bool, AX
+		return builtIn(Bool), AX
 	default:
 		log.Fatalf("type of infix expression is not handled. got=%q", expression.Operator)
-		return "", ""
+		return Type{}, ""
 	}
 }
 
-func (c *Compiler) compileIdentifier(expression *ast.Identifier) (name, register) {
+func (c *Compiler) compileIdentifier(expression *ast.Identifier) (Type, register) {
 	return c.compileIdentifierFromScope(expression, c.scope)
 }
 
-func (c *Compiler) compileIdentifierFromScope(expression *ast.Identifier, scope *scope) (name, register) {
+func (c *Compiler) compileIdentifierFromScope(expression *ast.Identifier, scope *scope) (Type, register) {
 	// TODO check if scope is nil
 	if variable, ok := scope.GetVariable(expression.Value); ok {
 		c.emit(LOAD_TO_REG_FROM_MEM, AX, variable.Addr)
@@ -479,7 +486,7 @@ func (c *Compiler) compileIdentifierFromScope(expression *ast.Identifier, scope 
 
 	err := helper.MakeError(expression.Token, fmt.Sprintf("undefined identifier. got=%q", expression))
 	c.addError(err)
-	return "", ""
+	return Type{}, ""
 }
 
 func (c *Compiler) findScope(expression *ast.ScopeExpression, scope *scope) (*scope, bool) {
@@ -495,6 +502,34 @@ func (c *Compiler) findScope(expression *ast.ScopeExpression, scope *scope) (*sc
 		return scope.GetScope(exp.Value)
 	default:
 		return scope, false
+	}
+}
+
+func (c *Compiler) findType(expression *ast.Variable) (Type, bool) {
+	switch exp := expression.Type.(type) {
+	case *ast.ScopeExpression:
+		s, ok := c.findScope(exp, c.scope)
+		if !ok {
+			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined scope/alias %q", exp.Value.Value))
+			c.addError(err)
+			return Type{}, false
+		}
+		return Type{Scope: s, Name: exp.Value.Value}, true
+	case *ast.Identifier:
+		if slices.Contains(BUILTIN_TYPES, exp.Value) {
+			return Type{Scope: nil, Name: exp.Value}, true
+		}
+
+		s, ok := c.scope.GetScope(exp.Value)
+		if !ok {
+			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined type %q", exp.Value))
+			c.addError(err)
+			return Type{}, false
+		}
+
+		return Type{Scope: s, Name: exp.Value}, true
+	default:
+		return Type{}, false
 	}
 }
 
