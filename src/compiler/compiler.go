@@ -131,7 +131,8 @@ func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 	}
 
 	if _type != var_type {
-		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("declared variable and expression have different types. variable=%q, expression=%q", ds.Var.Type, _type))
+		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("declared variable and expression have different types. variable=%q, expression=%q",
+			ds.Var.Type, _type.String()))
 		c.addError(err)
 	}
 
@@ -163,7 +164,8 @@ func (c *Compiler) compileReturnStatement(rs *ast.ReturnStatement) {
 	}
 
 	if returnType != _type {
-		err := helper.MakeError(rs.Token, fmt.Sprintf("expected return of type=%q, got=%q", returnType, _type))
+		err := helper.MakeError(rs.Token, fmt.Sprintf("expected return of type=%q, got=%q",
+			returnType.String(), _type.String()))
 		c.addError(err)
 	}
 
@@ -208,7 +210,8 @@ func (c *Compiler) compileAssignmentStatement(as *ast.AssignmentStatement) {
 	}
 
 	if variable.Type != _type {
-		err := helper.MakeError(as.Name.Token, fmt.Sprintf("expected expression of type=%q, got=%q", variable.Type, _type))
+		err := helper.MakeError(as.Name.Token, fmt.Sprintf("expected expression of type=%q, got=%q",
+			variable.Type.String(), _type.String()))
 		c.addError(err)
 	}
 
@@ -240,7 +243,7 @@ func (c *Compiler) compileWhileStatement(ws *ast.WhileStatement) {
 	_type, register := c.compileExpression(ws.Condition)
 
 	if _type != builtIn(Bool) {
-		err := helper.MakeError(ws.Token, fmt.Sprintf("expected boolean condition in while loop, got %q", _type))
+		err := helper.MakeError(ws.Token, fmt.Sprintf("expected boolean condition in while loop, got %q", _type.String()))
 		c.addError(err)
 	}
 
@@ -268,7 +271,7 @@ func (c *Compiler) compileAliasStatement(as *ast.AliasStatement) {
 	}
 
 	t, ok := as.Var.Type.(*ast.Identifier)
-	if !ok && t.Value != Bool && t.Value != Int {
+	if !ok || (t.Value != Bool && t.Value != Int) {
 		err := helper.MakeError(as.Token, fmt.Sprintf("expected alias to be primitive type(Bool, Int), got %q", as.Var.Type))
 		c.addError(err)
 	} else {
@@ -278,11 +281,12 @@ func (c *Compiler) compileAliasStatement(as *ast.AliasStatement) {
 				_type, register := c.compileExpression(val.Value)
 
 				if _type.Name != t.Value {
-					err := helper.MakeError(val.Var.Token, fmt.Sprintf("declared alias and expression have different types. alias=%q, expression=%q", as.Var.Type, _type))
+					err := helper.MakeError(val.Var.Token, fmt.Sprintf("declared alias and expression have different types. alias=%q, expression=%q",
+						as.Var.Type, _type.String()))
 					c.addError(err)
 				}
 
-				if ok := c.addNewVariable(register, val.Var.Name, Type{Scope: nil, Name: t.Value}); !ok {
+				if ok := c.addNewVariable(register, val.Var.Name, Type{Scope: c.scope.GetParent(), Name: as.Var.Name}); !ok {
 					err := helper.MakeError(val.Var.Token, fmt.Sprintf("redeclaration of alias %q", val.Var.Name))
 					c.addError(err)
 				}
@@ -346,7 +350,7 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (Ty
 	switch expression.Operator {
 	case tokens.NOT:
 		if _type != builtIn(Bool) {
-			err := helper.MakeError(expression.Token, fmt.Sprintf("expected boolean expression. got=%q", _type))
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected boolean expression. got=%q", _type.String()))
 			c.addError(err)
 		}
 
@@ -391,7 +395,8 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (Type
 
 	emitComparison := func(jump command) (Type, register) {
 		if leftType != builtIn(Int) || rightType != builtIn(Int) {
-			err := helper.MakeError(expression.Token, fmt.Sprintf("expected int expression(s). got left=%q and right=%q", leftType, rightType))
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected int expression(s). got left=%q and right=%q",
+				leftType.String(), rightType.String()))
 			c.addError(err)
 		}
 
@@ -425,7 +430,8 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (Type
 		return emitComparison(JUMP_IF_EQUAL)
 	case tokens.AND:
 		if leftType != builtIn(Bool) || rightType != builtIn(Bool) {
-			err := helper.MakeError(expression.Token, fmt.Sprintf("expected bool expression(s). got left=%q and right=%q", leftType, rightType))
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected bool expression(s). got left=%q and right=%q",
+				leftType.String(), rightType.String()))
 			c.addError(err)
 		}
 
@@ -447,7 +453,8 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (Type
 		return builtIn(Bool), AX
 	case tokens.OR:
 		if leftType != builtIn(Bool) || rightType != builtIn(Bool) {
-			err := helper.MakeError(expression.Token, fmt.Sprintf("expected bool expression(s). got left=%q and right=%q", leftType, rightType))
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected bool expression(s). got left=%q and right=%q",
+				leftType.String(), rightType.String()))
 			c.addError(err)
 		}
 
