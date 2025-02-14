@@ -48,11 +48,14 @@ type Parser struct {
 	prefixParseFns map[tokens.TokenType]prefixParseFns
 	infixParseFns  map[tokens.TokenType]infixParseFns
 
-	pleaseDontSkipToken bool
+	pleaseDontSkipToken     bool
+	pleaseDontParseCallExpr bool //TODO: don't use global state, maybe more elegant solutions is achievable,
+	// Such that we don't need to use workaround with call expression
 }
 
 func New(lexer *lexer.Lexer) *Parser {
 	p := &Parser{lexer: lexer, level: 0}
+	p.pleaseDontParseCallExpr = false
 
 	p.prefixParseFns = make(map[tokens.TokenType]prefixParseFns)
 	p.registerPrefix(tokens.IDENT, p.parseIdentifier)
@@ -189,7 +192,9 @@ func (p *Parser) parseType() ast.Expression {
 	if p.isCurrent(tokens.PIDENT) {
 		return &ast.Identifier{Token: p.current, Value: p.current.Literal}
 	} else if p.isCurrent(tokens.IDENT) {
+		p.pleaseDontParseCallExpr = true
 		ok, exp := p.parseExpressionStatement()
+		p.pleaseDontParseCallExpr = false
 		if !ok {
 			error := helper.MakeError(p.current, "couldn't parse type expression")
 			p.addError(error)
@@ -327,7 +332,6 @@ func (p *Parser) parseFunctionStatement() (bool, *ast.FunctionStatement) {
 	} else {
 		name.Type = nil
 	}
-
 	statement.Var = name
 
 	if p.isNext(tokens.DOLLAR) {
@@ -383,6 +387,10 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		}
 
 		leftExpression = infix(leftExpression)
+
+		if p.isNext(tokens.DOLLAR) && p.pleaseDontParseCallExpr {
+			return leftExpression
+		}
 	}
 
 	if p.isNext(tokens.NEWLINE) {
@@ -735,7 +743,7 @@ func (p *Parser) parseScopeExpression(scope ast.Expression) ast.Expression {
 
 	exp.Value = p.parseIdentifier().(*ast.Identifier)
 
-	if p.isCurrent(tokens.PIDENT) {
+	if p.isCurrent(tokens.PIDENT) && !p.pleaseDontParseCallExpr {
 		if p.isNext(tokens.DOLLAR) {
 			p.nextToken()
 			return p.parseCallExpression(exp)

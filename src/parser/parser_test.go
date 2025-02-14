@@ -864,13 +864,13 @@ Fun L::bot::Dir$v world::Status:
 		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
 	}
 
-	if !testTypedIdentifier(test, statement.Var, "Dir", "I") {
+	if !testTypedIdentifier(test, statement.Var, "Dir", "L") {
 		return
 	}
 
 	length = 1
 	if len(statement.Parameters) != length {
-		test.Fatalf("wrong number of parameters in I, expected=%d, got=%d", length, len(statement.Parameters))
+		test.Fatalf("wrong number of parameters in L, expected=%d, got=%d", length, len(statement.Parameters))
 	}
 
 	if !testTypedIdentifier(test, statement.Parameters[0], "Status", "v") {
@@ -967,7 +967,7 @@ goo`)
 
 	length := 2
 	if len(program.Statements) != 2 {
-		test.Fatalf("program has not enough statements, expectdd=%d, got=%d", length, len(program.Statements))
+		test.Fatalf("program has not enough statements, expected=%d, got=%d", length, len(program.Statements))
 	}
 
 	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
