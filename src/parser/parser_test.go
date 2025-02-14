@@ -505,6 +505,12 @@ Fun Z$v Int:
 
 Fun K::bot::Dir:
     Foo
+
+Fun Z$v bot::Dir:
+    Foo
+
+Fun L::bot::Dir$v world::Status:
+    Return v
 `)
 
 	lexer := lexer.New(input)
@@ -516,7 +522,7 @@ Fun K::bot::Dir:
 	}
 	checkParseErrors(test, parser, input)
 
-	length := 6
+	length := 8
 	if len(program.Statements) != length {
 		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
 	}
@@ -763,7 +769,7 @@ Fun K::bot::Dir:
 
 	statement, ok = program.Statements[5].(*ast.FunctionStatement)
 	if !ok {
-		test.Fatalf("program.Statements[3] is not ast.FunnctionStatement, got=%T", program.Statements[3])
+		test.Fatalf("program.Statements[5] is not ast.FunnctionStatement, got=%T", program.Statements[3])
 	}
 
 	if statement.TokenLiteral() != "Fun" {
@@ -800,6 +806,100 @@ Fun K::bot::Dir:
 	if !testEmptyCallExpression(test, expStatement.Expression, "Foo") {
 		return
 	}
+
+	//-6-
+
+	statement, ok = program.Statements[6].(*ast.FunctionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[6] is not ast.FunnctionStatement, got=%T", program.Statements[4])
+	}
+
+	if statement.TokenLiteral() != "Fun" {
+		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
+	}
+
+	if statement.Var.Type != nil {
+		test.Fatalf("statement.Name.Type is not `nil`, got=%v", statement.Var.Type)
+	}
+
+	if statement.Var.TokenLiteral() != "Z" {
+		test.Fatalf("statement.Name.TokenLiteral() is not '%s', got=%s", "Z", statement.Var.TokenLiteral())
+	}
+
+	if statement.Var.Name != "Z" {
+		test.Fatalf("statement.Name.Value is not '%s', got=%s", "Z", statement.Var.Name)
+	}
+
+	length = 1
+	if len(statement.Parameters) != length {
+		test.Fatalf("wrong number of parameters in H, expected=%d, got=%d", length, len(statement.Parameters))
+	}
+
+	length = 1
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in H, expected=%d, got=%d", length, len(statement.Body.Statements))
+	}
+
+	if !testTypedIdentifier(test, statement.Parameters[0], "Dir", "v") {
+		return
+	}
+
+	expStatement, ok = statement.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("statement.Body.Statements[0] is not ast.ExpressionStatement, got=%T", statement.Body.Statements[0])
+	}
+
+	if !testEmptyCallExpression(test, expStatement.Expression, "Foo") {
+		return
+	}
+
+	//-7-
+
+	statement, ok = program.Statements[7].(*ast.FunctionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[7] is not ast.FunnctionStatement, got=%T", program.Statements[1])
+	}
+
+	if statement.TokenLiteral() != "Fun" {
+		test.Fatalf("statement.TokenLiteral() is not `Fun`, got=%q", statement.TokenLiteral())
+	}
+
+	if !testTypedIdentifier(test, statement.Var, "Dir", "I") {
+		return
+	}
+
+	length = 1
+	if len(statement.Parameters) != length {
+		test.Fatalf("wrong number of parameters in I, expected=%d, got=%d", length, len(statement.Parameters))
+	}
+
+	if !testTypedIdentifier(test, statement.Parameters[0], "Status", "v") {
+		return
+	}
+
+	length = 1
+	if len(statement.Body.Statements) != length {
+		test.Fatalf("wrong number of statements in I, expected=%d, got=%d", length, len(statement.Body.Statements))
+	}
+
+	ret, ok = statement.Body.Statements[0].(*ast.ReturnStatement)
+	if !ok {
+		test.Fatalf("statement.Body.Statements[0] is not ast.ReturnStatement, got=%T", statement.Body.Statements[0])
+	}
+
+	if ret.TokenLiteral() != "Return" {
+		test.Fatalf("ret.TokenLiteral() is not Return, got=%q", ret.TokenLiteral())
+	}
+
+	ident, ok = ret.Value.(*ast.Identifier)
+	if !ok {
+		test.Fatalf("ret.Value is not ast.InfixExpression, got=%T", ret.Value)
+	}
+
+	if !testIdentifier(test, ident, "v") {
+		return
+	}
+
 }
 
 func TestBodyOfFunction(test *testing.T) {
