@@ -202,7 +202,14 @@ func (fs *FunctionStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(fs.TokenLiteral() + " ")
-	out.WriteString(fs.Var.String() + "{\n")
+	out.WriteString(fs.Var.String() + "(")
+	for i, arg := range fs.Parameters {
+		out.WriteString(arg.String())
+		if i != len(fs.Parameters)-1 {
+			out.WriteString(", ")
+		}
+	}
+	out.WriteString("){\n")
 	if fs.Body != nil {
 		out.WriteString(fs.Body.String())
 	}
