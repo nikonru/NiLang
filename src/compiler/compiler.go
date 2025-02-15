@@ -227,8 +227,8 @@ func (c *Compiler) compileAssignmentStatement(as *ast.AssignmentStatement) {
 }
 
 func (c *Compiler) compileScopeStatement(ss *ast.ScopeStatement) {
-
 	c.enterNamedScope(ss.Name.Value)
+	defer c.leaveScope()
 
 	if ok := c.scope.GetParent().AddScope(c.scope); !ok {
 		err := helper.MakeError(ss.Name.Token, fmt.Sprintf("redeclaration of scope/alias %q", c.scope.name))
@@ -238,8 +238,6 @@ func (c *Compiler) compileScopeStatement(ss *ast.ScopeStatement) {
 	for _, statement := range ss.Body.Statements {
 		c.compileStatement(statement)
 	}
-
-	c.leaveScope()
 }
 
 func (c *Compiler) compileWhileStatement(ws *ast.WhileStatement) {
@@ -259,6 +257,7 @@ func (c *Compiler) compileWhileStatement(ws *ast.WhileStatement) {
 	c.emit(JUMP_IF_NOT_EQUAL, end)
 
 	c.enterScope()
+	defer c.leaveScope()
 
 	for _, statement := range ws.Body.Statements {
 		c.compileStatement(statement)
@@ -266,12 +265,11 @@ func (c *Compiler) compileWhileStatement(ws *ast.WhileStatement) {
 
 	c.emit(JUMP, loop)
 	c.emitLabel(end)
-
-	c.leaveScope()
 }
 
 func (c *Compiler) compileAliasStatement(as *ast.AliasStatement) {
 	c.enterNamedScope(helper.FirstToLowerCase(as.Var.Name))
+	defer c.leaveScope()
 
 	if ok := c.scope.GetParent().AddScope(c.scope); !ok {
 		err := helper.MakeError(as.Token, fmt.Sprintf("redeclaration of scope/alias %q", c.scope.name))
@@ -304,8 +302,6 @@ func (c *Compiler) compileAliasStatement(as *ast.AliasStatement) {
 			}
 		}
 	}
-
-	c.leaveScope()
 }
 
 func (c *Compiler) compileFunctionStatement(fs *ast.FunctionStatement) {
@@ -322,6 +318,7 @@ func (c *Compiler) compileFunctionStatement(fs *ast.FunctionStatement) {
 	}
 
 	start := c.getUniqueLabel()
+	end := c.getUniqueLabel()
 
 	var arguments []variable
 	if fs.Parameters != nil {
@@ -359,8 +356,10 @@ func (c *Compiler) compileFunctionStatement(fs *ast.FunctionStatement) {
 	}
 
 	c.enterNamedScope(fs.Var.Name)
+	defer c.leaveScope()
 	c.scope.returnType = _type
 
+	c.emit(JUMP, end)
 	c.emitLabel(start)
 
 	foundReturnStatement := false
@@ -381,7 +380,7 @@ func (c *Compiler) compileFunctionStatement(fs *ast.FunctionStatement) {
 		}
 	}
 
-	c.leaveScope()
+	c.emitLabel(end)
 }
 
 func (c *Compiler) compileExpression(statement ast.Expression) (Type, register) {
