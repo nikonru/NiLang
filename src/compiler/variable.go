@@ -1,6 +1,8 @@
 package compiler
 
-import "bytes"
+import (
+	"bytes"
+)
 
 type variable struct {
 	Name name
@@ -13,15 +15,24 @@ type Type struct {
 	Name  name
 }
 
+var VOID = Type{Scope: nil, Name: ""}
+
 func (t *Type) String() string {
 	var out bytes.Buffer
 
+	names := make([]string, 0)
 	scope := t.Scope
 	for scope != nil {
-		out.WriteString(t.Scope.name + "::")
-		scope = t.Scope.GetParent()
+		if scope.name != "" {
+			names = append(names, scope.name)
+		}
+		scope = scope.GetParent()
 	}
-	out.WriteString(t.Name)
 
+	for i := len(names) - 1; i >= 0; i -= 1 {
+		out.WriteString(names[i] + "::")
+	}
+
+	out.WriteString(t.Name)
 	return out.String()
 }

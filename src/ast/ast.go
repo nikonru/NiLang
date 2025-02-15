@@ -31,7 +31,11 @@ func (ti *Variable) TokenLiteral() string { return ti.Token.Literal }
 func (ti *Variable) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(ti.Type.String() + " ")
+	if ti.Type != nil {
+		out.WriteString(ti.Type.String() + " ")
+	} else {
+		out.WriteString("void ")
+	}
 	out.WriteString(ti.Name)
 
 	return out.String()
@@ -190,8 +194,8 @@ func (as *AliasStatement) String() string {
 
 type FunctionStatement struct {
 	Token      tokens.Token
-	Var        Variable //it has nil type in case of void function
-	Parameters []Variable
+	Var        Variable   //it has nil type in Type field in case of void function
+	Parameters []Variable //it has nil type in case of parameterless function
 	Body       *BlockStatement
 }
 

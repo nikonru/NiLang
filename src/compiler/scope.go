@@ -1,8 +1,12 @@
 package compiler
 
+import (
+	"slices"
+)
+
 type scope struct {
 	name       name
-	returnType interface{} //this is optional field for string representing return type
+	returnType interface{} //this is optional field for Type Structure representing return type
 
 	variables map[name]variable
 	functions map[name]function
@@ -56,6 +60,19 @@ func (s *scope) AddScope(scope *scope) bool {
 	}
 
 	s.children[scope.name] = scope
+	return true
+}
+
+func (s *scope) AddFunction(name name, label string, t Type, signature []Type) bool {
+	if _, ok := s.functions[name]; ok {
+		return false
+	}
+
+	s.functions[name] = function{
+		Name:      name,
+		Label:     label,
+		Type:      t,
+		Signature: slices.Clone(signature)}
 	return true
 }
 

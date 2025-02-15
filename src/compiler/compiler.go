@@ -62,6 +62,12 @@ func (c *Compiler) Compile(input []byte) ([]byte, errors) {
 	}
 	fmt.Println("END")
 	fmt.Println(c.scope.variables)
+	fmt.Println(c.scope.functions)
+	fmt.Println(c.scope.children)
+	for _, scope := range c.scope.usingScopes {
+		fmt.Println(scope.name)
+	}
+
 	return c.output.Bytes(), c.errors
 }
 
@@ -116,6 +122,8 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 		c.compileWhileStatement(stm)
 	case *ast.AliasStatement:
 		c.compileAliasStatement(stm)
+	case *ast.FunctionStatement:
+		c.compileFunctionStatement(stm)
 	default:
 		log.Fatalf("type of statement is not handled. got=%T", statement)
 	}
@@ -158,7 +166,7 @@ func (c *Compiler) compileReturnStatement(rs *ast.ReturnStatement) {
 	}
 
 	var register name
-	var _type Type
+	_type := VOID
 	if rs.Value != nil {
 		_type, register = c.compileExpression(rs.Value)
 	}
@@ -183,7 +191,7 @@ func (c *Compiler) compileUsingStatement(us *ast.UsingStatement) {
 	case *ast.ScopeExpression:
 		s, ok = c.findScope(name, c.scope)
 		if !ok {
-			err := helper.MakeError(us.Token, "undefined scope/alias expression")
+			err := helper.MakeError(us.Token, "undeclared scope/alias expression")
 			c.addError(err)
 		}
 		s, ok = s.GetScope(name.Value.Value)
@@ -193,7 +201,7 @@ func (c *Compiler) compileUsingStatement(us *ast.UsingStatement) {
 	}
 
 	if !ok {
-		err := helper.MakeError(us.Token, "undefined scope/alias expression")
+		err := helper.MakeError(us.Token, "undeclared scope/alias expression")
 		c.addError(err)
 	} else {
 		c.scope.UsingScope(s)
@@ -296,6 +304,80 @@ func (c *Compiler) compileAliasStatement(as *ast.AliasStatement) {
 			}
 		}
 	}
+
+	c.leaveScope()
+}
+
+func (c *Compiler) compileFunctionStatement(fs *ast.FunctionStatement) {
+	_type := VOID
+
+	if fs.Var.Type != nil {
+		var ok bool
+		_type, ok = c.findType(&fs.Var)
+
+		if !ok {
+			err := helper.MakeError(fs.Var.Token, "undeclared function type")
+			c.addError(err)
+		}
+	}
+
+	start := c.getUniqueLabel()
+
+	var signature []Type
+	if fs.Parameters != nil {
+		signature = make([]Type, len(fs.Parameters))
+
+		for i, parameter := range fs.Parameters {
+			if parameter.Type != nil {
+
+				_type, ok := c.findType(&parameter)
+				signature[i] = _type
+
+				if !ok {
+					err := helper.MakeError(parameter.Token, "undeclared parameter type")
+					c.addError(err)
+					return
+				}
+			} else {
+				err := helper.MakeError(parameter.Token, "undeclared parameter type")
+				c.addError(err)
+				return
+			}
+		}
+	} else {
+		signature = make([]Type, 0)
+	}
+
+	ok := c.scope.AddFunction(fs.Var.Name, start, _type, signature)
+	if !ok {
+		err := helper.MakeError(fs.Token, fmt.Sprintf("redeclaration of function %q", fs.Var.Name))
+		c.addError(err)
+		return
+	}
+
+	c.enterNamedScope(fs.Var.Name)
+	c.scope.returnType = _type
+
+	c.emitLabel(start)
+
+	foundReturnStatement := false
+	for _, statement := range fs.Body.Statements {
+		if !foundReturnStatement {
+			_, foundReturnStatement = statement.(*ast.ReturnStatement)
+		}
+
+		c.compileStatement(statement)
+	}
+
+	if !foundReturnStatement {
+		if _type == VOID {
+			c.emit(RETURN)
+		} else {
+			err := helper.MakeError(fs.Token, fmt.Sprintf("expected return statement in function %q", fs.Var.Name))
+			c.addError(err)
+		}
+	}
+
 	c.leaveScope()
 }
 
@@ -313,11 +395,11 @@ func (c *Compiler) compileExpression(statement ast.Expression) (Type, register) 
 		return c.compileIdentifier(exp)
 	case *ast.CallExpression:
 		log.Fatalf("WIP")
-		return Type{}, ""
+		return VOID, ""
 	case *ast.ScopeExpression:
 		scope, ok := c.findScope(exp, c.scope)
 		if !ok {
-			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined scope/alias %q", exp.Scope))
+			err := helper.MakeError(exp.Token, fmt.Sprintf("undeclared scope/alias %q", exp.Scope))
 			c.addError(err)
 		} else {
 			return c.compileIdentifierFromScope(exp.Value, scope)
@@ -325,7 +407,7 @@ func (c *Compiler) compileExpression(statement ast.Expression) (Type, register) 
 	default:
 		log.Fatalf("type of expression is not handled. got=%T", exp)
 	}
-	return Type{}, ""
+	return VOID, ""
 }
 
 func (c *Compiler) compileIntegralLiteral(expression *ast.IntegralLiteral) (Type, register) {
@@ -476,7 +558,7 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (Type
 		return builtIn(Bool), AX
 	default:
 		log.Fatalf("type of infix expression is not handled. got=%q", expression.Operator)
-		return Type{}, ""
+		return VOID, ""
 	}
 }
 
@@ -491,9 +573,9 @@ func (c *Compiler) compileIdentifierFromScope(expression *ast.Identifier, scope 
 		return variable.Type, AX
 	}
 
-	err := helper.MakeError(expression.Token, fmt.Sprintf("undefined identifier. got=%q", expression))
+	err := helper.MakeError(expression.Token, fmt.Sprintf("undeclared identifier. got=%q", expression))
 	c.addError(err)
-	return Type{}, ""
+	return VOID, ""
 }
 
 func (c *Compiler) findScope(expression *ast.ScopeExpression, scope *scope) (*scope, bool) {
@@ -501,7 +583,7 @@ func (c *Compiler) findScope(expression *ast.ScopeExpression, scope *scope) (*sc
 	case *ast.ScopeExpression:
 		s, ok := c.findScope(exp, scope)
 		if !ok {
-			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined scope/alias %q", exp.Value.Value))
+			err := helper.MakeError(exp.Token, fmt.Sprintf("undeclared scope/alias %q", exp.Value.Value))
 			c.addError(err)
 		}
 		return s.GetScope(exp.Value.Value)
@@ -517,26 +599,26 @@ func (c *Compiler) findType(expression *ast.Variable) (Type, bool) {
 	case *ast.ScopeExpression:
 		s, ok := c.findScope(exp, c.scope)
 		if !ok {
-			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined scope/alias %q", exp.Value.Value))
+			err := helper.MakeError(exp.Token, fmt.Sprintf("undeclared scope/alias %q", exp.Value.Value))
 			c.addError(err)
-			return Type{}, false
+			return VOID, false
 		}
+
 		return Type{Scope: s, Name: exp.Value.Value}, true
 	case *ast.Identifier:
 		if slices.Contains(BUILTIN_TYPES, exp.Value) {
 			return Type{Scope: nil, Name: exp.Value}, true
 		}
-
-		s, ok := c.scope.GetScope(exp.Value)
+		s, ok := c.scope.GetScope(helper.FirstToLowerCase(exp.Value))
 		if !ok {
-			err := helper.MakeError(exp.Token, fmt.Sprintf("undefined type %q", exp.Value))
+			err := helper.MakeError(exp.Token, fmt.Sprintf("undeclared type %q", exp.Value))
 			c.addError(err)
-			return Type{}, false
+			return VOID, false
 		}
 
-		return Type{Scope: s, Name: exp.Value}, true
+		return Type{Scope: s.GetParent(), Name: exp.Value}, true
 	default:
-		return Type{}, false
+		return VOID, false
 	}
 }
 
