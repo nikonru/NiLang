@@ -63,7 +63,7 @@ func (s *scope) AddScope(scope *scope) bool {
 	return true
 }
 
-func (s *scope) AddFunction(name name, label string, t Type, signature []Type) bool {
+func (s *scope) AddFunction(name name, label string, t Type, arguments []variable) bool {
 	if _, ok := s.functions[name]; ok {
 		return false
 	}
@@ -72,7 +72,7 @@ func (s *scope) AddFunction(name name, label string, t Type, signature []Type) b
 		Name:      name,
 		Label:     label,
 		Type:      t,
-		Signature: slices.Clone(signature)}
+		Arguments: slices.Clone(arguments)}
 	return true
 }
 

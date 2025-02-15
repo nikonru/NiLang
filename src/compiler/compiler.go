@@ -323,21 +323,24 @@ func (c *Compiler) compileFunctionStatement(fs *ast.FunctionStatement) {
 
 	start := c.getUniqueLabel()
 
-	var signature []Type
+	var arguments []variable
 	if fs.Parameters != nil {
-		signature = make([]Type, len(fs.Parameters))
+		arguments = make([]variable, len(fs.Parameters))
 
 		for i, parameter := range fs.Parameters {
 			if parameter.Type != nil {
-
+				var _var variable
+				_var.Name = parameter.Name
 				_type, ok := c.findType(&parameter)
-				signature[i] = _type
-
 				if !ok {
 					err := helper.MakeError(parameter.Token, "undeclared parameter type")
 					c.addError(err)
 					return
 				}
+				_var.Type = _type
+				_var.Addr = c.purchaseMemoryAddress()
+
+				arguments[i] = _var
 			} else {
 				err := helper.MakeError(parameter.Token, "undeclared parameter type")
 				c.addError(err)
@@ -345,10 +348,10 @@ func (c *Compiler) compileFunctionStatement(fs *ast.FunctionStatement) {
 			}
 		}
 	} else {
-		signature = make([]Type, 0)
+		arguments = make([]variable, 0)
 	}
 
-	ok := c.scope.AddFunction(fs.Var.Name, start, _type, signature)
+	ok := c.scope.AddFunction(fs.Var.Name, start, _type, arguments)
 	if !ok {
 		err := helper.MakeError(fs.Token, fmt.Sprintf("redeclaration of function %q", fs.Var.Name))
 		c.addError(err)
