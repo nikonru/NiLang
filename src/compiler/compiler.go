@@ -124,6 +124,8 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 		c.compileAliasStatement(stm)
 	case *ast.FunctionStatement:
 		c.compileFunctionStatement(stm)
+	case *ast.IfStatement:
+		c.compileIfStatement(stm)
 	default:
 		log.Fatalf("type of statement is not handled. got=%T", statement)
 	}
@@ -381,6 +383,68 @@ func (c *Compiler) compileFunctionStatement(fs *ast.FunctionStatement) {
 	}
 
 	c.emitLabel(end)
+}
+
+func (c *Compiler) compileIfStatement(is *ast.IfStatement) {
+	elifOrElse := c.getUniqueLabel()
+	end := c.getUniqueLabel()
+
+	_type, register := c.compileExpression(is.Condition)
+
+	if _type != builtIn(Bool) {
+		err := helper.MakeError(is.Token, fmt.Sprintf("expected boolean condition in if statement, got %q", _type.String()))
+		c.addError(err)
+	}
+
+	c.emit(COMPARE_WITH_VALUE, register, BOOL_TRUE)
+	c.emit(JUMP_IF_NOT_EQUAL, elifOrElse)
+
+	c.enterScope()
+
+	for _, statement := range is.Consequence.Statements {
+		c.compileStatement(statement)
+	}
+
+	c.emit(JUMP, end)
+	c.leaveScope()
+
+	c.emitLabel(elifOrElse)
+
+	if is.Elifs != nil {
+		for _, elif := range is.Elifs {
+			c.compileElifStatement(elif, end)
+		}
+	}
+
+	if is.Alternative != nil {
+		for _, statement := range is.Alternative.Statements {
+			c.compileStatement(statement)
+		}
+	}
+
+	c.emitLabel(end)
+}
+
+func (c *Compiler) compileElifStatement(es *ast.ElifStatement, end string) {
+	nextElif := c.getUniqueLabel()
+	_type, register := c.compileExpression(es.Condition)
+
+	if _type != builtIn(Bool) {
+		err := helper.MakeError(es.Token, fmt.Sprintf("expected boolean condition in elif statement, got %q", _type.String()))
+		c.addError(err)
+	}
+
+	c.emit(COMPARE_WITH_VALUE, register, BOOL_TRUE)
+	c.emit(JUMP_IF_NOT_EQUAL, nextElif)
+
+	c.enterScope()
+	defer c.leaveScope()
+
+	for _, statement := range es.Consequence.Statements {
+		c.compileStatement(statement)
+	}
+	c.emit(JUMP, end)
+	c.emitLabel(nextElif)
 }
 
 func (c *Compiler) compileExpression(statement ast.Expression) (Type, register) {
