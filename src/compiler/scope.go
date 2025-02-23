@@ -13,6 +13,9 @@ type scope struct {
 
 	usingScopes []*scope
 
+	escapeLabel string //used by Break and Continue in While loop
+	repeatLabel string
+
 	parent   *scope
 	children map[name]*scope
 }
@@ -24,6 +27,8 @@ func newScope(n name) *scope {
 		variables:   make(map[name]variable),
 		functions:   make(map[name]function),
 		usingScopes: make([]*scope, 0),
+		escapeLabel: "",
+		repeatLabel: "",
 		parent:      nil,
 		children:    make(map[name]*scope, 0)}
 }
@@ -130,6 +135,16 @@ func (s *scope) SetParent(scope *scope) {
 	s.parent = scope
 }
 
+func (s *scope) GetLoopEndAndBegin() (string, string, bool) {
+	if s.isIterable() {
+		return s.escapeLabel, s.repeatLabel, true
+	}
+	if s.parent != nil {
+		return s.parent.GetLoopEndAndBegin()
+	}
+	return "", "", false
+}
+
 func (s *scope) getLocalVariable(name name) (variable, bool) {
 	if variable, ok := s.variables[name]; ok {
 		return variable, true
@@ -144,4 +159,8 @@ func (s *scope) getLocalFunction(name name) (function, bool) {
 	}
 
 	return function{}, false
+}
+
+func (s *scope) isIterable() bool {
+	return s.escapeLabel != "" && s.repeatLabel != ""
 }

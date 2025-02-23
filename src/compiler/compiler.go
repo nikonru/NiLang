@@ -267,6 +267,9 @@ func (c *Compiler) compileWhileStatement(ws *ast.WhileStatement) {
 	c.enterScope()
 	defer c.leaveScope()
 
+	c.scope.escapeLabel = end
+	c.scope.repeatLabel = loop
+
 	for _, statement := range ws.Body.Statements {
 		c.compileStatement(statement)
 	}
@@ -440,11 +443,23 @@ func (c *Compiler) compileIfStatement(is *ast.IfStatement) {
 }
 
 func (c *Compiler) compileBreakStatement(bs *ast.BreakStatement) {
+	_, begin, ok := c.scope.GetLoopEndAndBegin()
+	if !ok {
+		err := helper.MakeError(bs.Token, "unexpected Break statement")
+		c.addError(err)
+	}
 
+	c.emit(JUMP, begin)
 }
 
 func (c *Compiler) compileContinueStatement(bs *ast.ContinueStatement) {
+	end, _, ok := c.scope.GetLoopEndAndBegin()
+	if !ok {
+		err := helper.MakeError(bs.Token, "unexpected Continue statement")
+		c.addError(err)
+	}
 
+	c.emit(JUMP, end)
 }
 
 func (c *Compiler) compileElifStatement(es *ast.ElifStatement, end string) {
