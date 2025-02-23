@@ -12,6 +12,7 @@ import (
 func main() {
 	stackSize := flag.Int("s", 128, "stack size in bytes")
 	outputFilename := flag.String("o", "bot.tor", "output file name")
+	printAST := flag.Bool("AST", false, "print abstract syntax tree in a human readable form (pseudo-code), use for debugging the compiler")
 	flag.Parse()
 
 	var fileName string
@@ -38,7 +39,7 @@ func main() {
 	}
 
 	c := compiler.New(*stackSize)
-	code, errors := c.Compile(input)
+	code, errors := c.Compile(input, *printAST)
 	if len(errors) != 0 {
 		for _, err := range errors {
 			helper.PrintError(err, input)

@@ -38,7 +38,7 @@ func New(stackSize int) *Compiler {
 		maxStackAddress:  address(stackSize)}
 }
 
-func (c *Compiler) Compile(input []byte) ([]byte, errors) {
+func (c *Compiler) Compile(input []byte, printAST bool) ([]byte, errors) {
 
 	lexer := lexer.New(input)
 	parser := parser.New(&lexer)
@@ -55,17 +55,13 @@ func (c *Compiler) Compile(input []byte) ([]byte, errors) {
 		return c.output.Bytes(), errors
 	}
 
-	fmt.Println("PROGRAM TREE")
-	for _, statement := range program.Statements {
-		fmt.Println(statement.String())
-		c.compileStatement(statement)
-	}
-	fmt.Println("END")
-	fmt.Println(c.scope.variables)
-	fmt.Println(c.scope.functions)
-	fmt.Println(c.scope.children)
-	for _, scope := range c.scope.usingScopes {
-		fmt.Println(scope.name)
+	if printAST {
+		fmt.Println("PROGRAM TREE")
+		for _, statement := range program.Statements {
+			fmt.Println(statement.String())
+			c.compileStatement(statement)
+		}
+		fmt.Println("END")
 	}
 
 	return c.output.Bytes(), c.errors
