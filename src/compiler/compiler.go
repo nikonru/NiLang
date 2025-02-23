@@ -126,6 +126,10 @@ func (c *Compiler) compileStatement(statement ast.Statement) {
 		c.compileFunctionStatement(stm)
 	case *ast.IfStatement:
 		c.compileIfStatement(stm)
+	case *ast.BreakStatement:
+		c.compileBreakStatement(stm)
+	case *ast.ContinueStatement:
+		c.compileContinueStatement(stm)
 	default:
 		log.Fatalf("type of statement is not handled. got=%T", statement)
 	}
@@ -433,6 +437,14 @@ func (c *Compiler) compileIfStatement(is *ast.IfStatement) {
 	}
 
 	c.emitLabel(end)
+}
+
+func (c *Compiler) compileBreakStatement(bs *ast.BreakStatement) {
+
+}
+
+func (c *Compiler) compileContinueStatement(bs *ast.ContinueStatement) {
+
 }
 
 func (c *Compiler) compileElifStatement(es *ast.ElifStatement, end string) {

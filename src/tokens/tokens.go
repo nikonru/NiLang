@@ -36,6 +36,9 @@ const (
 	FALSE = "FALSE"
 	TRUE  = "TRUE"
 
+	BREAK    = "BREAK"
+	CONTINUE = "CONTINUE"
+
 	COLON  = ":"
 	DCOLON = "::"
 	DOLLAR = "$"
@@ -57,20 +60,22 @@ const (
 )
 
 var keywords = map[string]TokenType{
-	"If":     IF,
-	"Else":   ELSE,
-	"Elif":   ELIF,
-	"While":  WHILE,
-	"True":   TRUE,
-	"False":  FALSE,
-	"Using":  USING,
-	"And":    AND,
-	"Or":     OR,
-	"Not":    NOT,
-	"Return": RETURN,
-	"Scope":  SCOPE,
-	"Alias":  ALIAS,
-	"Fun":    FUN,
+	"If":       IF,
+	"Else":     ELSE,
+	"Elif":     ELIF,
+	"While":    WHILE,
+	"True":     TRUE,
+	"False":    FALSE,
+	"Using":    USING,
+	"And":      AND,
+	"Or":       OR,
+	"Not":      NOT,
+	"Return":   RETURN,
+	"Scope":    SCOPE,
+	"Alias":    ALIAS,
+	"Fun":      FUN,
+	"Break":    BREAK,
+	"Continue": CONTINUE,
 }
 
 func LookUpIdent(ident string) TokenType {

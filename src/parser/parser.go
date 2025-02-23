@@ -136,6 +136,12 @@ func (p *Parser) parseStatement() (bool, ast.Statement) {
 		return p.parseAliasStatement()
 	case tokens.FUN:
 		return p.parseFunctionStatement()
+	case tokens.BREAK:
+		res := &ast.BreakStatement{Token: p.current}
+		return p.expectNext(tokens.NEWLINE), res
+	case tokens.CONTINUE:
+		res := &ast.ContinueStatement{Token: p.current}
+		return p.expectNext(tokens.NEWLINE), res
 	case tokens.COLON, tokens.EOF, tokens.INDENT, tokens.NEWLINE, tokens.ELIF:
 		err := helper.MakeError(p.current, fmt.Sprintf("attempt to parse invalid token %s", p.current.Type))
 		p.addError(err)
