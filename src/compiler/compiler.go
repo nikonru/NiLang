@@ -833,9 +833,17 @@ func (c *Compiler) leaveScope() {
 func nextLabel(last string) string {
 	if last == "" {
 		return "a"
-	} else if last[len(last)-1] == 'z' {
-		return last[:len(last)-1] + "aa"
-	} else {
-		return last[:len(last)-1] + string(last[len(last)-1]+1)
 	}
+
+	next := ""
+	for i, c := range last {
+		if c == 'z' {
+			next += "a"
+		} else {
+			next += string(c + 1)
+			return next + last[i+1:]
+		}
+	}
+
+	return next + "a"
 }
