@@ -40,6 +40,8 @@ const (
 	DCOLON = "::"
 	DOLLAR = "$"
 
+	NEGATION = "-"
+
 	ASSIGN = "="
 	EQUAL  = "=="
 	NEQUAL = "!="

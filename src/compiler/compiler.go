@@ -526,7 +526,12 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (Ty
 		c.emit(LOAD_TO_REG_FROM_VAL, register, BOOL_FALSE)
 
 		c.emitLabel(end)
-
+	case tokens.NEGATION:
+		if _type != builtIn(Int) {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected integer expression. got=%q", _type.String()))
+			c.addError(err)
+		}
+		log.Fatalf("WIP")
 	default:
 		log.Fatalf("type of prefix is not handled. got=%q", expression.Operator)
 	}

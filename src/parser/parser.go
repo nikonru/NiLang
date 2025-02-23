@@ -18,19 +18,21 @@ const (
 	PREFIX      // Not
 	CALL        // func$ or func
 	SCOPE       // ::
+	NEGATION    // -
 )
 
 var precedence = map[tokens.TokenType]int{
-	tokens.DCOLON: SCOPE,
-	tokens.DOLLAR: CALL,
-	tokens.EQUAL:  EQUALS,
-	tokens.NEQUAL: EQUALS,
-	tokens.LT:     LESSGREATER,
-	tokens.LE:     LESSGREATER,
-	tokens.GT:     LESSGREATER,
-	tokens.GE:     LESSGREATER,
-	tokens.OR:     LOGIC,
-	tokens.AND:    LOGIC,
+	tokens.NEGATION: NEGATION,
+	tokens.DCOLON:   SCOPE,
+	tokens.DOLLAR:   CALL,
+	tokens.EQUAL:    EQUALS,
+	tokens.NEQUAL:   EQUALS,
+	tokens.LT:       LESSGREATER,
+	tokens.LE:       LESSGREATER,
+	tokens.GT:       LESSGREATER,
+	tokens.GE:       LESSGREATER,
+	tokens.OR:       LOGIC,
+	tokens.AND:      LOGIC,
 }
 
 type errors = []helper.Error
@@ -64,6 +66,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerPrefix(tokens.TRUE, p.parseBooleanLiteral)
 	p.registerPrefix(tokens.FALSE, p.parseBooleanLiteral)
 	p.registerPrefix(tokens.NOT, p.parsePrefixExpression)
+	p.registerPrefix(tokens.NEGATION, p.parsePrefixExpression)
 
 	p.infixParseFns = make(map[tokens.TokenType]infixParseFns)
 	p.registerInfix(tokens.LT, p.parseInfixExpression)

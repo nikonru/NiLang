@@ -47,6 +47,7 @@ func TestLexer(t *testing.T) {
 		{tokens.PIDENT, "Int"},
 		{tokens.IDENT, "maxEnergy"},
 		{tokens.ASSIGN, "="},
+		{tokens.NEGATION, "-"},
 		{tokens.NUMBER, "1500"},
 		{tokens.NEWLINE, "newline"},
 		{tokens.INDENT, "indentation"},

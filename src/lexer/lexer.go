@@ -70,6 +70,8 @@ func (l *lexer) NextToken() tokens.Token {
 		tok = l.newToken(tokens.COMMA)
 	case '$':
 		tok = l.newToken(tokens.DOLLAR)
+	case '-':
+		tok = l.newToken(tokens.NEGATION)
 	case '=':
 		if l.peek() == '=' {
 			tok = l.newDoubleCharacterToken(tokens.EQUAL)
@@ -80,7 +82,7 @@ func (l *lexer) NextToken() tokens.Token {
 		if l.peek() == '=' {
 			tok = l.newDoubleCharacterToken(tokens.NEQUAL)
 		} else {
-			tok = l.newToken(tokens.ILLEGAL) //may be array index?
+			tok = l.newToken(tokens.ILLEGAL) //may be an array index?
 		}
 	case ':':
 		if l.peek() == ':' {
@@ -101,10 +103,6 @@ func (l *lexer) NextToken() tokens.Token {
 			tok = l.newToken(tokens.LT)
 		}
 	case 0:
-		// tok.Literal = ""
-		// tok.Type = tokens.EOF
-		// tok.Line = l.line
-		// tok.Offset = l.offset
 		tok = l.newToken(tokens.EOF)
 		tok.Literal = ""
 	case '\t':
