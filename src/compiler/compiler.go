@@ -22,7 +22,7 @@ type Compiler struct {
 
 	scope *scope
 
-	labelIndex uint64
+	lastLabel string
 
 	maxStackAddress address
 	errors          errors
@@ -34,7 +34,7 @@ func New(stackSize int) *Compiler {
 		memoryIndex:      address(stackSize),
 		stackMemoryIndex: -1,
 		scope:            newScope(""),
-		labelIndex:       0,
+		lastLabel:        "",
 		maxStackAddress:  address(stackSize)}
 }
 
@@ -57,10 +57,17 @@ func (c *Compiler) Compile(input []byte, printAST bool) ([]byte, errors) {
 
 	if printAST {
 		fmt.Println("PROGRAM TREE")
-		for _, statement := range program.Statements {
+	}
+
+	for _, statement := range program.Statements {
+		if printAST {
 			fmt.Println(statement.String())
-			c.compileStatement(statement)
 		}
+
+		c.compileStatement(statement)
+	}
+
+	if printAST {
 		fmt.Println("END")
 	}
 
@@ -670,12 +677,12 @@ func (c *Compiler) compileIdentifier(expression *ast.Identifier) (Type, register
 }
 
 func (c *Compiler) compileIdentifierFromScope(expression *ast.Identifier, scope *scope) (Type, register) {
-	// TODO check if scope is nil
-	if variable, ok := scope.GetVariable(expression.Value); ok {
-		c.emit(LOAD_TO_REG_FROM_MEM, AX, variable.Addr)
-		return variable.Type, AX
+	if scope != nil {
+		if variable, ok := scope.GetVariable(expression.Value); ok {
+			c.emit(LOAD_TO_REG_FROM_MEM, AX, variable.Addr)
+			return variable.Type, AX
+		}
 	}
-
 	err := helper.MakeError(expression.Token, fmt.Sprintf("undeclared identifier. got=%q", expression))
 	c.addError(err)
 	return VOID, ""
@@ -796,9 +803,8 @@ func (c *Compiler) flushStackMemory() {
 }
 
 func (c *Compiler) getUniqueLabel() string {
-	// TODO: maximize the number of possible labels
-	c.labelIndex++
-	return "label" + strconv.FormatUint(c.labelIndex, 10)
+	c.lastLabel = nextLabel(c.lastLabel)
+	return "lbl_" + c.lastLabel
 }
 
 func (c *Compiler) addError(error helper.Error) {
@@ -821,5 +827,15 @@ func (c *Compiler) leaveScope() {
 		c.scope = parent
 	} else {
 		log.Fatal("leaving global scope")
+	}
+}
+
+func nextLabel(last string) string {
+	if last == "" {
+		return "a"
+	} else if last[len(last)-1] == 'z' {
+		return last[:len(last)-1] + "aa"
+	} else {
+		return last[:len(last)-1] + string(last[len(last)-1]+1)
 	}
 }
