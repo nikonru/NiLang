@@ -23,5 +23,8 @@ const (
 	LOAD_TO_MEM_FROM_REG = "ldr"
 	LOAD_TO_REG_FROM_MEM = "ldm"
 
+	//CALL [label]
+	CALL = "call"
+
 	RETURN = "ret"
 )

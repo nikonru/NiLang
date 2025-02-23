@@ -179,7 +179,9 @@ func (c *Compiler) compileReturnStatement(rs *ast.ReturnStatement) {
 		c.addError(err)
 	}
 
-	c.emit(LOAD_TO_REG_FROM_REG, AX, register) // TODO: maybe we can select some area of memory for this
+	if register != "" {
+		c.emit(LOAD_TO_REG_FROM_REG, RETURN_REGISTER, register)
+	}
 	c.emit(RETURN)
 }
 
@@ -361,6 +363,14 @@ func (c *Compiler) compileFunctionStatement(fs *ast.FunctionStatement) {
 	defer c.leaveScope()
 	c.scope.returnType = _type
 
+	for i, arg := range arguments {
+		ok = c.scope.AddVariable(arg.Name, arg.Addr, arg.Type)
+		if !ok {
+			err := helper.MakeError(fs.Parameters[i].Token, fmt.Sprintf("redeclaration of an argument %q", arg.Name))
+			c.addError(err)
+		}
+	}
+
 	c.emit(JUMP, end)
 	c.emitLabel(start)
 
@@ -460,8 +470,7 @@ func (c *Compiler) compileExpression(statement ast.Expression) (Type, register) 
 	case *ast.Identifier:
 		return c.compileIdentifier(exp)
 	case *ast.CallExpression:
-		log.Fatalf("WIP")
-		return VOID, ""
+		return c.compileCallExpression(exp)
 	case *ast.ScopeExpression:
 		scope, ok := c.findScope(exp, c.scope)
 		if !ok {
@@ -642,6 +651,59 @@ func (c *Compiler) compileIdentifierFromScope(expression *ast.Identifier, scope 
 	err := helper.MakeError(expression.Token, fmt.Sprintf("undeclared identifier. got=%q", expression))
 	c.addError(err)
 	return VOID, ""
+}
+
+func (c *Compiler) compileCallExpression(expression *ast.CallExpression) (Type, register) {
+	var function name
+	var scope *scope
+
+	switch exp := expression.Function.(type) {
+	case *ast.ScopeExpression:
+		s, ok := c.findScope(exp, c.scope)
+		if !ok {
+			err := helper.MakeError(exp.Token, fmt.Sprintf("undeclared scope %q", exp.Value.Value))
+			c.addError(err)
+			return VOID, ""
+		}
+		function = exp.Value.Value
+		scope = s
+	case *ast.Identifier:
+		function = exp.Value
+		scope = c.scope
+	default:
+		log.Fatalf("type of call expression is not handled. got=%q", expression.Function)
+		return VOID, ""
+	}
+
+	fun, ok := scope.GetFunction(function)
+	if !ok {
+		err := helper.MakeError(expression.Token, fmt.Sprintf("undeclared function %q", function))
+		c.addError(err)
+		return VOID, ""
+	}
+
+	if len(fun.Arguments) != len(expression.Arguments) {
+		err := helper.MakeError(expression.Token, fmt.Sprintf("unexpected number of arguments expected=%d, got=%d", len(fun.Arguments), len(expression.Arguments)))
+		c.addError(err)
+		return VOID, ""
+	}
+
+	for i := range len(fun.Arguments) {
+		arg := fun.Arguments[i]
+		passedArg := expression.Arguments[i]
+		t, register := c.compileExpression(passedArg)
+
+		if t != arg.Type {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("unexpected type of an argument expected %q, got %q", t.String(), arg.Type.String()))
+			c.addError(err)
+		}
+
+		c.emit(LOAD_TO_MEM_FROM_REG, arg.Addr, register)
+	}
+
+	c.emit(CALL, fun.Label)
+
+	return fun.Type, RETURN_REGISTER
 }
 
 func (c *Compiler) findScope(expression *ast.ScopeExpression, scope *scope) (*scope, bool) {

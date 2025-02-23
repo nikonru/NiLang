@@ -33,6 +33,10 @@ func (t *Type) String() string {
 		out.WriteString(names[i] + "::")
 	}
 
-	out.WriteString(t.Name)
+	if t.Name == "" {
+		out.WriteString("void")
+	} else {
+		out.WriteString(t.Name)
+	}
 	return out.String()
 }

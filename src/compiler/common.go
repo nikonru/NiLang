@@ -18,6 +18,8 @@ const (
 	Bool = "Bool"
 )
 
+const RETURN_REGISTER = AX
+
 var BUILTIN_TYPES = []name{Int, Bool}
 
 func builtIn(name name) Type {

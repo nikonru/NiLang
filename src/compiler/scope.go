@@ -45,6 +45,23 @@ func (s *scope) GetVariable(name name) (variable, bool) {
 	return variable{}, false
 }
 
+func (s *scope) GetFunction(name name) (function, bool) {
+	if function, ok := s.getLocalFunction(name); ok {
+		return function, true
+	}
+
+	for _, scope := range s.usingScopes {
+		if function, ok := scope.getLocalFunction(name); ok {
+			return function, true
+		}
+	}
+
+	if s.parent != nil {
+		return s.parent.GetFunction(name)
+	}
+	return function{}, false
+}
+
 func (s *scope) AddVariable(name string, addr address, t Type) bool {
 	if _, ok := s.variables[name]; ok {
 		return false
@@ -119,4 +136,12 @@ func (s *scope) getLocalVariable(name name) (variable, bool) {
 	}
 
 	return variable{}, false
+}
+
+func (s *scope) getLocalFunction(name name) (function, bool) {
+	if function, ok := s.functions[name]; ok {
+		return function, true
+	}
+
+	return function{}, false
 }
