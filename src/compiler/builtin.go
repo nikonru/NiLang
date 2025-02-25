@@ -23,7 +23,8 @@ func (c *Compiler) initBuiltin(globalScope *scope) {
 		{"GetLuminosity", 1},
 		{"GetMineralization", 1},
 		{"Sleep", 0},
-		{"Move", 0},
+		{"Move", 1},
+		{"Face", 1},
 	}
 	bot := newScope("bot")
 
@@ -87,7 +88,7 @@ func (c *Compiler) compileBuiltin(expression *ast.CallExpression, name name) (Ty
 		}
 		t, register := c.compileExpression(expression.Arguments[0])
 
-		if t == builtIn(Dir) {
+		if t != builtIn(Dir) {
 			err := helper.MakeError(expression.Token,
 				fmt.Sprintf("unexpected type of an argument expected %q, got %q", Dir, t.String()))
 			c.addError(err)
@@ -133,6 +134,9 @@ func (c *Compiler) compileBuiltin(expression *ast.CallExpression, name name) (Ty
 		return VOID, ""
 	case "Move":
 		c.compileFunctionWithDirectionArgument(MOVE, direction())
+		return VOID, ""
+	case "Face":
+		c.compileFunctionWithDirectionArgument(FACE, direction())
 		return VOID, ""
 	default:
 		log.Fatalf("builtin function %q is not handled", name)

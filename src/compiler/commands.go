@@ -33,6 +33,7 @@ const (
 	RETURN = "ret"
 
 	MOVE = "mov"
+	FACE = "rot"
 
 	FORK             = "forc"
 	SPLIT            = "split"
