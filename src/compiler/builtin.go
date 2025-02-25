@@ -7,11 +7,6 @@ import (
 	"log"
 )
 
-var DIRECTION_TYPE = Type{
-	Scope: nil,
-	Name:  "Dir",
-}
-
 func (c *Compiler) initBuiltin(globalScope *scope) {
 	builtins := []struct {
 		name              string
@@ -46,14 +41,13 @@ func (c *Compiler) initBuiltin(globalScope *scope) {
 		log.Fatalf("failed to initialize builtin variables")
 	}
 
-	dir := newScope(helper.FirstToLowerCase(DIRECTION_TYPE.Name))
-	DIRECTION_TYPE.Scope = globalScope
+	dir := newScope(helper.FirstToLowerCase(Dir))
 
 	var directions = [DIR_END]string{"_", "front", "frontRight", "right", "backRight", "back", "backLeft", "left", "frontLeft"}
 
 	for direction := DIR_BEGIN + 1; direction < DIR_END; direction++ {
 		addr := c.purchaseMemoryAddress()
-		ok := dir.AddVariable(directions[direction], addr, DIRECTION_TYPE)
+		ok := dir.AddVariable(directions[direction], addr, builtIn(Dir))
 		if !ok {
 			log.Fatalf("failed to initialize builtin variables")
 		}
@@ -93,9 +87,9 @@ func (c *Compiler) compileBuiltin(expression *ast.CallExpression, name name) (Ty
 		}
 		t, register := c.compileExpression(expression.Arguments[0])
 
-		if t == DIRECTION_TYPE {
+		if t == builtIn(Dir) {
 			err := helper.MakeError(expression.Token,
-				fmt.Sprintf("unexpected type of an argument expected %q, got %q", DIRECTION_TYPE.String(), t.String()))
+				fmt.Sprintf("unexpected type of an argument expected %q, got %q", Dir, t.String()))
 			c.addError(err)
 		}
 		return register

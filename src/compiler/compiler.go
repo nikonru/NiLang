@@ -147,12 +147,15 @@ func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 
 	var_type, ok := c.findType(&ds.Var)
 	if !ok {
+		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("undeclared type of variable %q", var_type.String()))
+		c.addError(err)
 		return
 	}
 
 	if _type != var_type {
+		fmt.Printf("%v, %v \n", _type, var_type)
 		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("declared variable and expression have different types. variable=%q, expression=%q",
-			ds.Var.Type, _type.String()))
+			var_type.String(), _type.String()))
 		c.addError(err)
 	}
 

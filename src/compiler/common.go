@@ -16,6 +16,7 @@ const (
 const (
 	Int  = "Int"
 	Bool = "Bool"
+	Dir  = "Dir"
 )
 
 const (
@@ -35,7 +36,7 @@ const RETURN_REGISTER = AX
 
 const BEGIN_LABEL = "BEGIN"
 
-var BUILTIN_TYPES = []name{Int, Bool}
+var BUILTIN_TYPES = []name{Int, Bool, Dir}
 
 func builtIn(name name) Type {
 	if slices.Contains(BUILTIN_TYPES, name) {
