@@ -18,7 +18,22 @@ const (
 	Bool = "Bool"
 )
 
+const (
+	DIR_BEGIN int = iota
+	FRONT
+	FRONT_RIGHT
+	RIGHT
+	BACK_RIGHT
+	BACK
+	BACK_LEFT
+	LEFT
+	FRONT_LEFT
+	DIR_END
+)
+
 const RETURN_REGISTER = AX
+
+const BEGIN_LABEL = "BEGIN"
 
 var BUILTIN_TYPES = []name{Int, Bool}
 

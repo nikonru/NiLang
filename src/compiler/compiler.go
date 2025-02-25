@@ -29,7 +29,6 @@ type Compiler struct {
 }
 
 func New(stackSize int) *Compiler {
-
 	return &Compiler{
 		memoryIndex:      address(stackSize),
 		stackMemoryIndex: -1,
@@ -58,6 +57,10 @@ func (c *Compiler) Compile(input []byte, printAST bool) ([]byte, errors) {
 	if printAST {
 		fmt.Println("PROGRAM TREE")
 	}
+
+	c.emitLabel(BEGIN_LABEL)
+
+	c.initBuiltin(c.scope)
 
 	for _, statement := range program.Statements {
 		if printAST {
@@ -721,6 +724,10 @@ func (c *Compiler) compileCallExpression(expression *ast.CallExpression) (Type, 
 		err := helper.MakeError(expression.Token, fmt.Sprintf("unexpected number of arguments expected=%d, got=%d", len(fun.Arguments), len(expression.Arguments)))
 		c.addError(err)
 		return VOID, ""
+	}
+
+	if fun.IsBuiltin {
+		return c.compileBuiltin(expression, function)
 	}
 
 	for i := range len(fun.Arguments) {

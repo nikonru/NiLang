@@ -5,4 +5,6 @@ type function struct {
 	Label     string
 	Type      Type
 	Arguments []variable
+
+	IsBuiltin bool
 }

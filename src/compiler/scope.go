@@ -94,7 +94,8 @@ func (s *scope) AddFunction(name name, label string, t Type, arguments []variabl
 		Name:      name,
 		Label:     label,
 		Type:      t,
-		Arguments: slices.Clone(arguments)}
+		Arguments: slices.Clone(arguments),
+		IsBuiltin: false}
 	return true
 }
 

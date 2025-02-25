@@ -7,4 +7,7 @@ const (
 	BX = "BX"
 	CX = "CX"
 	DX = "DX"
+
+	SD = "SD"
+	MD = "MD"
 )

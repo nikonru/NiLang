@@ -17,6 +17,10 @@ const (
 	JUMP_IF_LESS_EQUAL_THAN    = "jle"
 	JUMP_IF_GREATER_EQUAL_THAN = "jge"
 
+	JUMP_IF_EMPTY   = "jmf"
+	JUMP_IF_FRIEND  = "jmc"
+	JUMP_IF_SIBLING = "jmb"
+
 	// LOAD_TO_REG_FROM_REG [target] [source]
 	LOAD_TO_REG_FROM_REG = "ld"
 	LOAD_TO_REG_FROM_VAL = "ldv"
@@ -27,4 +31,14 @@ const (
 	CALL = "call"
 
 	RETURN = "ret"
+
+	MOVE = "mov"
+
+	FORK             = "forc"
+	SPLIT            = "split"
+	BITE             = "bite"
+	CONSUME_SUNLIGHT = "eatsun"
+	ABSORB_MINERALS  = "absorb"
+	CHECK            = "chk"
+	SKIP_CYCLE       = "nop"
 )
