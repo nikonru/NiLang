@@ -153,7 +153,6 @@ func (c *Compiler) compileDeclarationStatement(ds *ast.DeclarationStatement) {
 	}
 
 	if _type != var_type {
-		fmt.Printf("%v, %v \n", _type, var_type)
 		err := helper.MakeError(ds.Var.Token, fmt.Sprintf("declared variable and expression have different types. variable=%q, expression=%q",
 			var_type.String(), _type.String()))
 		c.addError(err)

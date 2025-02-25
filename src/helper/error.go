@@ -31,8 +31,18 @@ func FormatError(error Error, input []byte) (str string) {
 		pointer = pointer[:index] + "^" + pointer[index+1:]
 	}
 
-	str = fmt.Sprintf("%s\n%s\nLine %d:%d: %s", string(line), pointer, error.Line, error.Offset, error.Description)
+	str = fmt.Sprintf("%s\n%s\n%s:%d:%d: %s", string(line), pointer, getFilename(), error.Line, error.Offset, error.Description)
 	return str
+}
+
+var filename string
+
+func SetFilename(name string) {
+	filename = name
+}
+
+func getFilename() string {
+	return filename
 }
 
 func getLine(line int, input []byte) (value []byte) {

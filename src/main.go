@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -21,6 +22,12 @@ func main() {
 	} else {
 		fileName = flag.Arg(0)
 	}
+
+	abs, err := filepath.Abs(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	helper.SetFilename(abs)
 
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -44,7 +51,7 @@ func main() {
 		for _, err := range errors {
 			helper.PrintError(err, input)
 		}
-		log.Fatal("Failed to compile code")
+		return
 	}
 
 	output, err := os.Create(*outputFilename)
