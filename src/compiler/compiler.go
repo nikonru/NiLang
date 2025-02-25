@@ -79,6 +79,14 @@ func (c *Compiler) Compile(input []byte, printAST bool) ([]byte, errors) {
 
 func (c *Compiler) emit(op command, args ...interface{}) {
 	write := func(arg interface{}, id int) {
+		//// REMOVE THIS LATER
+		if id == 0 && op == LOAD_TO_MEM_FROM_REG {
+			c.output.WriteString("[")
+		}
+		if id == 1 && op == LOAD_TO_REG_FROM_MEM {
+			c.output.WriteString("[")
+		}
+		//// END OF REMOVE
 		switch v := arg.(type) {
 		case int:
 			c.output.WriteString(strconv.Itoa(v))
@@ -95,6 +103,14 @@ func (c *Compiler) emit(op command, args ...interface{}) {
 		default:
 			log.Fatalf("type of arg%d not handled. got=%T", id, arg)
 		}
+		//// REMOVE THIS LATER
+		if id == 0 && op == LOAD_TO_MEM_FROM_REG {
+			c.output.WriteString("]")
+		}
+		if id == 1 && op == LOAD_TO_REG_FROM_MEM {
+			c.output.WriteString("]")
+		}
+		//// END OF REMOVE
 	}
 
 	c.output.WriteString(op)
