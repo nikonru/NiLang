@@ -161,3 +161,42 @@ myCar.brand = "Toyota"
 Int x = myCar.GetWheels
 Bool y = x == myCar.wheels # True
 ```
+## Imports
+```
+#src/helpers.nil
+Domain helpers
+
+Int x = 10
+```
+```
+#src/main.nil
+Domain main
+
+Import helpers 
+
+Int y = helpers.x
+```
+```
+#src/main2.nil
+Domain main2
+
+Import helpers as hp 
+
+Int y = hp.x
+```
+```
+#src/main3.nil
+Domain main3
+
+From helpers Import x 
+
+Int y = x
+```
+```
+#src/main4.nil
+Domain main4
+
+From helpers Import x as z 
+
+Int y = z
+```
