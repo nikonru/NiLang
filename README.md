@@ -9,6 +9,16 @@ The last two letters **ng** are reference to ISO 639 language code of *Ndonga* -
 NiLang (Russian: НиЛанг) is a high level language for programming a bot from [TorLand](https://github.com/Slava2001/TorLand).
 ## File extension
 We recommend use `.nil` as a file extension for files containing **NiLang** source code.
+## Usage of compiler
+Simply pass your source code file as the first argument to the compiler and it will generate 
+file with extension `.tor` and `botlang` in it.
+```
+$./nilang bot.nil
+```
+If you wish to use more options use `--help` flag to get their names and descriptions.
+```
+$./nilang ---help
+```
 # The hitchhiker's guide to the NiLang
 ## Rule №1
 **No brackets are allowed.**
