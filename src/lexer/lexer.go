@@ -44,7 +44,7 @@ func New(input []byte) Lexer {
 func (l *lexer) NextToken() tokens.Token {
 	l.pos = l.offset
 
-	if l.char == '#' {
+	for l.char == '#' {
 		flag := l.offset == 0
 		l.skipComment()
 		if flag {

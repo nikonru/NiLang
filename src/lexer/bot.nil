@@ -12,5 +12,7 @@ While hungry:
         Break
 Dir dir1 = GetDir
 # you may remove `bot::`, since we have already written 'using bot'
+# but it is 
+# up to you
 bot::Move$ RotateClockwise$ dir1  
 # this is the end of an example
