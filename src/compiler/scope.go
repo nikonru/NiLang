@@ -67,6 +67,18 @@ func (s *scope) GetFunction(name name) (function, bool) {
 	return function{}, false
 }
 
+func (s *scope) GetReturnType() (Type, bool) {
+	returnType, ok := s.returnType.(Type)
+	if ok {
+		return returnType, true
+	}
+
+	if s.parent != nil {
+		return s.parent.GetReturnType()
+	}
+	return Type{}, false
+}
+
 func (s *scope) AddVariable(name string, addr address, t Type) bool {
 	if _, ok := s.variables[name]; ok {
 		return false

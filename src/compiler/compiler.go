@@ -188,7 +188,7 @@ func (c *Compiler) addNewVariable(register register, name name, t Type) bool {
 }
 
 func (c *Compiler) compileReturnStatement(rs *ast.ReturnStatement) {
-	returnType, ok := c.scope.returnType.(Type)
+	returnType, ok := c.scope.GetReturnType()
 
 	if !ok {
 		err := helper.MakeError(rs.Token, "unexpected return statement")
