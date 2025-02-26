@@ -59,3 +59,17 @@ Fun W:
 W
 Bool flag = F$ 5, False
 flag = F$ G, True
+
+Fun ComplexFunction::Int$ x Int, y Bool, z Int:
+    If y:
+        If x > z:
+            Return 0
+
+    If x == z:
+        Return 1
+    Elif x > z:
+        Return 2
+    Else:
+        Return 3
+    Return 0
+

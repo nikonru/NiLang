@@ -542,7 +542,9 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 	}
 
 	statement.Consequence = p.parseBlockStatement()
-	p.nextToken()
+	if !p.pleaseDontSkipToken {
+		p.nextToken()
+	}
 
 	for p.isCurrent(tokens.ELIF) {
 		p.nextToken()
