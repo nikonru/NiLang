@@ -264,7 +264,7 @@ Scope food:
 Bool isTasty = food::berry::blackberry::isTasty
 
 Using food::berry
-IsTasty = blackberry::isTasty
+isTasty = blackberry::isTasty
 ```
 ## Aliases
 Sometimes there is a need to give some numerical values comprehensive names, exactly for such
