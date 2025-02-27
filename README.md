@@ -450,7 +450,7 @@ Fun$T: F::Bool$x T:
 Bool x = F$ 10
 x = F$ 10.1
 ```
-## Short assignment
+## Short assignments
 Just a syntax sugar for the economy of characters in a source code.
 ```
 Int x = 0
@@ -493,8 +493,9 @@ Bool y = x == myCar.wheels # True
 Writing the whole program in one file can be quite cumbersome. 
 Thus having some way to spread code among different files is must have.
 
-Another useful feature can be maintaining import structure, which is parallel 
-to the arrangement of files in file system.
+Maintaining import structure, which is parallel 
+to the arrangement of files in file system, might be also
+quite handful.
 ```
 #src/helpers.nil
 Domain helpers
@@ -509,7 +510,8 @@ Using helpers
 
 Int y = helpers.x
 ```
-Aliases for imports can be also useful for importing some code with similar names.
+Aliases for imports can be also useful for importing some 
+code with similarly named entities.
 ```
 #src/main2.nil
 Domain main2
@@ -518,7 +520,8 @@ Using helpers = hp
 
 Int y = hp.x
 ```
-Targeted import also helps to maintain clarity of expression.
+Targeted import might also help to avoid repeating use of resolution operator,
+while keeping the problem of name collisions away.
 ```
 #src/main3.nil
 Domain main3
@@ -527,6 +530,7 @@ Using helpers::x
 
 Int y = x
 ```
+In all other matters, targeted import must be similar to the simple one.
 ```
 #src/main4.nil
 Domain main4
