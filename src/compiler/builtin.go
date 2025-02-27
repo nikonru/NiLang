@@ -15,7 +15,7 @@ func (c *Compiler) initBuiltin(globalScope *scope) {
 		{"Fork", 1},
 		{"Split", 1},
 		{"Bite", 1},
-		{"ConsumeLight", 0},
+		{"ConsumeSunlight", 0},
 		{"AbsorbMinerals", 0},
 		{"IsEmpty", 1},
 		{"IsSibling", 1},

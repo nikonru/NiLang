@@ -4,17 +4,27 @@ import (
 	"NiLang/src/compiler"
 	"NiLang/src/helper"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 )
 
+const VERSION = "v0.1.0"
+const VERSION_NAME = "Alpha"
+
 func main() {
 	stackSize := flag.Int("s", 128, "stack size in bytes")
 	outputFilename := flag.String("o", "bot.tor", "output file name")
 	printAST := flag.Bool("AST", false, "print abstract syntax tree in a human readable form (pseudo-code), use for debugging the compiler")
+	printVersion := flag.Bool("version", false, "print current version of the compiler")
 	flag.Parse()
+
+	if *printVersion {
+		fmt.Printf("%s%s\n", VERSION, VERSION_NAME)
+		return
+	}
 
 	var fileName string
 	if flag.NArg() < 1 {

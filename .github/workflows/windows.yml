@@ -12,6 +12,7 @@ on:
 jobs:
 
   build:
+    name: windows
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
@@ -22,6 +23,7 @@ jobs:
         go-version: '1.22.4'
 
     - name: Build
+      shell: bash
       run: ./build.sh
 
     - name: lexer_test
