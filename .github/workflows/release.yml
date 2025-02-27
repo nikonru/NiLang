@@ -1,0 +1,86 @@
+name: release
+
+on:
+  push:
+    branches: [ "master" ]
+    tags:        
+      - '*'  
+
+jobs:
+  build_linux_release:
+    name: build_linux_release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22.4'
+    
+      - name: Build
+        run: ./build.sh
+
+      - name: version
+        run: echo "version=$(./build/nilang --version)" >> $GITHUB_OUTPUT
+        id: version
+
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: ${{ steps.version.outputs.version }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+        
+      - name: upload linux artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/nilang-linux.tar.gz
+          asset_name: nilang-linux.tar.gz
+          asset_content_type: application/gzip
+
+  build_windows_release:
+    name: build_windows_release
+    runs-on: windows-latest
+    needs: build_linux_release
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22.4'
+    
+      - name: Build
+        run: ./build.sh
+
+      - name: version
+        run: echo "version=$(./build/nilang.exe --version)" >> $GITHUB_OUTPUT
+        id: version
+
+      - name: upload windows artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.build_linux_release.outputs.upload_url }}
+          asset_path: ./build/nilang-windows.tar.gz
+          asset_name: nilang-windows.tar.gz
+          asset_content_type: application/gzip
