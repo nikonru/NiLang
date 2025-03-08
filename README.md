@@ -19,7 +19,7 @@ If you wish to use more options use `--help` flag to get their names and descrip
 ```
 $./nilang ---help
 ```
-# The hitchhiker's guide to the NiLang
+# The hitchhiker's guide to NiLang
 ## Rule №1
 **No brackets are allowed.**
 ## Comments
