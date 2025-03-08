@@ -387,7 +387,7 @@ func (i *IfStatement) TokenLiteral() string { return i.Token.Literal }
 func (i *IfStatement) String() string {
 	var out bytes.Buffer
 
-	out.WriteString("if")
+	out.WriteString("if ")
 	out.WriteString(i.Condition.String())
 
 	out.WriteString("{\n")
@@ -424,7 +424,7 @@ func (i *ElifStatement) TokenLiteral() string { return i.Token.Literal }
 func (i *ElifStatement) String() string {
 	var out bytes.Buffer
 
-	out.WriteString("elif")
+	out.WriteString("elif ")
 	out.WriteString(i.Condition.String())
 
 	out.WriteString("{\n")
