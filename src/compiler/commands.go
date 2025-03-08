@@ -35,7 +35,7 @@ const (
 	MOVE = "mov"
 	FACE = "rot"
 
-	FORK             = "forc"
+	FORK             = "fork"
 	SPLIT            = "split"
 	BITE             = "bite"
 	CONSUME_SUNLIGHT = "eatsun"
