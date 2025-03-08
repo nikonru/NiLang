@@ -12,27 +12,38 @@ import (
 const (
 	_ int = iota
 	LOWEST
-	LOGIC       // And, Or
+
+	LOGIC // And, Or
+
 	EQUALS      // ==
-	LESSGREATER // > or <
-	PREFIX      // Not
-	CALL        // func$ or func
-	SCOPE       // ::
-	NEGATION    // -
+	LESSGREATER // >=, >, <, <=
+
+	ADDSUB  // +, -
+	MULTDIV // *, /
+	POWER   // **
+
+	PREFIX // Not, -
+
+	CALL  // func$ or func
+	SCOPE // ::
 )
 
 var precedence = map[tokens.TokenType]int{
-	tokens.NEGATION: NEGATION,
-	tokens.DCOLON:   SCOPE,
-	tokens.DOLLAR:   CALL,
-	tokens.EQUAL:    EQUALS,
-	tokens.NEQUAL:   EQUALS,
-	tokens.LT:       LESSGREATER,
-	tokens.LE:       LESSGREATER,
-	tokens.GT:       LESSGREATER,
-	tokens.GE:       LESSGREATER,
-	tokens.OR:       LOGIC,
-	tokens.AND:      LOGIC,
+	tokens.DCOLON:         SCOPE,
+	tokens.DOLLAR:         CALL,
+	tokens.EQUAL:          EQUALS,
+	tokens.NEQUAL:         EQUALS,
+	tokens.LT:             LESSGREATER,
+	tokens.LE:             LESSGREATER,
+	tokens.GT:             LESSGREATER,
+	tokens.GE:             LESSGREATER,
+	tokens.OR:             LOGIC,
+	tokens.AND:            LOGIC,
+	tokens.ADDITION:       ADDSUB,
+	tokens.NEGATION:       ADDSUB,
+	tokens.MULTIPLICATION: MULTDIV,
+	tokens.DIVISION:       MULTDIV,
+	tokens.POWER:          POWER,
 }
 
 type errors = []helper.Error
