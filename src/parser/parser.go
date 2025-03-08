@@ -715,7 +715,7 @@ func (p *Parser) parseCallExpressionPrefix() ast.Expression {
 	exp.Arguments = nil
 
 	if !p.isCurrent(tokens.NEWLINE) && (p.isNext(tokens.IDENT) || p.isNext(tokens.PIDENT)) {
-		error := helper.MakeError(p.current, fmt.Sprintf("unexpected identity %q on the same line", p.next.Literal))
+		error := helper.MakeError(p.current, fmt.Sprintf("unexpected identity %q on the same line with call expression", p.next.Literal))
 		p.addError(error)
 	}
 	return exp
@@ -726,7 +726,7 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	exp.Arguments = p.parseCallArguments()
 
 	if !p.isCurrent(tokens.NEWLINE) && (p.isNext(tokens.IDENT) || p.isNext(tokens.PIDENT)) {
-		error := helper.MakeError(p.current, fmt.Sprintf("unexpected identity %q on the same line", p.next.Literal))
+		error := helper.MakeError(p.current, fmt.Sprintf("unexpected identity %q on the same line with call expression", p.next.Literal))
 		p.addError(error)
 	}
 	return exp
