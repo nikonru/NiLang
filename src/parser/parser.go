@@ -64,11 +64,13 @@ type Parser struct {
 	pleaseDontSkipToken     bool
 	pleaseDontParseCallExpr bool //TODO: don't use global state, maybe more elegant solutions is achievable,
 	// Such that we don't need to use workaround with call expression
+	allowToGoToTheNextLevel bool
 }
 
 func New(lexer *lexer.Lexer) *Parser {
 	p := &Parser{lexer: lexer, level: 0}
 	p.pleaseDontParseCallExpr = false
+	p.allowToGoToTheNextLevel = false
 
 	p.prefixParseFns = make(map[tokens.TokenType]prefixParseFns)
 	p.registerPrefix(tokens.IDENT, p.parseIdentifier)
@@ -98,6 +100,8 @@ func New(lexer *lexer.Lexer) *Parser {
 }
 
 func (p *Parser) nextToken() {
+	old_level := p.level
+
 	if p.isCurrent(tokens.NEWLINE) {
 		p.level = 0
 	}
@@ -108,6 +112,16 @@ func (p *Parser) nextToken() {
 	if p.isCurrent(tokens.INDENT) {
 		p.level = tokens.GetIdentLevel(p.current)
 		p.nextToken()
+	}
+
+	if p.level > old_level {
+		if p.allowToGoToTheNextLevel && (p.level == old_level+1) {
+			p.allowToGoToTheNextLevel = false
+			return
+		}
+
+		error := helper.MakeError(p.current, fmt.Sprintf("illegal indentation, expected=%d, got=%d", old_level, p.level))
+		p.addError(error)
 	}
 }
 
@@ -331,6 +345,7 @@ func (p *Parser) parseAliasStatement() (bool, *ast.AliasStatement) {
 		p.nextToken()
 		p.pleaseDontSkipToken = true
 	}
+
 	return true, statement
 }
 
@@ -536,14 +551,14 @@ func (p *Parser) gotoBlockStatement() bool {
 	if !p.expectNext(tokens.NEWLINE) {
 		return false
 	}
+
+	p.allowToGoToTheNextLevel = true
 	return true
 }
 
 func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 	statement := &ast.IfStatement{Token: p.current}
 	statement.Elifs = make([]*ast.ElifStatement, 0)
-
-	level := p.level
 
 	p.nextToken()
 	statement.Condition = p.parseExpression(LOWEST)
@@ -553,6 +568,7 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 	}
 
 	statement.Consequence = p.parseBlockStatement()
+
 	if !p.pleaseDontSkipToken {
 		p.nextToken()
 	}
@@ -586,11 +602,6 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 		p.nextToken()
 	}
 	p.pleaseDontSkipToken = true
-
-	if p.level > level && !p.isCurrent(tokens.EOF) && !p.isNext(tokens.EOF) {
-		err := helper.MakeError(p.current, "unexpected indentation after if statement")
-		p.addError(err)
-	}
 
 	return true, statement
 }
@@ -702,12 +713,22 @@ func (p *Parser) parseCallExpressionPrefix() ast.Expression {
 	}
 	exp := &ast.CallExpression{Token: p.current, Function: fun}
 	exp.Arguments = nil
+
+	if !p.isCurrent(tokens.NEWLINE) && (p.isNext(tokens.IDENT) || p.isNext(tokens.PIDENT)) {
+		error := helper.MakeError(p.current, fmt.Sprintf("unexpected identity %q on the same line", p.next.Literal))
+		p.addError(error)
+	}
 	return exp
 }
 
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	exp := &ast.CallExpression{Token: p.current, Function: function}
 	exp.Arguments = p.parseCallArguments()
+
+	if !p.isCurrent(tokens.NEWLINE) && (p.isNext(tokens.IDENT) || p.isNext(tokens.PIDENT)) {
+		error := helper.MakeError(p.current, fmt.Sprintf("unexpected identity %q on the same line", p.next.Literal))
+		p.addError(error)
+	}
 	return exp
 }
 

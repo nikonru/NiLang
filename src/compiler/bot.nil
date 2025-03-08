@@ -43,3 +43,95 @@ Else:
         x = 11
     Else:
         x = 10
+If x == 1:
+    x = 10
+Fun DoNothing:
+    Int useless = 0
+
+Fun UselessNumber::Int:
+    Return 5
+
+Fun IsGreaterThan5::Bool$ x Int:
+    Return x > 5 
+
+Fun ComplexFunction::Int$ x Int, z Int, y Bool:
+    If y:
+        If x > z:
+            Return 0
+    If x == z:
+        Return 1
+    Elif x > z:
+        Return 2
+    Else:
+        Return 3
+    Return 0
+DoNothing
+x = UselessNumber
+
+truth = IsGreaterThan5$ 6
+Int complexResult = ComplexFunction$ 10, UselessNumber, IsGreaterThan5$ 4
+# in ComplexFunction
+# x is 10
+# z is UselessNumber, which returns 5
+# y is IsGreaterThan5$ 4, which returns False for 4
+complexResult = ComplexFunction$ 10, UselessNumber, True
+complexResult = ComplexFunction$ 10, 12, False
+
+Scope first:
+    Fun GetNum::Int:
+        Return 1  
+
+Scope second:
+    Fun GetNum::Int:
+        Return 2
+
+x = first::GetNum # x = 1
+y = second::GetNum # y = 2
+
+Using first
+
+x = GetNum # x = 1
+y = second::GetNum # y = 2
+Int z = first::GetNum # z = 1
+
+Scope food:
+    Scope berry:
+        Scope blackberry:
+            Bool isTasty = True
+
+Bool isTasty = food::berry::blackberry::isTasty
+
+Using food::berry
+#isTasty = blackberry::isTasty
+
+Alias Code::Int:
+    ok = 100
+    bad = 101
+    notFound = 404
+
+Alias BooleanCode::Bool:
+    ok = True
+    bad = False
+    notFound = False
+
+Code myCode = code::ok
+BooleanCode myBooleanCode = booleanCode::bad
+
+Alias State::Int:
+    healthy = 1
+    ill = 2
+
+Scope world:
+    Alias Z::Int:
+        ok = 1
+
+world::Z value = world::z::ok
+
+Using state
+State myState = healthy
+
+Int xx = 0
+
+While xx < 10:
+    bot::Move$ dir::front
+    xx = xx

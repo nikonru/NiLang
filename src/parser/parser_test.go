@@ -1613,6 +1613,53 @@ If x:
 	}
 }
 
+func TestIncorrectIndentationStatement2(test *testing.T) {
+	input := []byte(`
+Int x = 10
+    Int y = 100`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+
+	errors := parser.Errors()
+
+	if len(errors) != 1 {
+		checkParseErrors(test, parser, input)
+		test.Fatalf("expected 1 parsing error, got=%d", len(errors))
+	}
+}
+
+func TestComplexIfElseStatement(test *testing.T) {
+	input := []byte(`
+If 8 > 10:
+    x = 8
+Else:
+    If 11 > 10:
+        x = 11
+    Else:
+        x = 10`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+
+	errors := parser.Errors()
+
+	if len(errors) != 0 {
+		checkParseErrors(test, parser, input)
+		test.Fatalf("expected 0 parsing error, got=%d", len(errors))
+	}
+}
+
 func testInfixExpression(test *testing.T, exp *ast.InfixExpression, left interface{}, operator string, right interface{}) bool {
 
 	if !testLiteralExpression(test, exp.Left, left) {
