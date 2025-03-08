@@ -3,7 +3,7 @@ Using bot #comment
 
 Bool hungry = True#commentary
 While hungry:
-    Int maxEnergy = -1500
+    Int maxEnergy = -1500 + 2000/2 * 3**3 - 100
     ConsumeSunlight
     Continue
     If GetEnergy > maxEnergy:

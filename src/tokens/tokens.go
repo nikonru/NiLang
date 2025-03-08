@@ -43,8 +43,6 @@ const (
 	DCOLON = "::"
 	DOLLAR = "$"
 
-	NEGATION = "-"
-
 	ASSIGN = "="
 	EQUAL  = "=="
 	NEQUAL = "!="
@@ -57,6 +55,12 @@ const (
 	AND = "And"
 	OR  = "Or"
 	NOT = "Not"
+
+	ADDITION       = "+"
+	NEGATION       = "-"
+	MULTIPLICATION = "*"
+	DIVISION       = "/"
+	POWER          = "**"
 )
 
 var keywords = map[string]TokenType{

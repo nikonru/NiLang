@@ -72,6 +72,16 @@ func (l *lexer) NextToken() tokens.Token {
 		tok = l.newToken(tokens.DOLLAR)
 	case '-':
 		tok = l.newToken(tokens.NEGATION)
+	case '+':
+		tok = l.newToken(tokens.ADDITION)
+	case '*':
+		if l.peek() == '*' {
+			tok = l.newDoubleCharacterToken(tokens.POWER)
+		} else {
+			tok = l.newToken(tokens.MULTIPLICATION)
+		}
+	case '/':
+		tok = l.newToken(tokens.DIVISION)
 	case '=':
 		if l.peek() == '=' {
 			tok = l.newDoubleCharacterToken(tokens.EQUAL)
