@@ -582,7 +582,7 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (Ty
 			err := helper.MakeError(expression.Token, fmt.Sprintf("expected integer expression. got=%q", _type.String()))
 			c.addError(err)
 		}
-		log.Fatalf("WIP")
+		log.Fatalf("WIP currently negation is not supported")
 	default:
 		log.Fatalf("type of prefix is not handled. got=%q", expression.Operator)
 	}
@@ -687,10 +687,51 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (Type
 
 		c.emitLabel(end)
 		return builtIn(Bool), AX
+	case tokens.ADDITION:
+		if leftType != builtIn(Int) || rightType != builtIn(Int) {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected integer expression(s). got left=%q and right=%q",
+				leftType.String(), rightType.String()))
+			c.addError(err)
+		}
+
+		log.Fatalf("WIP currently addition is not supported")
+	case tokens.NEGATION:
+		if leftType != builtIn(Int) || rightType != builtIn(Int) {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected integer expression(s). got left=%q and right=%q",
+				leftType.String(), rightType.String()))
+			c.addError(err)
+		}
+
+		log.Fatalf("WIP currently subtraction is not supported")
+	case tokens.MULTIPLICATION:
+		if leftType != builtIn(Int) || rightType != builtIn(Int) {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected integer expression(s). got left=%q and right=%q",
+				leftType.String(), rightType.String()))
+			c.addError(err)
+		}
+
+		log.Fatalf("WIP currently multiplication is not supported")
+	case tokens.DIVISION:
+		if leftType != builtIn(Int) || rightType != builtIn(Int) {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected integer expression(s). got left=%q and right=%q",
+				leftType.String(), rightType.String()))
+			c.addError(err)
+		}
+
+		log.Fatalf("WIP currently division is not supported")
+	case tokens.POWER:
+		if leftType != builtIn(Int) || rightType != builtIn(Int) {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected integer expression(s). got left=%q and right=%q",
+				leftType.String(), rightType.String()))
+			c.addError(err)
+		}
+
+		log.Fatalf("WIP currently rasing in a power is not supported")
 	default:
 		log.Fatalf("type of infix expression is not handled. got=%q", expression.Operator)
 		return VOID, ""
 	}
+	return VOID, ""
 }
 
 func (c *Compiler) compileIdentifier(expression *ast.Identifier) (Type, register) {
