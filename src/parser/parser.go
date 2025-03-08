@@ -20,9 +20,9 @@ const (
 
 	ADDSUB  // +, -
 	MULTDIV // *, /
-	POWER   // **
 
 	PREFIX // Not, -
+	POWER  // **
 
 	CALL  // func$ or func
 	SCOPE // ::

@@ -111,7 +111,24 @@ If so, it returns `True`. Otherwise, it returns `False`. For example, `5==5` wil
 * `>=` - (Greater Than Equal To) operator checks whether the first operand is greater than or equal to the second operand. If so, it returns `True`. Otherwise, it returns `False`. For example, `5>=5` will return `True`.
 * `<=` - (Less Than Equal To) operator checks whether the first operand is lesser than or equal to the second operand. If so, it returns `True`. Otherwise, it returns `False`. For example, `5<=5` will also return `True`.
 ### Arithmetic 
-**WIP: Coming soon**
+* `+` - (Addition) operator adds up two numbers. For example, `x = 5 + 2` will write value `7` to the variable `x`.
+* Infix `-` - (Subtraction) operator subtracts the second number from the first one. For example, `x = 5 - 2` will write value `3` to the variable `x`.
+* Prefix `-` - (Negation) operator negates a number. For example, `x = - 5` will write value `-5` to the variable `x`.
+* `*` - (Multiplication) operator multiplies two numbers. For example, `x = 5 * 2` will write value `10` to the variable `x`.
+* `/` - (integer Division) operator divides the first number from the second one dropping the reminder. For example, `x = 5 / 2` will write value `2` to the variable `x`. Another example, `y = 9 / 3` will write value `3`
+to the variable `y`.
+* `**` - (Power) operator raises the first number to a power equal to the second one. For example, `x = 5 ** 3` will write value `125` to the variable `x`.
+### Precedence
+Operators are applied in the following order, starting from the highest:
+* `::` - Scope resolution (see Scopes)
+* Function call (see Functions)
+* `**`
+* `Not`, unary `-`
+* `*`, `/`
+* `+`, `-`
+* `>=`, `>`, `<`, `<=`
+* `==`
+* `And`, `Or`
 ## Conditional statements
 What **if** you have to make a decision based on some condition? Exactly for such case 
 there is *if-statement* in **NiLang**.
