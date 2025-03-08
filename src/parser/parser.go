@@ -587,7 +587,7 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 	}
 	p.pleaseDontSkipToken = true
 
-	if p.level > level && !p.isCurrent(tokens.EOF) {
+	if p.level > level && !p.isCurrent(tokens.EOF) && !p.isNext(tokens.EOF) {
 		err := helper.MakeError(p.current, "unexpected indentation after if statement")
 		p.addError(err)
 	}

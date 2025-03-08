@@ -33,3 +33,6 @@ jobs:
 
     - name: ast_test
       run: go test ./src/ast/ast_test.go
+    
+    - name: compiler_test
+      run: go test ./src/compiler/compiler_test.go

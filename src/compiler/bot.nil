@@ -1,0 +1,45 @@
+Int variable = 0 #this commentary goes until the end of line
+Bool anotherVariable = False
+# this comment covers the whole line
+
+Int integer = 10
+Bool truth = True
+Bool lie = False
+Dir direction = dir::front
+
+Int _val = 0
+Int val_1 = 1
+Int aBcD1234 = 2
+Int _a_B_c_D_1_2_3__4_ = 3
+
+Int x = 10
+Int y = 16
+x = 12
+y = x
+
+Bool isEqual = x == y
+Bool isGreater = x > y
+Bool isGreaterOrEqual = isEqual Or isGreater
+
+If 10 > 8:
+    x = 10
+
+If 8 > 10:
+    x = 8
+Else:
+    x = 10
+
+If 8 > 10:
+    x = 8
+Elif 11 > 10:
+    x = 11
+Else:
+    x = 10
+
+If 8 > 10:
+    x = 8
+Else:
+    If 11 > 10:
+        x = 11
+    Else:
+        x = 10

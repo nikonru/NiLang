@@ -27,7 +27,7 @@ Character `#` is used to define the beginning of the comment, the part of code w
 completely ignored by the compiler. Once comment has begun it ends only at the end of line
 ```
 Int variable = 0 #this commentary goes until the end of line
-Bool anotherVariable = 1
+Bool anotherVariable = False
 # this comment covers the whole line 
 ```
 ## Variable declaration
@@ -176,13 +176,13 @@ The code below won't compile.
 ```
 Int x = 1
 If x:
-   x = 10
+    x = 10
 ```
 But, we can fix it by simply using *"equal to"* `==` operator.
 ```
 Int x = 1
 If x == 1:
-   x = 10
+    x = 10
 ```
 ## Functions
 Functions are reusable bits of code. Functions must be fun, 
@@ -208,7 +208,7 @@ Since right now we've written only one line functions, let us make a little bit 
 Fun ComplexFunction::Int$ x Int, z Int, y Bool:
     If y:
         If x > z:
-           Return 0
+            Return 0
     If x == z:
         Return 1
     Elif x > z:
@@ -355,7 +355,7 @@ after it is satisfied. The code down below calls `Move` function exactly 10 time
 Int x = 0
 
 While x < 10:
-    bot::Mov$ dir::front
+    bot::Move$ dir::front
     x = x + 1
 ```
 Sometimes it can be useful to escape *while-loop* earlier.
