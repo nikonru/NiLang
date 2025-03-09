@@ -18,7 +18,9 @@ type lexer struct {
 	current int
 	next    int
 
-	indentation bool
+	indentation             bool
+	indentationError        bool
+	indentationErrorMessage string
 
 	line   int
 	pos    int
@@ -33,6 +35,8 @@ func New(input []byte) Lexer {
 
 		line:   0,
 		offset: 0,
+
+		indentationError: false,
 	}
 	l.startNewline()
 	l.read()
@@ -47,9 +51,20 @@ func (l *lexer) NextToken() tokens.Token {
 	for l.char == '#' {
 		flag := l.offset == 0
 		l.skipComment()
-		if flag {
+		if flag || l.indentationError {
 			l.skipNewlines()
 		}
+		l.indentationError = false
+	}
+
+	if l.indentationError {
+		if !isNewline(l.char) {
+			err := helper.Error{Line: l.line, Offset: l.offset, Description: l.indentationErrorMessage}
+			log.Fatal("\n" + helper.FormatError(err, l.input))
+		}
+		l.skipNewlines()
+		l.indentationError = false
+		return l.NextToken()
 	}
 
 	var tok tokens.Token
@@ -60,7 +75,16 @@ func (l *lexer) NextToken() tokens.Token {
 		return tok
 	case ' ':
 		if l.indentation {
-			offset := l.readIndent()
+			offset, ok := l.readIndent()
+			if !ok {
+				return l.NextToken()
+			}
+
+			if isNewline(l.char) {
+				l.skipNewlines()
+				return l.NextToken()
+			}
+
 			return tokens.Token{Type: tokens.INDENT, Literal: "indentation", Line: l.line, Offset: offset}
 		} else {
 			l.read()
@@ -180,7 +204,7 @@ func (l *lexer) readIdent() []byte {
 	return l.readSequence(check)
 }
 
-func (l *lexer) readIndent() int {
+func (l *lexer) readIndent() (int, bool) {
 	counter := 0
 
 	l.readSequence(func(char byte) bool {
@@ -192,12 +216,12 @@ func (l *lexer) readIndent() int {
 	})
 
 	if counter%tokens.INDENT_LENGTH != 0 {
-		desc := fmt.Sprintf("expected indentation to be multiple of %d, got=%d whitespaces", tokens.INDENT_LENGTH, counter)
-		err := helper.Error{Line: l.line, Offset: l.offset, Description: desc}
-		log.Fatal("\n" + helper.FormatError(err, l.input))
+		l.indentationError = true
+		l.indentationErrorMessage = fmt.Sprintf("expected indentation to be multiple of %d, got=%d whitespaces", tokens.INDENT_LENGTH, counter)
+		return 0, false
 	}
 
-	return counter
+	return counter, true
 }
 
 func (l *lexer) readNumberToken() tokens.Token {
