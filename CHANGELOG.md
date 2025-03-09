@@ -1,5 +1,7 @@
-The first release version of *NiLang* programming language. 
-Arithmetic operators **aren't implemented** yet.
+New Features:
+* Arithmetic operators
 
-Beware, it has plenty of bugs, stack overflow errors and freezes. 
-
+Fixes:
+* Stack overflow error provoked by scope resolution operator
+* Compilation with invalid indentation
+* Print of If statement in AST form
