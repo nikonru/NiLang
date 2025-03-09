@@ -102,7 +102,7 @@ Scope food:
 Bool isTasty = food::berry::blackberry::isTasty
 
 Using food::berry
-#isTasty = blackberry::isTasty
+isTasty = blackberry::isTasty
 
 Alias Code::Int:
     ok = 100

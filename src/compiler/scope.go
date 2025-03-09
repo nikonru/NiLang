@@ -125,7 +125,7 @@ func (s *scope) GetScope(name name) (*scope, bool) {
 			return scope, true
 		}
 
-		if _scope, ok := scope.GetScope(name); ok {
+		if _scope, ok := scope.getLocalScope(name); ok {
 			return _scope, true
 		}
 	}
@@ -172,6 +172,14 @@ func (s *scope) getLocalFunction(name name) (function, bool) {
 	}
 
 	return function{}, false
+}
+
+func (s *scope) getLocalScope(name name) (*scope, bool) {
+	if child, ok := s.children[name]; ok {
+		return child, true
+	}
+
+	return nil, false
 }
 
 func (s *scope) isIterable() bool {
