@@ -22,6 +22,8 @@ type lexer struct {
 	indentationError        bool
 	indentationErrorMessage string
 
+	shouldSkipNewlines bool
+
 	line   int
 	pos    int
 	offset int
@@ -37,6 +39,8 @@ func New(input []byte) Lexer {
 		offset: 0,
 
 		indentationError: false,
+
+		shouldSkipNewlines: false,
 	}
 	l.startNewline()
 	l.read()
@@ -48,12 +52,15 @@ func New(input []byte) Lexer {
 func (l *lexer) NextToken() tokens.Token {
 	l.pos = l.offset
 
-	for l.char == '#' {
+	for isStartOfComment(l.char) {
 		flag := l.offset == 0
 		l.skipComment()
-		if flag || l.indentationError {
+
+		if flag || l.indentationError || l.shouldSkipNewlines {
 			l.skipNewlines()
+			l.shouldSkipNewlines = false
 		}
+
 		l.indentationError = false
 	}
 
@@ -84,7 +91,10 @@ func (l *lexer) NextToken() tokens.Token {
 				l.skipNewlines()
 				return l.NextToken()
 			}
-
+			if isStartOfComment(l.char) {
+				l.shouldSkipNewlines = true
+				return l.NextToken()
+			}
 			return tokens.Token{Type: tokens.INDENT, Literal: "indentation", Line: l.line, Offset: offset}
 		} else {
 			l.read()
@@ -274,6 +284,10 @@ func isDigit(char byte) bool {
 
 func isNewline(char byte) bool {
 	return char == '\n' || char == '\r'
+}
+
+func isStartOfComment(char byte) bool {
+	return char == '#'
 }
 
 func isLetter(char byte) bool {

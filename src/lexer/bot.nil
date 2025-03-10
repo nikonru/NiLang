@@ -11,6 +11,7 @@ While hungry:
         Fork$ world::Forward
         hungry = False
         Break
+        # commentary
 Dir dir1 = GetDir
 
  

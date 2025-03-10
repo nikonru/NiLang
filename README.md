@@ -244,6 +244,25 @@ You may wonder what signalizes the end? And the answer is simple - **end of line
 Instead of building insufferable
 nested constructions with a lot of brackets **NiLang** facilitates more comprehensive approach to the
 way of writing code without any brackets.
+That's important to notice that if function returns a value, **it must contain a `Return` statement in its main body**.
+
+The following code won't compile.
+```
+Fun F::Bool$ x Int:
+    If x > 10:
+        Return True
+    Else:
+        Return False
+```
+To fix it, we should add `Return` statement to the main body:
+```
+Fun F::Bool$ x Int:
+    If x > 10:
+        Return True
+    Else:
+        Return False
+    Return False
+```
 ## Scopes
 To keep number of name collisions low **NiLang** utilizes the concept of named scopes, which helps you
 to isolate similarly named entities in the different blocks of code. Scopes are also humble and thus 
