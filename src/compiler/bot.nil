@@ -135,3 +135,11 @@ Int xx = 0
 While xx < 10:
     bot::Move$ dir::front
     xx = xx
+
+
+State newState = ill
+
+While newState == myState:
+    bot::Move$dir::frontRight
+    If bot::IsEmpty$dir::front:
+        newState = ill

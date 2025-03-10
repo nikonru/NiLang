@@ -606,12 +606,8 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (Type
 	c.emit(LOAD_TO_REG_FROM_MEM, AX, buffer)
 	leftRegister = AX
 
-	emitComparison := func(jump command) (Type, register) {
-		if leftType != builtIn(Int) || rightType != builtIn(Int) {
-			err := helper.MakeError(expression.Token, fmt.Sprintf("expected int expression(s). got left=%q and right=%q",
-				leftType.String(), rightType.String()))
-			c.addError(err)
-		}
+	emitComparison := func(jump command, typeErrorHandler func()) (Type, register) {
+		typeErrorHandler()
 
 		end := c.getUniqueLabel()
 		True := c.getUniqueLabel()
@@ -628,19 +624,35 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (Type
 		return builtIn(Bool), AX
 	}
 
+	handleIntegers := func() {
+		if leftType != builtIn(Int) || rightType != builtIn(Int) {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected integer expression(s). got left=%q and right=%q",
+				leftType.String(), rightType.String()))
+			c.addError(err)
+		}
+	}
+
+	handleSameTypes := func() {
+		if leftType != rightType {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected expression(s) of the same type. got left=%q and right=%q",
+				leftType.String(), rightType.String()))
+			c.addError(err)
+		}
+	}
+
 	switch expression.Operator {
 	case tokens.LT:
-		return emitComparison(JUMP_IF_LESS_THAN)
+		return emitComparison(JUMP_IF_LESS_THAN, handleIntegers)
 	case tokens.LE:
-		return emitComparison(JUMP_IF_LESS_EQUAL_THAN)
+		return emitComparison(JUMP_IF_LESS_EQUAL_THAN, handleIntegers)
 	case tokens.GT:
-		return emitComparison(JUMP_IF_GREATER_THAN)
+		return emitComparison(JUMP_IF_GREATER_THAN, handleIntegers)
 	case tokens.GE:
-		return emitComparison(JUMP_IF_GREATER_EQUAL_THAN)
+		return emitComparison(JUMP_IF_GREATER_EQUAL_THAN, handleIntegers)
 	case tokens.NEQUAL:
-		return emitComparison(JUMP_IF_NOT_EQUAL)
+		return emitComparison(JUMP_IF_NOT_EQUAL, handleSameTypes)
 	case tokens.EQUAL:
-		return emitComparison(JUMP_IF_EQUAL)
+		return emitComparison(JUMP_IF_EQUAL, handleSameTypes)
 	case tokens.AND:
 		if leftType != builtIn(Bool) || rightType != builtIn(Bool) {
 			err := helper.MakeError(expression.Token, fmt.Sprintf("expected bool expression(s). got left=%q and right=%q",

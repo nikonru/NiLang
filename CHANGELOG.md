@@ -7,3 +7,4 @@ Fixes:
 * Print of If statement in AST form
 * Putting a comment in the middle don't compile
 * Line with only white spaces don't compile
+* Comparison of non-integers
