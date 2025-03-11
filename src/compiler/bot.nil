@@ -143,3 +143,13 @@ While newState == myState:
     bot::Move$dir::frontRight
     If bot::IsEmpty$dir::front:
         newState = ill
+
+Fun NiceFunc::Int$ x Int:
+    If x == 1:
+        Return 1
+    Else:
+        Return 0
+Fun Fooo::Bool$ x Int:
+    While x > 10:
+        Return True
+    Return False

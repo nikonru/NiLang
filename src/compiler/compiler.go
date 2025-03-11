@@ -405,16 +405,16 @@ func (c *Compiler) compileFunctionStatement(fs *ast.FunctionStatement) {
 	c.emit(JUMP, end)
 	c.emitLabel(start)
 
-	foundReturnStatement := false
-	for _, statement := range fs.Body.Statements {
-		if !foundReturnStatement {
-			_, foundReturnStatement = statement.(*ast.ReturnStatement)
-		}
+	doesBodyContainReturn := false
+	if fs.Body != nil {
+		doesBodyContainReturn = doesBlockContainReturn(fs.Body)
+	}
 
+	for _, statement := range fs.Body.Statements {
 		c.compileStatement(statement)
 	}
 
-	if !foundReturnStatement {
+	if !doesBodyContainReturn {
 		if _type == VOID {
 			c.emit(RETURN)
 		} else {
@@ -924,4 +924,32 @@ func nextLabel(last string) string {
 	}
 
 	return next + "a"
+}
+
+func doesBlockContainReturn(block *ast.BlockStatement) bool {
+	for _, statement := range block.Statements {
+		_, ok := statement.(*ast.ReturnStatement)
+		if ok {
+			return true
+		}
+
+		fork, ok := statement.(*ast.IfStatement)
+		if ok {
+			always_return := doesBlockContainReturn(fork.Consequence)
+			if fork.Alternative != nil {
+				always_return = always_return && doesBlockContainReturn(fork.Alternative)
+			}
+
+			for _, elif := range fork.Elifs {
+				if elif.Consequence != nil {
+					always_return = always_return && doesBlockContainReturn(elif.Consequence)
+				}
+			}
+
+			if always_return {
+				return true
+			}
+		}
+	}
+	return false
 }

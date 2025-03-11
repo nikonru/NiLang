@@ -244,23 +244,20 @@ You may wonder what signalizes the end? And the answer is simple - **end of line
 Instead of building insufferable
 nested constructions with a lot of brackets **NiLang** facilitates more comprehensive approach to the
 way of writing code without any brackets.
-That's important to notice that if function returns a value, **it must contain a `Return` statement in its main body**.
+
+That's important to notice that if function returns a value, **it must contain a `Return` statement**.
 
 The following code won't compile.
 ```
 Fun F::Bool$ x Int:
-    If x > 10:
+    While x > 10:
         Return True
-    Else:
-        Return False
 ```
-To fix it, we should add `Return` statement to the main body:
+To fix it, we should add `Return` statement to its body:
 ```
 Fun F::Bool$ x Int:
-    If x > 10:
+    While x > 10:
         Return True
-    Else:
-        Return False
     Return False
 ```
 ## Scopes
