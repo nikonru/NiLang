@@ -606,9 +606,9 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 	return true, statement
 }
 
-func (p *Parser) gotoNextLine() bool {
+func (p *Parser) gotoNextLine(level int) bool {
 	if p.isCurrent(tokens.NEWLINE) {
-		if p.IsNextLevel() == p.level {
+		if p.IsNextLevel() == level {
 			p.nextToken()
 			return true
 		}
@@ -632,7 +632,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	}
 
 	isInBlock := func() bool {
-		return level == p.level && !p.isCurrent(tokens.EOF)
+		return p.level >= level && !p.isCurrent(tokens.EOF)
 	}
 
 	for isInBlock() {
@@ -650,7 +650,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 			continue
 		}
 
-		if !p.gotoNextLine() {
+		if !p.gotoNextLine(level) {
 			break
 		}
 	}
@@ -673,7 +673,7 @@ func (p *Parser) parseAliasValues(t ast.Expression) []*ast.DeclarationStatement 
 	}
 
 	isInBlock := func() bool {
-		return level == p.level && !p.isCurrent(tokens.EOF)
+		return p.level >= level && !p.isCurrent(tokens.EOF)
 	}
 
 	for isInBlock() {
@@ -698,7 +698,7 @@ func (p *Parser) parseAliasValues(t ast.Expression) []*ast.DeclarationStatement 
 			break
 		}
 
-		if !p.gotoNextLine() {
+		if !p.gotoNextLine(level) {
 			break
 		}
 	}
