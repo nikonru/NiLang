@@ -70,7 +70,7 @@ Int _a_B_c_D_1_2_3__4_ = 3
 
 
 ## Variable assignment
-After declaration you are free to use assign variables as you wish
+After declaration you are free to assign values to variables as you wish
 ```
 Int x = 10
 Int y = 16
