@@ -731,6 +731,14 @@ func (c *Compiler) compileInfixExpression(expression *ast.InfixExpression) (Type
 		}
 
 		log.Fatalf("WIP currently division is not supported")
+	case tokens.MODULO:
+		if leftType != builtIn(Int) || rightType != builtIn(Int) {
+			err := helper.MakeError(expression.Token, fmt.Sprintf("expected integer expression(s). got left=%q and right=%q",
+				leftType.String(), rightType.String()))
+			c.addError(err)
+		}
+
+		log.Fatalf("WIP currently modulo is not supported")
 	case tokens.POWER:
 		if leftType != builtIn(Int) || rightType != builtIn(Int) {
 			err := helper.MakeError(expression.Token, fmt.Sprintf("expected integer expression(s). got left=%q and right=%q",

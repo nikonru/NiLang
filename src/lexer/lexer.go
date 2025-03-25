@@ -116,6 +116,8 @@ func (l *lexer) NextToken() tokens.Token {
 		}
 	case '/':
 		tok = l.newToken(tokens.DIVISION)
+	case '%':
+		tok = l.newToken(tokens.MODULO)
 	case '=':
 		if l.peek() == '=' {
 			tok = l.newDoubleCharacterToken(tokens.EQUAL)

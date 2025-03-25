@@ -19,7 +19,7 @@ const (
 	LESSGREATER // >=, >, <, <=
 
 	ADDSUB  // +, -
-	MULTDIV // *, /
+	MULTDIV // *, /, %
 
 	PREFIX // Not, -
 	POWER  // **
@@ -43,6 +43,7 @@ var precedence = map[tokens.TokenType]int{
 	tokens.NEGATION:       ADDSUB,
 	tokens.MULTIPLICATION: MULTDIV,
 	tokens.DIVISION:       MULTDIV,
+	tokens.MODULO:         MULTDIV,
 	tokens.POWER:          POWER,
 }
 

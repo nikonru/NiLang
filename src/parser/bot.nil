@@ -60,7 +60,7 @@ W
 Bool flag = F$ 5, False
 flag = F$ G, True
 
-Bool val = 10 * 25 + 54 / 10**2 - 100 == 0
+Bool val = 10 % 2 * 25 + 54 / 10**2 - 100 == 0
 Int negative = -10
 
 Fun ComplexFunction::Int$ x Int, y Bool, z Int:

@@ -9,7 +9,7 @@ The last two letters **ng** are reference to ISO 639 language code of *Ndonga* -
 NiLang (Russian: НиЛанг) is a high level language for programming a bot from [TorLand](https://github.com/Slava2001/TorLand).
 ## File extension
 We recommend use `.nil` as a file extension for files containing **NiLang** source code.
-## Usage of compiler
+## Usage of the compiler
 Simply pass your source code file as the first argument to the compiler and it will generate 
 file with extension `.tor` and `botlang` in it.
 ```
@@ -115,8 +115,8 @@ If so, it returns `True`. Otherwise, it returns `False`. For example, `5==5` wil
 * Infix `-` - (Subtraction) operator subtracts the second number from the first one. For example, `x = 5 - 2` will write value `3` to the variable `x`.
 * Prefix `-` - (Negation) operator negates a number. For example, `x = - 5` will write value `-5` to the variable `x`.
 * `*` - (Multiplication) operator multiplies two numbers. For example, `x = 5 * 2` will write value `10` to the variable `x`.
-* `/` - (integer Division) operator divides the first number from the second one dropping the reminder. For example, `x = 5 / 2` will write value `2` to the variable `x`. Another example, `y = 9 / 3` will write value `3`
-to the variable `y`.
+* `/` - (integer Division) operator divides the first number from the second one dropping the reminder. For example, `x = 5 / 2` will write value `2` to the variable `x`. Another example, `y = 9 / 3` will write value `3` to the variable `y`.
+* `%` - (Modulo) operator returns the remainder of dividing the first number by the second one. For example, `x = 5 % 2` will write value `1` to the variable `x`. Another example, `y = -7 / 3` will write value `2` to the variable `y`.
 * `**` - (Power) operator raises the first number to a power equal to the second one. For example, `x = 5 ** 3` will write value `125` to the variable `x`.
 ### Precedence
 Operators are applied in the following order, starting from the highest:

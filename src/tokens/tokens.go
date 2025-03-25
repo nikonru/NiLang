@@ -61,6 +61,7 @@ const (
 	MULTIPLICATION = "*"
 	DIVISION       = "/"
 	POWER          = "**"
+	MODULO         = "%"
 )
 
 var keywords = map[string]TokenType{

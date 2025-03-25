@@ -59,6 +59,8 @@ func TestLexer(t *testing.T) {
 		{tokens.NUMBER, "3"},
 		{tokens.NEGATION, "-"},
 		{tokens.NUMBER, "100"},
+		{tokens.MODULO, "%"},
+		{tokens.NUMBER, "2"},
 		{tokens.NEWLINE, "newline"},
 		{tokens.INDENT, "indentation"},
 		{tokens.PIDENT, "ConsumeSunlight"},
