@@ -153,3 +153,6 @@ Fun Fooo::Bool$ x Int:
     While x > 10:
         Return True
     Return False
+
+Bool val = 10 % 2 * 25 + 54 / 10**2 - 100 % 89 == 0
+Int negative = -10

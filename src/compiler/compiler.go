@@ -583,6 +583,8 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (Ty
 			c.addError(err)
 		}
 		c.emit(NEGATE, register)
+
+		return builtIn(Int), register
 	default:
 		log.Fatalf("type of prefix is not handled. got=%q", expression.Operator)
 	}

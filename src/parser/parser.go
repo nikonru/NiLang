@@ -94,6 +94,13 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerInfix(tokens.DOLLAR, p.parseCallExpression)
 	p.registerInfix(tokens.DCOLON, p.parseScopeExpression)
 
+	p.registerInfix(tokens.ADDITION, p.parseInfixExpression)
+	p.registerInfix(tokens.NEGATION, p.parseInfixExpression)
+	p.registerInfix(tokens.MULTIPLICATION, p.parseInfixExpression)
+	p.registerInfix(tokens.DIVISION, p.parseInfixExpression)
+	p.registerInfix(tokens.POWER, p.parseInfixExpression)
+	p.registerInfix(tokens.MODULO, p.parseInfixExpression)
+
 	p.nextToken()
 	p.nextToken()
 
