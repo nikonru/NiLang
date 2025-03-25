@@ -9,7 +9,6 @@ jobs:
   linux:
     name: linux
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
 
@@ -56,7 +55,6 @@ jobs:
   windows:
     name: windows
     runs-on: windows-latest
-    if: github.ref == 'refs/heads/master'
     needs: linux
     steps:
       - name: checkout
