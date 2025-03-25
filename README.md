@@ -66,6 +66,7 @@ Int _val = 0
 Int val_1 = 1
 Int aBcD1234 = 2
 Int _a_B_c_D_1_2_3__4_ = 3
+Bool _23gf = True
 ```
 
 
