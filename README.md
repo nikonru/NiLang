@@ -124,7 +124,7 @@ Operators are applied in the following order, starting from the highest:
 * Function call (see Functions)
 * `**`
 * `Not`, unary `-`
-* `*`, `/`
+* `*`, `/`, `%`
 * `+`, `-`
 * `>=`, `>`, `<`, `<=`
 * `==`
