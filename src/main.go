@@ -11,13 +11,13 @@ import (
 	"path/filepath"
 )
 
-const VERSION = "v0.1.0"
+const VERSION = "v0.1.1"
 const VERSION_NAME = "Alpha"
 
 func main() {
 	stackSize := flag.Int("s", 128, "stack size in bytes")
 	outputFilename := flag.String("o", "bot.tor", "output file name")
-	printAST := flag.Bool("AST", false, "print abstract syntax tree in a human readable form (pseudo-code), use for debugging the compiler")
+	printAST := flag.Bool("AST", false, "print abstract syntax tree in a human readable form (pseudo-code), use it for debugging the compiler")
 	printVersion := flag.Bool("version", false, "print current version of the compiler")
 	flag.Parse()
 
