@@ -42,4 +42,12 @@ const (
 	ABSORB_MINERALS  = "absorb"
 	CHECK            = "chk"
 	SKIP_CYCLE       = "nop"
+
+	NEGATE   = "neg"
+	ADD      = "add"
+	SUBTRACT = "sub"
+	DIVIDE   = "div"
+	MULTIPLY = "mul"
+	MOD      = "mod"
+	POWER    = "pow"
 )
