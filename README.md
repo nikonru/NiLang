@@ -24,7 +24,7 @@ $./nilang ---help
 **No brackets are allowed.**
 ## Comments
 Character `#` is used to define the beginning of the comment, the part of code which is 
-completely ignored by the compiler. Once comment has begun it ends only at the end of line
+completely ignored by the compiler. Once comment has begun it ends only at the end of a line
 ```
 Int variable = 0 #this commentary goes until the end of line
 Bool anotherVariable = False
