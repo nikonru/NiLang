@@ -222,7 +222,7 @@ By the way, functions are also very proud members of **NiLang**, hence **functio
 
 Now we have plenty of functions, but how can we use them? Don't worry, call syntax is pretty simple in **NiLang**.
 
-To call a function just write it name.
+To call a function just write its name.
 ```
 DoNothing
 Int x = UselessNumber
