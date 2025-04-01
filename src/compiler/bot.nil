@@ -139,6 +139,14 @@ While xx < 10:
 Int energy = bot::GetEnergy
 Int age = bot::GetAge
 
+Int myMemory = 0
+If bot::IsMemoryReady:
+    myMemory = bot::ReadMemory
+Else:
+    bot::WriteMemory$ myMemory + 1
+
+
+
 State newState = ill
 
 While newState == myState:

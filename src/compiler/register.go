@@ -5,8 +5,8 @@ type register = string
 const (
 	AX = "AX"
 	BX = "BX"
-	CX = "CX"
-	DX = "DX"
+	CX = "CX" // flag for bot's memory being ready for reading
+	DX = "DX" // bot's memory
 
 	SD = "SD"
 	MD = "MD"

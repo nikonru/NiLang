@@ -27,6 +27,9 @@ func (c *Compiler) initBuiltin(globalScope *scope) {
 		{"Face", 1},
 		{"GetAge", 0},
 		{"GetEnergy", 0},
+		{"IsMemoryReady", 0},
+		{"ReadMemory", 0},
+		{"WriteMemory", 1},
 	}
 	bot := newScope("bot")
 
@@ -146,6 +149,31 @@ func (c *Compiler) compileBuiltin(expression *ast.CallExpression, name name) (Ty
 	case "GetEnergy":
 		c.emit(LOAD_TO_REG_FROM_REG, AX, EN)
 		return builtIn(Int), AX
+	case "IsMemoryReady":
+		c.emit(LOAD_TO_REG_FROM_REG, AX, CX)
+		return builtIn(Bool), AX
+	case "ReadMemory":
+		c.emit(LOAD_TO_REG_FROM_REG, AX, DX)
+		return builtIn(Int), AX
+	case "WriteMemory":
+		numberOfArguments := 1
+		if len(expression.Arguments) != 1 {
+			err := helper.MakeError(expression.Token,
+				fmt.Sprintf("unexpected number of arguments expected=%d, got=%d", numberOfArguments, len(expression.Arguments)))
+			c.addError(err)
+		}
+		t, register := c.compileExpression(expression.Arguments[0])
+
+		if t != builtIn(Int) {
+			err := helper.MakeError(expression.Token,
+				fmt.Sprintf("unexpected type of an argument expected %q, got %q", Int, t.String()))
+			c.addError(err)
+		}
+
+		c.emit(LOAD_TO_REG_FROM_VAL, CX, BOOL_TRUE)
+		c.emit(LOAD_TO_REG_FROM_REG, DX, register)
+
+		return builtIn(Int), register
 	default:
 		log.Fatalf("builtin function %q is not handled", name)
 		return VOID, ""
