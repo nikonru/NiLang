@@ -365,6 +365,8 @@ and current position of the bot;
 * `Sleep` - bot skips one world cycle;
 * `Move$Dir` - move the bot on one cell towards the given direction;
 * `Face$Dir` - face the bot towards the given direction;
+* `GetEnergy::Int` - returns the current level of energy of the bot;
+* `GetAge::Int` - returns the current age of energy of the bot as a number of cycles;
 ## Loop
 Keyword `While` is used to describe block of code, which repeats multiple times **while** condition 
 after it is satisfied. The code down below calls `Move` function exactly 10 times.

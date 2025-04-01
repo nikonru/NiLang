@@ -25,6 +25,8 @@ func (c *Compiler) initBuiltin(globalScope *scope) {
 		{"Sleep", 0},
 		{"Move", 1},
 		{"Face", 1},
+		{"GetAge", 0},
+		{"GetEnergy", 0},
 	}
 	bot := newScope("bot")
 
@@ -138,6 +140,12 @@ func (c *Compiler) compileBuiltin(expression *ast.CallExpression, name name) (Ty
 	case "Face":
 		c.compileFunctionWithDirectionArgument(FACE, direction())
 		return VOID, ""
+	case "GetAge":
+		c.emit(LOAD_TO_REG_FROM_REG, AX, AG)
+		return builtIn(Int), AX
+	case "GetEnergy":
+		c.emit(LOAD_TO_REG_FROM_REG, AX, EN)
+		return builtIn(Int), AX
 	default:
 		log.Fatalf("builtin function %q is not handled", name)
 		return VOID, ""

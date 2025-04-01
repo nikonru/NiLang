@@ -10,4 +10,6 @@ const (
 
 	SD = "SD"
 	MD = "MD"
+	EN = "EN"
+	AG = "AG"
 )

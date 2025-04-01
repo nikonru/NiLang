@@ -136,6 +136,8 @@ While xx < 10:
     bot::Move$ dir::front
     xx = xx
 
+Int energy = bot::GetEnergy
+Int age = bot::GetAge
 
 State newState = ill
 
