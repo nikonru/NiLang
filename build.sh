@@ -9,13 +9,18 @@ else
     exit 1
 fi
 
+additional_files=""
 if [[ "$1" = "-wasm" ]]; then
-    GOOS=js 
-    GOARCH=wasm
     ext=".wasm"
     platform="js"
+
+    if [[ "$OSTYPE" = "linux-gnu" ]]; then
+        additional_files="$(go env GOROOT)/misc/wasm/wasm_exec.js $(go env GOROOT)/misc/wasm/wasm_exec.html"
+    fi
+
+    GOOS=js GOARCH=wasm go build -o build/nilang$ext src/main.go
+else
+    go build -o build/nilang$ext src/main.go
 fi
 
-go build -o build/nilang$ext  src/main.go
-
-tar -czvf build/nilang-$platform.tar.gz --directory=build nilang$ext
+tar -czvf build/nilang-$platform.tar.gz --directory=build nilang$ext $additional_files
