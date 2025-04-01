@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Go WASM Test</title>
+    <script src="wasm_exec.js"></script>
+</head>
+<body>
+    <textarea id="input"></textarea>
+    <input type="number" id="stackSize" placeholder="Stack size (optional)">
+    <button onclick="runWasm()">Run</button>
+    <p id="output"></p>
+
+    <script>
+        const go = new Go();
+        let wasmInstance;
+
+        WebAssembly.instantiateStreaming(fetch("nilang.wasm"), go.importObject).then(result => {
+            wasmInstance = result.instance;
+            go.run(wasmInstance);
+        });
+
+        async function runWasm() {
+            let input = document.getElementById("input").value;
+            let stackSize = document.getElementById("stackSize").value;
+
+            let [isError, result] = await compile(input, stackSize);
+            // you can do 
+            // let [isError, result] = await compile(input);
+            // in this case default value for the stack size will be used
+            document.getElementById("output").innerText = isError
+                ? "Error: \n" + result
+                : result;
+        }
+    </script>
+</body>
+</html>

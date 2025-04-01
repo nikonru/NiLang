@@ -14,11 +14,11 @@ if [[ "$1" = "-wasm" ]]; then
     ext=".wasm"
     platform="js"
 
-    if [[ "$OSTYPE" = "linux-gnu" ]]; then
-        additional_files="$(go env GOROOT)/misc/wasm/wasm_exec.js $(go env GOROOT)/misc/wasm/wasm_exec.html"
-    fi
+    GOOS=js GOARCH=wasm go build -o build/nilang$ext src/wasm.go
 
-    GOOS=js GOARCH=wasm go build -o build/nilang$ext src/main.go
+    additional_files="wasm_exec.js index.html"
+    cp "wasm/wasm_exec.js" "build/wasm_exec.js"
+    cp "wasm/index.html" "build/index.html"
 else
     go build -o build/nilang$ext src/main.go
 fi

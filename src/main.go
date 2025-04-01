@@ -1,6 +1,9 @@
+//go:build !js || !wasm
+
 package main
 
 import (
+	"NiLang/src/common"
 	"NiLang/src/compiler"
 	"NiLang/src/helper"
 	"flag"
@@ -15,7 +18,7 @@ const VERSION = "v0.1.1"
 const VERSION_NAME = "Alpha"
 
 func main() {
-	stackSize := flag.Int("s", 128, "stack size in bytes")
+	stackSize := flag.Int("s", common.DefaultStackSize, "stack size in bytes")
 	outputFilename := flag.String("o", "bot.tor", "output file name")
 	printAST := flag.Bool("AST", false, "print abstract syntax tree in a human readable form (pseudo-code), use it for debugging the compiler")
 	printVersion := flag.Bool("version", false, "print current version of the compiler")
