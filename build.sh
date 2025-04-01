@@ -13,6 +13,7 @@ if [[ "$1" = "-wasm" ]]; then
     GOOS=js 
     GOARCH=wasm
     ext=".wasm"
+    platform="js"
 fi
 
 go build -o build/nilang$ext  src/main.go

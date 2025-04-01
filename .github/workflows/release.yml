@@ -26,6 +26,9 @@ jobs:
       - name: Build
         run: ./build.sh
 
+      - name: Build WebAssembly
+        run: ./build.sh -wasm
+
       - name: version
         run: echo "version=$(./build/nilang --version)" >> $GITHUB_OUTPUT
         id: version
@@ -50,6 +53,16 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./build/nilang-linux.tar.gz
           asset_name: nilang-linux.tar.gz
+          asset_content_type: application/gzip
+      
+      - name: upload wasm artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/nilang-js.tar.gz
+          asset_name: nilang-js.tar.gz
           asset_content_type: application/gzip
 
   windows:
