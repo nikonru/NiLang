@@ -166,3 +166,10 @@ Fun Fooo::Bool$ x Int:
 
 Bool val = 10 % 2 * 25 + 54 / 10**2 - 100 % 89 == 0
 Int negative = -10
+
+Using bot
+
+If GetEnergy > 1000:
+    Move$dir::front
+Else:
+    Move$dir::front # it must be exactly at the last line of the file 

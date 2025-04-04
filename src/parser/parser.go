@@ -606,7 +606,7 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 		statement.Alternative = p.parseBlockStatement()
 	}
 
-	if p.isCurrent(tokens.NEWLINE) {
+	if p.isCurrent(tokens.NEWLINE) || p.isNext(tokens.EOF) {
 		p.nextToken()
 	}
 	p.pleaseDontSkipToken = true

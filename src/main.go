@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 )
 
-const VERSION = "v0.1.2"
+const VERSION = "v0.1.3"
 const VERSION_NAME = "Alpha"
 
 func main() {
