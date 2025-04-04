@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Go WASM Test</title>
+    <title>NiLang</title>
     <script src="wasm_exec.js"></script>
 </head>
+
 <body>
-    <textarea id="input"></textarea>
+    <label>version:&nbsp</label>
+    <label id="version"></label><br>
+
+    <textarea id="input"></textarea><br>
     <input type="number" id="stackSize" placeholder="Stack size (optional)">
-    <button onclick="runWasm()">Run</button>
+    <button onclick="compileCode()">Compile</button>
     <p id="output"></p>
 
     <script>
@@ -20,7 +25,7 @@
             go.run(wasmInstance);
         });
 
-        async function runWasm() {
+        async function compileCode() {
             let input = document.getElementById("input").value;
             let stackSize = document.getElementById("stackSize").value;
 
@@ -32,6 +37,25 @@
                 ? "Error: \n" + result
                 : result;
         }
+
+        function promiseVersion() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(getVersion());
+                }, 100);
+            });
+        }
+
+        async function setVersion() {
+            const version = await promiseVersion();
+            let versionLabel = document.getElementById("version");
+            versionLabel.innerText = version;
+        }
+
+        window.onload = (event) => {
+            setVersion();
+        }
     </script>
 </body>
+
 </html>

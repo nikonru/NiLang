@@ -13,6 +13,7 @@ import (
 
 func main() {
 	js.Global().Set("compile", js.FuncOf(compile))
+	js.Global().Set("getVersion", js.FuncOf(getVersion))
 	select {}
 }
 
@@ -53,4 +54,9 @@ func compile(this js.Value, args []js.Value) any {
 	}
 
 	return []any{false, string(code)}
+}
+
+func getVersion(this js.Value, args []js.Value) any {
+	// returns string
+	return js.ValueOf(common.VERSION + common.VERSION_NAME)
 }

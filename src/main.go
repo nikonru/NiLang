@@ -14,9 +14,6 @@ import (
 	"path/filepath"
 )
 
-const VERSION = "v0.1.3"
-const VERSION_NAME = "Alpha"
-
 func main() {
 	stackSize := flag.Int("s", common.DefaultStackSize, "stack size in bytes")
 	outputFilename := flag.String("o", "bot.tor", "output file name")
@@ -25,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	if *printVersion {
-		fmt.Printf("%s%s\n", VERSION, VERSION_NAME)
+		fmt.Printf("%s%s\n", common.VERSION, common.VERSION_NAME)
 		return
 	}
 
