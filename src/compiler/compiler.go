@@ -567,7 +567,7 @@ func (c *Compiler) compilePrefixExpression(expression *ast.PrefixExpression) (Ty
 		False := c.getUniqueLabel()
 
 		c.emit(COMPARE_WITH_VALUE, register, BOOL_TRUE)
-		c.emit(JUMP_IF_EQUAL, register, False)
+		c.emit(JUMP_IF_EQUAL, False)
 
 		c.emitLabel(True)
 		c.emit(LOAD_TO_REG_FROM_VAL, register, BOOL_TRUE)
