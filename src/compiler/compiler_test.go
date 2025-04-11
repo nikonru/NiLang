@@ -38,3 +38,53 @@ func TestSmoke1(t *testing.T) {
 		t.Fatalf("Failed to compile code")
 	}
 }
+
+func TestFailToCompileFunctionWithoutReturn(t *testing.T) {
+
+	input := []byte(`
+Fun X::Int:
+    Int y = 0
+Int x = X`)
+
+	c := compiler.New(stackSize)
+	_, errors := c.Compile(input, true)
+	if len(errors) == 0 {
+		t.Fatalf("Successfully compiled ill-formed code")
+	}
+}
+
+func TestFailToCompileFunctionWithoutReturn1(t *testing.T) {
+
+	input := []byte(`
+Fun X::Int:
+    Int y = 0
+    If y == 1:
+        Return 1
+    Elif y == 0:
+        Return 0
+
+Int x = X`)
+
+	c := compiler.New(stackSize)
+	_, errors := c.Compile(input, true)
+	if len(errors) == 0 {
+		t.Fatalf("Successfully compiled ill-formed code")
+	}
+}
+
+func TestFailToCompileFunctionWithoutReturn2(t *testing.T) {
+
+	input := []byte(`
+Fun X::Int:
+    Int y = 0
+    If y == 1:
+        Return 1
+
+Int x = X`)
+
+	c := compiler.New(stackSize)
+	_, errors := c.Compile(input, true)
+	if len(errors) == 0 {
+		t.Fatalf("Successfully compiled ill-formed code")
+	}
+}

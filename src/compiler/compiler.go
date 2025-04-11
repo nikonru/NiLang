@@ -930,7 +930,7 @@ func doesBlockContainReturn(block *ast.BlockStatement) bool {
 				}
 			}
 
-			if always_return {
+			if always_return && fork.Alternative != nil {
 				return true
 			}
 		}
