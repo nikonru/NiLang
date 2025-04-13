@@ -1,6 +1,7 @@
 package lexer_test
 
 import (
+	"NiLang/src/helper"
 	"NiLang/src/lexer"
 	"NiLang/src/tokens"
 	"io"
@@ -109,7 +110,10 @@ func TestLexer(t *testing.T) {
 	Lexer := lexer.New(input)
 
 	for i, test := range tests {
-		tok := Lexer.NextToken()
+		err, tok := Lexer.NextToken()
+		if err != nil {
+			t.Fatalf(helper.FormatError(*err, input))
+		}
 		if tok.Type != test.expectedType || tok.Literal != test.expectedLiteral {
 			t.Logf("tests[%d] - tok: %#v", i, tok)
 			t.Fatalf("tests[%d] - token type. expected=%q, got=%q; literal. expected=%q, got=%q;", i, test.expectedType, tok.Type, test.expectedLiteral, tok.Literal)
@@ -162,8 +166,10 @@ func TestLexerLines(t *testing.T) {
 	Lexer := lexer.New(input)
 
 	for i, test := range tests {
-		tok := Lexer.NextToken()
-
+		err, tok := Lexer.NextToken()
+		if err != nil {
+			t.Fatalf(helper.FormatError(*err, input))
+		}
 		if tok.Type != test.Type || tok.Literal != test.Literal || tok.Line != test.Line || tok.Offset != test.Offset {
 			t.Logf("tests[%d] - tok: %#v", i, tok)
 			t.Fatalf("tests[%d] - token type. expected=%q, got=%q; literal. expected=%q, got=%q; line. expected=%d, got=%d; offset. expected=%d, got=%d;",

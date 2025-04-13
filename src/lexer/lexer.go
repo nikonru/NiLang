@@ -4,11 +4,10 @@ import (
 	"NiLang/src/helper"
 	"NiLang/src/tokens"
 	"fmt"
-	"log"
 )
 
 type Lexer interface {
-	NextToken() tokens.Token
+	NextToken() (*helper.Error, tokens.Token)
 }
 
 type lexer struct {
@@ -49,7 +48,7 @@ func New(input []byte) Lexer {
 	return l
 }
 
-func (l *lexer) NextToken() tokens.Token {
+func (l *lexer) NextToken() (*helper.Error, tokens.Token) {
 	l.pos = l.offset
 
 	for isStartOfComment(l.char) {
@@ -67,7 +66,7 @@ func (l *lexer) NextToken() tokens.Token {
 	if l.indentationError {
 		if !isNewline(l.char) {
 			err := helper.Error{Line: l.line, Offset: l.offset, Description: l.indentationErrorMessage}
-			log.Fatal("\n" + helper.FormatError(err, l.input))
+			return &err, l.newToken(tokens.EOF)
 		}
 		l.skipNewlines()
 		l.indentationError = false
@@ -79,7 +78,7 @@ func (l *lexer) NextToken() tokens.Token {
 	case '\n', '\r':
 		tok = l.newToken(tokens.NEWLINE)
 		l.skipNewlines()
-		return tok
+		return nil, tok
 	case ' ':
 		if l.indentation {
 			offset, ok := l.readIndent()
@@ -95,7 +94,7 @@ func (l *lexer) NextToken() tokens.Token {
 				l.shouldSkipNewlines = true
 				return l.NextToken()
 			}
-			return tokens.Token{Type: tokens.INDENT, Literal: "indentation", Line: l.line, Offset: offset}
+			return nil, tokens.Token{Type: tokens.INDENT, Literal: "indentation", Line: l.line, Offset: offset}
 		} else {
 			l.read()
 			return l.NextToken()
@@ -154,21 +153,21 @@ func (l *lexer) NextToken() tokens.Token {
 	case '\t':
 		desc := fmt.Sprintf("tabulation is not allowed, use %d whitespaces only", tokens.INDENT_LENGTH)
 		err := helper.Error{Line: l.line, Offset: l.offset, Description: desc}
-		log.Fatal("\n" + helper.FormatError(err, l.input))
+		return &err, l.newToken(tokens.EOF)
 	default:
 		if isDigit(l.char) {
-			return l.readNumberToken()
+			return nil, l.readNumberToken()
 		}
 		if isLetter(l.char) {
 			literal := string(l.readIdent())
-			return l.makeToken(tokens.LookUpIdent(literal), literal)
+			return nil, l.makeToken(tokens.LookUpIdent(literal), literal)
 		}
 
 		tok = l.newToken(tokens.ILLEGAL)
 	}
 
 	l.read()
-	return tok
+	return nil, tok
 }
 
 func (l *lexer) startNewline() {

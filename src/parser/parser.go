@@ -115,7 +115,13 @@ func (p *Parser) nextToken() {
 	}
 
 	p.current = p.next
-	p.next = (*p.lexer).NextToken()
+	var err *helper.Error
+	err, p.next = (*p.lexer).NextToken()
+
+	if err != nil {
+		p.addError(*err)
+		return
+	}
 
 	if p.isCurrent(tokens.INDENT) {
 		p.level = tokens.GetIdentLevel(p.current)
