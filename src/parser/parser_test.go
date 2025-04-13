@@ -1660,6 +1660,42 @@ Else:
 	}
 }
 
+func TestFunctionCallAtTheEndOfFile(test *testing.T) {
+	input := []byte(`Using bot
+
+Fun PlantLoop:
+    While True:
+        ConsumeSunlight
+ 
+Int x = 0 
+If IsMemoryReady:
+    x = ReadMemory
+PlantLoop`)
+
+	lexer := lexer.New(input)
+	parser := parser.New(&lexer)
+
+	program := parser.Parse()
+	if program == nil {
+		test.Fatalf("parser.Parse() has returned nil")
+	}
+	checkParseErrors(test, parser, input)
+
+	length := 5
+	if len(program.Statements) != length {
+		test.Fatalf("program.Statements doesn't contain %d statements: got=%v", length, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[4].(*ast.ExpressionStatement)
+	if !ok {
+		test.Fatalf("program.Statements[4] is not ast.ExpressionStatement, got=%T", program.Statements[4])
+	}
+
+	if statement.Token.Literal != "PlantLoop" {
+		test.Fatalf("the last statement is not PlantLoop, got=%T", statement.Token.Literal)
+	}
+}
+
 func testInfixExpression(test *testing.T, exp *ast.InfixExpression, left interface{}, operator string, right interface{}) bool {
 
 	if !testLiteralExpression(test, exp.Left, left) {

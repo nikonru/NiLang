@@ -568,6 +568,8 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 	statement := &ast.IfStatement{Token: p.current}
 	statement.Elifs = make([]*ast.ElifStatement, 0)
 
+	startOffset := p.current.Offset
+
 	p.nextToken()
 	statement.Condition = p.parseExpression(LOWEST)
 
@@ -606,7 +608,7 @@ func (p *Parser) parseIfStatement() (bool, ast.Statement) {
 		statement.Alternative = p.parseBlockStatement()
 	}
 
-	if p.isCurrent(tokens.NEWLINE) || p.isNext(tokens.EOF) {
+	if p.isCurrent(tokens.NEWLINE) || (p.isNext(tokens.EOF) && (p.current.Offset > startOffset)) {
 		p.nextToken()
 	}
 	p.pleaseDontSkipToken = true
