@@ -160,7 +160,7 @@ func TestLexerLines(t *testing.T) {
 		{tokens.ASSIGN, "=", 5, 11},
 		{tokens.NUMBER, "1", 5, 13},
 		{tokens.NEWLINE, "newline", 5, 14},
-		{tokens.EOF, "", 6, 0},
+		{tokens.EOF, "", 6, 1},
 	}
 
 	Lexer := lexer.New(input)

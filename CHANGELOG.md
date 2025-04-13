@@ -5,4 +5,5 @@ Fixes:
 * Phantom statement at the end of AST due to incorrect parsing EOF token;
 * Incorrect compilation of the `Not` operator;
 * Compilation of function returning value without return in all branches;
+* Indentation at the ond of a file;
 * Crashes on the wrong indentation.

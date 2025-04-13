@@ -64,7 +64,7 @@ func (l *lexer) NextToken() (*helper.Error, tokens.Token) {
 	}
 
 	if l.indentationError {
-		if !isNewline(l.char) {
+		if !(isNewline(l.char) || (l.char == 0)) {
 			err := helper.Error{Line: l.line, Offset: l.offset, Description: l.indentationErrorMessage}
 			return &err, l.newToken(tokens.EOF)
 		}
