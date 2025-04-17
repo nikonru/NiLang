@@ -53,7 +53,7 @@ Dir direction = dir::front
 ```
 Did you notice something? 
 Variables in **NiLang** are very humble and **must have a name, which begins with a lower case letter**.
-On the opposite **types are very proud and always begins with an upper case letter**.
+On the opposite **types are very proud and always begin with an upper case letter**.
 
 The following code won't compile.
 ```
